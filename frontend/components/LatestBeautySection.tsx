@@ -105,7 +105,8 @@ const BREAKPOINT_SM = 480;
 const VISIBLE_DESKTOP = 4;
 const VISIBLE_TABLET = 3;
 const VISIBLE_MOBILE = 2;
-const SLIDE_GAP_PX = 8; // tight gap like View by categories
+const SLIDE_GAP_PX = 8;
+const MAX_CARD_WIDTH_PX = 260; // keep product images small
 
 function getVisibleCount(width: number): number {
   if (width >= BREAKPOINT_LG) return VISIBLE_DESKTOP;
@@ -172,11 +173,13 @@ export default function LatestBeautySection() {
     setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
   };
 
-  // Same slider logic as View by categories: item width = (container - gaps) / visibleCount
-  const slideWidthPx =
+  // Small cards: cap width so images don't get huge; exactly 8px gap between products
+  const rawSlidePx =
     containerWidth > 0
       ? (containerWidth - SLIDE_GAP_PX * (visibleCount - 1)) / visibleCount
       : 100 / visibleCount;
+  const slideWidthPx =
+    containerWidth > 0 ? Math.min(rawSlidePx, MAX_CARD_WIDTH_PX) : rawSlidePx;
   const trackWidthPx =
     containerWidth > 0
       ? products.length * slideWidthPx + SLIDE_GAP_PX * (products.length - 1)

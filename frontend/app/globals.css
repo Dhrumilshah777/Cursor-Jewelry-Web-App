@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:wght@200&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-mona-sans: 'Mona Sans', system-ui, sans-serif;
+}
+
+@keyframes hero-text-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-text {
+  opacity: 0;
+  animation: hero-text-in 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.animate-hero-text-delay-1 { animation-delay: 0.18s; }
+.animate-hero-text-delay-2 { animation-delay: 0.36s; }
+.animate-hero-text-delay-3 { animation-delay: 0.54s; }
+.animate-hero-text-delay-4 { animation-delay: 0.72s; }
+
+/* Loader logo "BLURE" effect */
+@keyframes loader-logo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+    letter-spacing: 0.2em;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    letter-spacing: 0.05em;
+  }
+}
+
+.animate-loader-logo {
+  animation: loader-logo-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  text-shadow: 0 0 40px rgba(28, 25, 23, 0.08), 0 2px 4px rgba(28, 25, 23, 0.04);
+}
+
+/* Hero services strip: icon animations (each icon has a distinct effect) */
+@keyframes icon-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.14); }
+  28% { transform: scale(1.02); }
+  42% { transform: scale(1.1); }
+  70%, 100% { transform: scale(1); }
+}
+@keyframes icon-fly {
+  0%, 100% { transform: translate(0, 0) rotate(-12deg); }
+  50% { transform: translate(6px, -6px) rotate(-4deg); }
+}
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes icon-pop {
+  0%, 90%, 100% { transform: scale(1) rotate(0deg); }
+  45% { transform: scale(1.12) rotate(3deg); }
+}
+.animate-icon-heartbeat {
+  animation: icon-heartbeat 1.8s ease-in-out infinite;
+}
+.animate-icon-fly {
+  animation: icon-fly 2.4s ease-in-out infinite;
+}
+.animate-icon-bounce {
+  animation: icon-bounce 2s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+.animate-icon-pop {
+  animation: icon-pop 2.6s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+/* Hide scrollbar but keep scroll behavior */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* Full-width section: extends to viewport edges (no side space) */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}

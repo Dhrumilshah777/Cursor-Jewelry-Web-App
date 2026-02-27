@@ -3,14 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getApiBase, setAdminKey, clearAdminKey, apiGet } from '@/lib/api';
+import { getApiBase, setAdminKey, getAdminKey, getUserToken, clearAdminKey, clearUserToken, apiGet } from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const [adminKey, setAdminKeyInput] = useState('');
   const [adminError, setAdminError] = useState('');
   const [adminLoading, setAdminLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -20,6 +25,14 @@ export default function LoginPage() {
     else if (err === 'no_email') setError('Could not get your email from Google.');
     else if (err === 'server_error') setError('Something went wrong. Please try again.');
   }, []);
+
+  const isLoggedIn = mounted && (!!getUserToken() || !!getAdminKey());
+
+  const handleLogout = () => {
+    clearUserToken();
+    clearAdminKey();
+    router.refresh();
+  };
 
   const googleLoginUrl = `${getApiBase()}/api/auth/google`;
 
@@ -52,9 +65,22 @@ export default function LoginPage() {
           Sign in with your Google account to access your wishlist and more.
         </p>
 
+        {isLoggedIn && (
+          <div className="mt-6 rounded border border-stone-200 bg-stone-50 px-4 py-3">
+            <p className="text-sm text-stone-600">You&apos;re already logged in.</p>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-2 text-sm font-medium text-charcoal underline hover:no-underline"
+            >
+              Log out
+            </button>
+          </div>
+        )}
+
         <a
           href={googleLoginUrl}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded border border-stone-300 bg-white px-4 py-3.5 font-sans text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-stone-50"
+          className={`flex w-full items-center justify-center gap-3 rounded border border-stone-300 bg-white px-4 py-3.5 font-sans text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-stone-50 ${isLoggedIn ? 'mt-6' : 'mt-8'}`}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

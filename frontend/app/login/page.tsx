@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getApiBase } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { getApiBase, setAdminKey, clearAdminKey, apiGet } from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
+  const [adminKey, setAdminKeyInput] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -17,6 +22,25 @@ export default function LoginPage() {
   }, []);
 
   const googleLoginUrl = `${getApiBase()}/api/auth/google`;
+
+  const handleAdminKeySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError('');
+    if (!adminKey.trim()) return;
+    setAdminLoading(true);
+    try {
+      clearAdminKey();
+      setAdminKey(adminKey.trim());
+      await apiGet('/api/admin/products', true);
+      router.push('/admin');
+      router.refresh();
+    } catch {
+      setAdminError('Invalid admin key.');
+      clearAdminKey();
+    } finally {
+      setAdminLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-[60vh] px-4 py-16 sm:py-24">
@@ -42,6 +66,30 @@ export default function LoginPage() {
         </a>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+
+        <div className="mt-8 flex items-center gap-3 text-stone-400">
+          <span className="flex-1 border-t border-stone-200" />
+          <span className="text-xs">Admin?</span>
+          <span className="flex-1 border-t border-stone-200" />
+        </div>
+        <form onSubmit={handleAdminKeySubmit} className="mt-4">
+          <input
+            type="password"
+            value={adminKey}
+            onChange={(e) => setAdminKeyInput(e.target.value)}
+            placeholder="Admin key"
+            className="w-full rounded border border-stone-300 px-3 py-2 text-charcoal placeholder-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+            autoComplete="off"
+          />
+          {adminError && <p className="mt-2 text-sm text-red-600">{adminError}</p>}
+          <button
+            type="submit"
+            disabled={adminLoading}
+            className="mt-2 w-full rounded bg-stone-700 px-3 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+          >
+            {adminLoading ? 'Checking…' : 'Sign in with admin key'}
+          </button>
+        </form>
 
         <p className="mt-8 text-center text-sm text-stone-500">
           Don&apos;t have an account? You&apos;ll create one when you sign in with Google.

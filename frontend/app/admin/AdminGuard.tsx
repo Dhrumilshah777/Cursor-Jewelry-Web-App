@@ -33,16 +33,25 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   const key = getAdminKey();
   const isLoginPage = pathname === '/admin/login';
 
-  if (!key && !isLoginPage) {
-    router.replace('/admin/login');
+  // No admin key: redirect to home (visitors and customers cannot access any /admin route, including /admin/login)
+  if (!key) {
+    router.replace('/');
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-100">
-        <span className="text-stone-500">Redirecting to login…</span>
+        <span className="text-stone-500">Redirecting…</span>
       </div>
     );
   }
 
-  if (isLoginPage) return <>{children}</>;
+  // Already admin and on login page → go to dashboard
+  if (isLoginPage) {
+    router.replace('/admin');
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-stone-100">
+        <span className="text-stone-500">Redirecting…</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-stone-100">
@@ -71,7 +80,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
             type="button"
             onClick={() => {
               clearAdminKey();
-              router.push('/admin/login');
+              router.push('/');
             }}
             className="mt-2 block text-sm text-stone-500 hover:text-charcoal"
           >

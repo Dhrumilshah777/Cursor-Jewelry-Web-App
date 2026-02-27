@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { apiGet, assetUrl } from '@/lib/api';
+import { apiGet, assetUrl, getWishlist, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
 
 type Product = {
   id: string;
@@ -26,6 +26,21 @@ const AUTOPLAY_MS = 5000;
 function ProductCard({ product }: { product: Product }) {
   const [wishlisted, setWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setWishlisted(isInWishlist(product.id));
+  }, [product.id]);
+
+  const toggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (wishlisted) {
+      removeFromWishlist(product.id);
+      setWishlisted(false);
+    } else {
+      addToWishlist({ id: product.id, name: product.name, category: product.category, price: product.price, image: product.image });
+      setWishlisted(true);
+    }
+  };
 
   return (
     <article className= "  group mx-auto w-full max-w-sm flex-shrink-0 px-2 sm:px-3 md:px-4 lg:max-w-none lg:px-3">
@@ -70,7 +85,7 @@ function ProductCard({ product }: { product: Product }) {
             </Link>
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); setWishlisted((w) => !w); }}
+              onClick={toggleWishlist}
               className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
               aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >

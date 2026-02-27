@@ -90,3 +90,38 @@ export async function uploadFiles(files: File[], admin = true): Promise<{ urls: 
   }
   return res.json();
 }
+
+// Wishlist (localStorage) – product shape: { id, name, category, price, image }
+const WISHLIST_KEY = 'wishlist-items';
+
+export type WishlistProduct = { id: string; name: string; category: string; price: string; image: string };
+
+export function getWishlist(): WishlistProduct[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(WISHLIST_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+export function setWishlist(items: WishlistProduct[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(WISHLIST_KEY, JSON.stringify(items));
+}
+
+export function addToWishlist(product: WishlistProduct) {
+  const list = getWishlist();
+  if (list.some((p) => p.id === product.id)) return;
+  setWishlist([...list, product]);
+}
+
+export function removeFromWishlist(productId: string) {
+  setWishlist(getWishlist().filter((p) => p.id !== productId));
+}
+
+export function isInWishlist(productId: string): boolean {
+  return getWishlist().some((p) => p.id === productId);
+}

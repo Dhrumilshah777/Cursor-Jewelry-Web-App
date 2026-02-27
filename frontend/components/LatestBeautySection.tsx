@@ -2,7 +2,13 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { apiGet, assetUrl, getWishlist, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
+import {
+  apiGet,
+  assetUrl,
+  addToWishlist,
+  removeFromWishlist,
+  isInWishlist,
+} from '@/lib/api';
 
 type Product = {
   id: string;
@@ -12,7 +18,17 @@ type Product = {
   image: string;
 };
 
+const MOCK_PRODUCTS: Product[] = [
+  { id: 'mock-1', name: 'Circle Necklace', category: 'Accessories', price: '52.00', image: '/instagram-1.jpg' },
+  { id: 'mock-2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  { id: 'mock-3', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  { id: 'mock-4', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  { id: 'mock-5', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+];
+
 const AUTOPLAY_MS = 5000;
+
+/* ---------------- PRODUCT CARD ---------------- */
 
 function ProductCard({ product }: { product: Product }) {
   const [wishlisted, setWishlisted] = useState(false);
@@ -24,225 +40,187 @@ function ProductCard({ product }: { product: Product }) {
 
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (wishlisted) {
-      removeFromWishlist(product.id);
-      setWishlisted(false);
-    } else {
-      addToWishlist({ id: product.id, name: product.name, category: product.category, price: product.price, image: product.image });
-      setWishlisted(true);
-    }
+    wishlisted ? removeFromWishlist(product.id) : addToWishlist(product);
+    setWishlisted(!wishlisted);
   };
 
   return (
-    <article className="group mx-auto w-full flex-shrink-0 px-1">
-      <Link href={`/products/${product.id}`} className="block">
-        <div className="relative w-full overflow-hidden rounded-sm bg-stone-100 shadow-md transition-shadow duration-300 group-hover:shadow-lg">
-          <div className="aspect-square w-full">
+    <article className="mx-auto w-full">
+      <Link href={`/products/${product.id}`}>
+        <div className="rounded-sm bg-stone-100 shadow-md transition-all hover:shadow-xl">
+
+          {/* 🔥 Bigger Responsive Image */}
+          <div className="w-full h-[240px] sm:h-[260px] md:h-[320px] overflow-hidden">
             {!imageError ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={product.image.startsWith('http') ? product.image : product.image.startsWith('/uploads/') ? assetUrl(product.image) : product.image}
+                src={
+                  product.image.startsWith('http')
+                    ? product.image
+                    : product.image.startsWith('/uploads/')
+                    ? assetUrl(product.image)
+                    : product.image
+                }
                 alt={product.name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
                 onError={() => setImageError(true)}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
-                <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+              <div className="flex h-full items-center justify-center bg-stone-200 text-stone-400">
+                Image not available
               </div>
             )}
           </div>
         </div>
       </Link>
-      <div className="mt-2 px-0.5">
-        <Link href={`/products/${product.id}`}>
-          <h3 className="font-sans text-xs font-semibold uppercase tracking-wide text-charcoal line-clamp-1">
-            {product.name}
-          </h3>
-        </Link>
-        <p className="mt-0.5 font-sans text-[10px] text-stone-500">{product.category}</p>
-        <div className="mt-1.5 flex items-center justify-between gap-1">
-          <span className="font-sans text-xs font-semibold text-charcoal">{product.price}$</span>
-          <div className="flex items-center gap-0.5">
-            <Link
-              href={`/products/${product.id}`}
-              className="flex h-6 w-6 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
-              aria-label="Quick view"
+
+      {/* TEXT */}
+      <div className="mt-3">
+        <h3 className="text-base font-semibold uppercase tracking-wide text-charcoal line-clamp-1">
+          {product.name}
+        </h3>
+        <p className="text-sm text-stone-500">{product.category}</p>
+
+        <div className="mt-2 flex justify-between items-center">
+          <span className="text-base font-semibold">{product.price}$</span>
+
+          <button onClick={toggleWishlist}>
+            <svg
+              className="h-5 w-5"
+              fill={wishlisted ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
             >
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </Link>
-            <button
-              type="button"
-              onClick={toggleWishlist}
-              className="flex h-6 w-6 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
-              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                fill={wishlisted ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-            </button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733
+                   -.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25
+                   c0 7.22 9 12 9 12s9-4.78 9-12z"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </article>
   );
 }
 
+/* ---------------- SLIDER LOGIC ---------------- */
+
 const BREAKPOINT_LG = 1024;
 const BREAKPOINT_MD = 768;
-const BREAKPOINT_SM = 480;
+
 const VISIBLE_DESKTOP = 4;
 const VISIBLE_TABLET = 3;
 const VISIBLE_MOBILE = 2;
-const SLIDE_GAP_PX = 8;
-const MAX_CARD_WIDTH_PX = 260; // keep product images small
 
-function getVisibleCount(width: number): number {
+const SLIDE_GAP_PX = 16;
+const MAX_CARD_WIDTH_PX_DESKTOP = 340;
+
+function getVisibleCount(width: number) {
   if (width >= BREAKPOINT_LG) return VISIBLE_DESKTOP;
   if (width >= BREAKPOINT_MD) return VISIBLE_TABLET;
-  if (width >= BREAKPOINT_SM) return VISIBLE_MOBILE;
-  return VISIBLE_MOBILE; // 2 even at 425px and below
+  return VISIBLE_MOBILE;
 }
+
+/* ---------------- MAIN SECTION ---------------- */
 
 export default function LatestBeautySection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(VISIBLE_MOBILE);
   const [containerWidth, setContainerWidth] = useState(0);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use actual container width so 2 slides show at 425px and below; size slides in px for accuracy
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const update = () => {
-      const w = el.getBoundingClientRect().width;
-      setContainerWidth(w);
-      setVisibleCount(getVisibleCount(w));
+
+    const resize = () => {
+      const width = el.getBoundingClientRect().width;
+      setContainerWidth(width);
+      setVisibleCount(getVisibleCount(width));
     };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(el);
+
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    apiGet<Product[] & { _id?: string }[]>('/api/products')
+    apiGet<Product[]>('/api/products')
       .then((list) => {
-        if (Array.isArray(list) && list.length > 0) {
-          setProducts(
-            list.map((p) => ({
-              id: String((p as { _id?: string })._id ?? (p as Product).id ?? ''),
-              name: p.name,
-              category: p.category,
-              price: p.price,
-              image: p.image,
-            }))
-          );
-        }
+        const mapped = list.map((p: any) => ({
+          id: String(p._id),
+          name: p.name,
+          category: p.category,
+          price: p.price,
+          image: p.image,
+        }));
+
+        setProducts([...mapped, ...MOCK_PRODUCTS]);
       })
-      .catch(() => {});
+      .catch(() => setProducts(MOCK_PRODUCTS));
   }, []);
 
   const maxIndex = Math.max(0, products.length - visibleCount);
 
   useEffect(() => {
-    setCurrentIndex((prev) => Math.min(prev, maxIndex));
-  }, [maxIndex]);
-
-  useEffect(() => {
     if (products.length <= visibleCount) return;
+
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, AUTOPLAY_MS);
+
     return () => clearInterval(timer);
-  }, [products.length, visibleCount, maxIndex]);
+  }, [products, visibleCount, maxIndex]);
 
-  const goTo = (index: number) => {
-    setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
-  };
-
-  // Small cards: cap width so images don't get huge; exactly 8px gap between products
-  const rawSlidePx =
+  // 🔥 Responsive width calculation
+  const baseWidth =
     containerWidth > 0
       ? (containerWidth - SLIDE_GAP_PX * (visibleCount - 1)) / visibleCount
-      : 100 / visibleCount;
-  const slideWidthPx =
-    containerWidth > 0 ? Math.min(rawSlidePx, MAX_CARD_WIDTH_PX) : rawSlidePx;
-  const trackWidthPx =
-    containerWidth > 0
-      ? products.length * slideWidthPx + SLIDE_GAP_PX * (products.length - 1)
-      : products.length * (100 / visibleCount);
-  const slideAndGapPx = slideWidthPx + SLIDE_GAP_PX;
-  const translatePx = currentIndex * slideAndGapPx;
-  const usePx = containerWidth > 0;
+      : 260;
+
+  const slideWidth =
+    visibleCount === VISIBLE_DESKTOP
+      ? Math.min(baseWidth, MAX_CARD_WIDTH_PX_DESKTOP)
+      : baseWidth;
 
   return (
-    <section className="mt-12 w-full overflow-hidden bg-cream py-16 sm:py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center font-sans text-3xl font-thin uppercase tracking-wide text-charcoal sm:text-3xl">
-          Latest Beauty
-        </h2>
+    <section className="bg-cream py-16">
+      <h2 className="text-center text-3xl font-thin uppercase mb-12">
+        Latest Beauty
+      </h2>
 
-        {products.length === 0 ? (
-          <p className="mt-10 text-center text-stone-500">No products in this section yet.</p>
-        ) : (
-        <div ref={containerRef} className="relative mt-10 w-full overflow-hidden" style={{ minHeight: 280 }}>
+      <div
+        ref={containerRef}
+        className="overflow-hidden max-w-7xl mx-auto px-4"
+      >
         <div
-          className="flex flex-nowrap transition-transform duration-500 ease-out"
+          className="flex transition-transform duration-700 ease-in-out"
           style={{
-            width: usePx ? trackWidthPx : `${(100 / visibleCount) * products.length}vw`,
-            transform: usePx ? `translateX(-${translatePx}px)` : `translateX(-${currentIndex * (100 / visibleCount)}vw)`,
-            gap: usePx ? SLIDE_GAP_PX : undefined,
+            gap: SLIDE_GAP_PX,
+            transform: `translateX(-${
+              currentIndex * (slideWidth + SLIDE_GAP_PX)
+            }px)`,
           }}
         >
           {products.map((product) => (
             <div
               key={product.id}
-              className="flex-shrink-0 overflow-hidden"
-              style={
-                usePx
-                  ? { width: slideWidthPx, minWidth: slideWidthPx }
-                  : { width: `${100 / visibleCount}vw`, minWidth: `${100 / visibleCount}vw` }
-              }
+              style={{
+                width: slideWidth,
+                minWidth: slideWidth,
+              }}
             >
               <ProductCard product={product} />
             </div>
           ))}
         </div>
-
-        {/* Dots: one per slider position */}
-        {maxIndex > 0 && (
-          <div className="mt-20 flex items-center justify-center gap-2">
-            {Array.from({ length: maxIndex + 1 }, (_, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => goTo(index)}
-                className="h-1.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-charcoal/30"
-                style={{
-                  width: index === currentIndex ? '2rem' : '1.5rem',
-                  backgroundColor: index === currentIndex ? 'rgb(41 37 36)' : 'rgb(214 211 209)',
-                }}
-                aria-label={`Go to slide ${index + 1}`}
-                aria-current={index === currentIndex ? 'true' : undefined}
-              />
-            ))}
-          </div>
-        )}
-        </div>
-        )}
       </div>
     </section>
   );

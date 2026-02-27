@@ -16,6 +16,11 @@ type Product = {
   colors?: string[];
 };
 
+const MOCK_PRODUCTS: Array<Pick<Product, '_id' | 'name' | 'category' | 'price' | 'image'>> = [
+  { _id: 'mock-1', name: 'Circle Necklace', category: 'Accessories', price: '52.00', image: '/instagram-1.jpg' },
+  { _id: 'mock-2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+];
+
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -35,6 +40,17 @@ export default function ProductDetailPage() {
       setError('Invalid product');
       return;
     }
+
+    // Mock products (frontend-only)
+    const mock = MOCK_PRODUCTS.find((p) => p._id === id);
+    if (mock) {
+      setProduct(mock as Product);
+      setWishlisted(typeof window !== 'undefined' && isInWishlist(mock._id));
+      setError('');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError('');
     apiGet<Product & { id?: string }>(`/api/products/${id}`)
@@ -95,9 +111,12 @@ export default function ProductDetailPage() {
 
   // Image: full URL as-is; otherwise ensure /uploads/ path and use backend base URL
   const rawImage = product.image || '';
+  const normalized = rawImage.startsWith('/') ? rawImage : `/${rawImage}`;
   const imageSrc = rawImage.startsWith('http')
     ? rawImage
-    : assetUrl(rawImage.startsWith('/') ? rawImage : `/${rawImage}`);
+    : normalized.startsWith('/uploads/')
+      ? assetUrl(normalized)
+      : normalized; // frontend public images like /instagram-1.jpg
 
   return (
     <main className="min-h-[50vh] px-4 py-8 sm:py-12">

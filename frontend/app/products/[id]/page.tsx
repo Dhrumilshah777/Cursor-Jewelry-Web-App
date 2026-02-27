@@ -23,6 +23,11 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [wishlisted, setWishlisted] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -32,10 +37,16 @@ export default function ProductDetailPage() {
     }
     setLoading(true);
     setError('');
-    apiGet<Product>(`/api/products/${id}`)
+    apiGet<Product & { id?: string }>(`/api/products/${id}`)
       .then((data) => {
-        setProduct(data);
-        setWishlisted(typeof window !== 'undefined' && isInWishlist(data._id));
+        if (!data || (!data._id && !data.id)) {
+          setError('Product not found');
+          setProduct(null);
+          return;
+        }
+        const p = { ...data, _id: data._id || data.id || '' };
+        setProduct(p);
+        setWishlisted(typeof window !== 'undefined' && isInWishlist(p._id));
       })
       .catch(() => setError('Product not found'))
       .finally(() => setLoading(false));
@@ -82,12 +93,11 @@ export default function ProductDetailPage() {
     );
   }
 
-  const imageSrc =
-    product.image.startsWith('http')
-      ? product.image
-      : product.image.startsWith('/uploads/')
-        ? assetUrl(product.image)
-        : product.image;
+  // Image: full URL as-is; otherwise ensure /uploads/ path and use backend base URL
+  const rawImage = product.image || '';
+  const imageSrc = rawImage.startsWith('http')
+    ? rawImage
+    : assetUrl(rawImage.startsWith('/') ? rawImage : `/${rawImage}`);
 
   return (
     <main className="min-h-[50vh] px-4 py-8 sm:py-12">
@@ -102,11 +112,20 @@ export default function ProductDetailPage() {
 
         <div className="grid gap-8 md:grid-cols-2">
           <div className="aspect-square w-full overflow-hidden rounded-lg bg-stone-100">
-            <img
-              src={imageSrc}
-              alt={product.name}
-              className="h-full w-full object-cover"
-            />
+            {!imageError && imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={product.name}
+                className="h-full w-full object-cover"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
+                <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
           </div>
 
           <div>

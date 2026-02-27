@@ -9,6 +9,17 @@ exports.list = async (req, res) => {
   }
 };
 
+exports.getOne = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Product not found' });
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.create = async (req, res) => {
   try {
     const product = await Product.create(req.body);

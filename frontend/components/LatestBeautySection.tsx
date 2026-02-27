@@ -34,8 +34,8 @@ function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="group mx-auto w-full max-w-sm flex-shrink-0 px-1 sm:px-2 md:px-2 lg:px-2">
-      <Link href={`/products/${product.id}`} className="block">
+    <article className="group flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded border border-stone-200 bg-white">
+      <Link href={`/products/${product.id}`} className="block flex-1">
         <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
           {!imageError ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -53,44 +53,43 @@ function ProductCard({ product }: { product: Product }) {
             </div>
           )}
         </div>
-      </Link>
-      <div className="mt-4">
-        <Link href={`/products/${product.id}`}>
+        <div className="p-4">
           <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">
             {product.name}
           </h3>
-        </Link>
-        <p className="mt-1 font-sans text-xs text-stone-500">{product.category}</p>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="font-sans text-sm font-semibold text-charcoal">{product.price}$</span>
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/products/${product.id}`}
-              className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
-              aria-label="Quick view"
+          <p className="mt-1 font-sans text-xs text-stone-500">{product.category}</p>
+          <p className="mt-2 font-sans text-sm font-semibold text-charcoal">{product.price}$</p>
+        </div>
+      </Link>
+      <div className="flex items-center justify-between border-t border-stone-100 px-4 py-2">
+        <span className="text-xs text-stone-400">View details</span>
+        <div className="flex items-center gap-1">
+          <Link
+            href={`/products/${product.id}`}
+            className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
+            aria-label="Quick view"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </Link>
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
+            aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <svg
+              className="h-4 w-4"
+              fill={wishlisted ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </Link>
-            <button
-              type="button"
-              onClick={toggleWishlist}
-              className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-charcoal"
-              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <svg
-                className="h-4 w-4"
-                fill={wishlisted ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-            </button>
-          </div>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+          </button>
         </div>
       </div>
     </article>
@@ -103,7 +102,8 @@ const BREAKPOINT_SM = 480;
 const VISIBLE_DESKTOP = 4;
 const VISIBLE_TABLET = 3;
 const VISIBLE_MOBILE = 2;
-const SLIDE_GAP_PX = 16; // gap between product slides
+const SLIDE_GAP_PX = 16;
+const MAX_SLIDE_WIDTH_PX = 380; // match wishlist card width (grid ~400px per card)
 
 function getVisibleCount(width: number): number {
   if (width >= BREAKPOINT_LG) return VISIBLE_DESKTOP;
@@ -170,11 +170,13 @@ export default function LatestBeautySection() {
     setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
   };
 
-  // Slide width so that visibleCount slides + gaps fit in container; fixed gap reduces space between products
-  const slideWidthPx =
+  // Slide width to match wishlist card size; cap so cards don't get wider than wishlist
+  const rawSlideWidth =
     containerWidth > 0
       ? (containerWidth - SLIDE_GAP_PX * (visibleCount - 1)) / visibleCount
       : 100 / visibleCount;
+  const slideWidthPx =
+    containerWidth > 0 ? Math.min(rawSlideWidth, MAX_SLIDE_WIDTH_PX) : rawSlideWidth;
   const trackWidthPx =
     containerWidth > 0
       ? products.length * slideWidthPx + SLIDE_GAP_PX * (products.length - 1)
@@ -193,8 +195,11 @@ export default function LatestBeautySection() {
         {products.length === 0 ? (
           <p className="mt-10 text-center text-stone-500">No products in this section yet.</p>
         ) : (
-        <div ref={containerRef} className="relative mt-10 w-full overflow-hidden" style={{ minHeight: 320 }}>
-        {/* Slider track: px or vw so exactly visibleCount slides fit in the container */}
+        <div
+          ref={containerRef}
+          className="relative mt-10 w-full overflow-hidden"
+          style={{ minHeight: 320, display: 'flex', justifyContent: usePx && trackWidthPx < containerWidth ? 'center' : 'flex-start' }}
+        >
         <div
           className="flex flex-nowrap transition-transform duration-500 ease-out"
           style={{

@@ -34,7 +34,7 @@ function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="group mx-auto w-full max-w-sm flex-shrink-0 px-2 sm:px-3 md:px-4 lg:px-3">
+    <article className="group mx-auto w-full max-w-sm flex-shrink-0 px-1 sm:px-2 md:px-2 lg:px-2">
       <Link href={`/products/${product.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
           {!imageError ? (
@@ -102,7 +102,8 @@ const BREAKPOINT_MD = 768;
 const BREAKPOINT_SM = 480;
 const VISIBLE_DESKTOP = 4;
 const VISIBLE_TABLET = 3;
-const VISIBLE_MOBILE = 2; // at least 2 slides at all sizes (including ≤425px)
+const VISIBLE_MOBILE = 2;
+const SLIDE_GAP_PX = 16; // gap between product slides
 
 function getVisibleCount(width: number): number {
   if (width >= BREAKPOINT_LG) return VISIBLE_DESKTOP;
@@ -169,10 +170,17 @@ export default function LatestBeautySection() {
     setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
   };
 
-  // Size by container width so 2 slides show at 425px and below; fallback to vw when container not measured
-  const slideWidthPx = containerWidth > 0 ? containerWidth / visibleCount : 100 / visibleCount;
-  const trackWidthPx = containerWidth > 0 ? (containerWidth / visibleCount) * products.length : products.length * (100 / visibleCount);
-  const translatePx = currentIndex * slideWidthPx;
+  // Slide width so that visibleCount slides + gaps fit in container; fixed gap reduces space between products
+  const slideWidthPx =
+    containerWidth > 0
+      ? (containerWidth - SLIDE_GAP_PX * (visibleCount - 1)) / visibleCount
+      : 100 / visibleCount;
+  const trackWidthPx =
+    containerWidth > 0
+      ? products.length * slideWidthPx + SLIDE_GAP_PX * (products.length - 1)
+      : products.length * (100 / visibleCount);
+  const slideAndGapPx = slideWidthPx + SLIDE_GAP_PX;
+  const translatePx = currentIndex * slideAndGapPx;
   const usePx = containerWidth > 0;
 
   return (
@@ -192,6 +200,7 @@ export default function LatestBeautySection() {
           style={{
             width: usePx ? trackWidthPx : `${(100 / visibleCount) * products.length}vw`,
             transform: usePx ? `translateX(-${translatePx}px)` : `translateX(-${currentIndex * (100 / visibleCount)}vw)`,
+            gap: usePx ? SLIDE_GAP_PX : undefined,
           }}
         >
           {products.map((product) => (

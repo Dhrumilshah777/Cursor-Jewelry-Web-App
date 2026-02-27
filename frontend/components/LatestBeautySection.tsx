@@ -34,7 +34,7 @@ function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className= "  group mx-auto w-full max-w-sm flex-shrink-0 px-2 sm:px-3 md:px-4 lg:max-w-none lg:px-3">
+    <article className="group mx-auto w-full max-w-sm flex-shrink-0 px-2 sm:px-3 md:px-4 lg:px-3">
       <Link href={`/products/${product.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
           {!imageError ? (

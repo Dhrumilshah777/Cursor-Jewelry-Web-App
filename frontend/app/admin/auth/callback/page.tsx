@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setAdminKey, apiGet } from '@/lib/api';
 
-export default function AdminAuthCallbackPage() {
+function AdminAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -42,5 +42,19 @@ export default function AdminAuthCallbackPage() {
     <div className="flex min-h-screen items-center justify-center bg-stone-100 p-4">
       <p className="text-stone-500">Signing you in…</p>
     </div>
+  );
+}
+
+export default function AdminAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-stone-100 p-4">
+          <p className="text-stone-500">Signing you in…</p>
+        </div>
+      }
+    >
+      <AdminAuthCallbackContent />
+    </Suspense>
   );
 }

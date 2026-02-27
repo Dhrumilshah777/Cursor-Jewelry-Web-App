@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setUserToken, clearAdminKey } from '@/lib/api';
 
-export default function LoginCallbackPage() {
+function LoginCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -15,7 +15,7 @@ export default function LoginCallbackPage() {
       setStatus('error');
       return;
     }
-    clearAdminKey(); // Customer login must not grant admin access
+    clearAdminKey();
     setUserToken(token);
     setStatus('ok');
     router.replace('/');
@@ -39,5 +39,19 @@ export default function LoginCallbackPage() {
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <p className="text-stone-500">Signing you in…</p>
     </div>
+  );
+}
+
+export default function LoginCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center px-4">
+          <p className="text-stone-500">Signing you in…</p>
+        </div>
+      }
+    >
+      <LoginCallbackContent />
+    </Suspense>
   );
 }

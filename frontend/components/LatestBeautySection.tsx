@@ -12,15 +12,6 @@ type Product = {
   image: string;
 };
 
-const MOCK_PRODUCTS: Product[] = [
-  { id: '1', name: 'Circle Necklace', category: 'Accessories / Beauty bracelets', price: '52.00', image: '/instagram-1.jpg' },
-  { id: '2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { id: '3', name: 'Circle Earrings', category: 'Accessories', price: '56.00', image: '/instagram-3.jpg' },
-  { id: '4', name: 'Heart Bracelet', category: 'Accessories', price: '62.00', image: '/instagram-4.jpg' },
-  { id: '5', name: 'Heart Bracelet', category: 'Accessories', price: '62.00', image: '/instagram-5.jpg' },
-
-];
-
 const AUTOPLAY_MS = 5000;
 
 function ProductCard({ product }: { product: Product }) {
@@ -121,7 +112,7 @@ function getVisibleCount(width: number): number {
 }
 
 export default function LatestBeautySection() {
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(VISIBLE_MOBILE);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -143,12 +134,12 @@ export default function LatestBeautySection() {
   }, []);
 
   useEffect(() => {
-    apiGet<Product[] & { _id: string }[]>('/api/products')
+    apiGet<Product[] & { _id?: string }[]>('/api/products')
       .then((list) => {
         if (Array.isArray(list) && list.length > 0) {
           setProducts(
             list.map((p) => ({
-              id: (p as { _id?: string })._id || (p as Product).id || '',
+              id: String((p as { _id?: string })._id ?? (p as Product).id ?? ''),
               name: p.name,
               category: p.category,
               price: p.price,
@@ -191,6 +182,9 @@ export default function LatestBeautySection() {
           Latest Beauty
         </h2>
 
+        {products.length === 0 ? (
+          <p className="mt-10 text-center text-stone-500">No products in this section yet.</p>
+        ) : (
         <div ref={containerRef} className="relative mt-10 w-full overflow-hidden" style={{ minHeight: 320 }}>
         {/* Slider track: px or vw so exactly visibleCount slides fit in the container */}
         <div
@@ -235,6 +229,7 @@ export default function LatestBeautySection() {
           </div>
         )}
         </div>
+        )}
       </div>
     </section>
   );

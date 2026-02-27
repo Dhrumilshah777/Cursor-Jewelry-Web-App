@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getApiBase } from '@/lib/api';
 
-const googleLoginUrl = () => `${getApiBase()}/api/auth/google/user`;
-
 export default function LoginPage() {
   const [error, setError] = useState('');
 
@@ -18,6 +16,8 @@ export default function LoginPage() {
     else if (err === 'server_error') setError('Something went wrong. Please try again.');
   }, []);
 
+  const googleLoginUrl = `${getApiBase()}/api/auth/google`;
+
   return (
     <main className="min-h-[60vh] px-4 py-16 sm:py-24">
       <div className="mx-auto max-w-sm">
@@ -29,7 +29,7 @@ export default function LoginPage() {
         </p>
 
         <a
-          href={googleLoginUrl()}
+          href={googleLoginUrl}
           className="mt-8 flex w-full items-center justify-center gap-3 rounded border border-stone-300 bg-white px-4 py-3.5 font-sans text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-stone-50"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
@@ -41,9 +41,7 @@ export default function LoginPage() {
           Sign in with Google
         </a>
 
-        {error && (
-          <p className="mt-4 text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
         <p className="mt-8 text-center text-sm text-stone-500">
           Don&apos;t have an account? You&apos;ll create one when you sign in with Google.

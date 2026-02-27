@@ -115,9 +115,9 @@ In **Google Cloud Console** → your OAuth 2.0 Client:
 
 1. **Authorized JavaScript origins:** add your frontend URL and the Railway backend URL, e.g.  
    `https://your-backend.up.railway.app`
-2. **Authorized redirect URIs:** add:
+2. **Authorized redirect URIs:** add only:
    - `https://your-backend.up.railway.app/api/auth/google/callback`
-   - `https://your-backend.up.railway.app/api/auth/google/user/callback`
+   (One flow: admin vs user is decided by `ALLOWED_ADMIN_EMAILS`; no separate user callback.)
 
 Replace `your-backend.up.railway.app` with your real Railway backend domain.
 
@@ -140,7 +140,7 @@ Replace `your-backend.up.railway.app` with your real Railway backend domain.
 - [ ] **FRONTEND_URL** and **BACKEND_URL** (Railway URL) set.
 - [ ] Domain generated for the backend service.
 - [ ] **NEXT_PUBLIC_API_URL** in frontend set to Railway URL.
-- [ ] Google OAuth redirect URIs updated to the Railway backend URL.
+- [ ] Google OAuth redirect URI set to `.../api/auth/google/callback` only.
 - [ ] `/api/health` returns OK.
 
 If any step fails (e.g. build error or 502), check the **Deployments** → **View logs** for that service on Railway.

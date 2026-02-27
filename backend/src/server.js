@@ -15,12 +15,17 @@ app.use(express.json());
 app.use(passport.initialize());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Root (so visiting the backend URL shows something friendly)
+app.get('/', (req, res) => {
+  res.json({ message: 'Jewelry API', health: '/api/health' });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Jewelry API is running' });
 });
 
-// Auth (Google OAuth)
+// Auth (Google OAuth can be added later)
 app.use('/api/auth', require('./routes/auth'));
 
 // Public API (no auth)

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { apiGet, assetUrl } from '@/lib/api';
 
 const POPULAR_SEARCHES = [
   { label: 'Rings', href: '/products?category=rings' },
@@ -9,6 +10,16 @@ const POPULAR_SEARCHES = [
   { label: 'Earrings', href: '/products?category=earrings' },
   { label: 'Bracelets', href: '/products?category=bracelets' },
 ];
+
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: string;
+  image: string;
+};
+
+const SUGGESTED_COUNT = 5;
 
 type SearchOverlayProps = {
   isOpen: boolean;
@@ -18,6 +29,7 @@ type SearchOverlayProps = {
 export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +62,28 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
+
+  // Fetch first 5 newest products for "Suggested for you" when overlay opens (API returns newest first)
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    apiGet<(Product & { _id?: string })[]>('/api/products')
+      .then((list) => {
+        if (cancelled || !Array.isArray(list)) return;
+        const normalized = list.slice(0, SUGGESTED_COUNT).map((p) => ({
+          id: p.id || p._id?.toString?.() || '',
+          name: p.name || '',
+          category: p.category || '',
+          price: typeof p.price === 'number' ? String(p.price) : (p.price || ''),
+          image: p.image || '',
+        }));
+        setSuggestedProducts(normalized.filter((p) => p.id && p.name));
+      })
+      .catch(() => setSuggestedProducts([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -108,7 +142,36 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           <h3 className="font-sans text-xs font-medium uppercase tracking-wider text-stone-500">
             Suggested for you
           </h3>
-          <p className="mt-4 font-sans text-sm text-stone-400">Start typing to see suggestions.</p>
+          {suggestedProducts.length > 0 ? (
+            <ul className="mt-4 space-y-2">
+              {suggestedProducts.map((product) => (
+                <li key={product.id}>
+                  <Link
+                    href={`/products/${product.id}`}
+                    onClick={onClose}
+                    className="flex items-center gap-3 rounded-sm py-2 transition-colors hover:bg-stone-50"
+                  >
+                    <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-sm bg-stone-100">
+                      <img
+                        src={
+                          product.image.startsWith('http')
+                            ? product.image
+                            : product.image.startsWith('/uploads/')
+                            ? assetUrl(product.image)
+                            : product.image || ''
+                        }
+                        alt=""
+                        className="h-full w-full object-cover object-center"
+                      />
+                    </span>
+                    <span className="font-sans text-sm font-medium text-charcoal">{product.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 font-sans text-sm text-stone-400">Start typing to see suggestions.</p>
+          )}
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ export default function Home() {
 
       <LatestBeautySection />
 
-      <HomePageVideoSection />
+      {/* <HomePageVideoSection /> */}
 
       <ViewByCategoriesSection />
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { apiGet, assetUrl, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
+import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
 
 type Product = {
   _id: string;
@@ -56,18 +56,35 @@ export default function ProductDetailPage() {
 
     setLoading(true);
     setError('');
-    apiGet<Product & { id?: string }>(`/api/products/${id}`)
-      .then((data) => {
-        if (!data || (!data._id && !data.id)) {
+    const base = getApiBase();
+    fetch(`${base}/api/products/${id}`)
+      .then((res) => {
+        if (!res.ok) {
+          if (res.status === 404) throw new Error('Product not found');
+          throw new Error(res.statusText || 'Request failed');
+        }
+        return res.json();
+      })
+      .then((data: Product & { id?: string }) => {
+        if (!data || (data && !data._id && !data.id)) {
           setError('Product not found');
           setProduct(null);
           return;
         }
-        const p = { ...data, _id: data._id || data.id || '' };
+        const p = { ...data, _id: (data._id || data.id || '') as string };
         setProduct(p);
         setWishlisted(typeof window !== 'undefined' && isInWishlist(p._id));
+        setError('');
       })
-      .catch(() => setError('Product not found'))
+      .catch((err: Error) => {
+        const isNetwork = !err.message || err.message === 'Failed to fetch' || err.message.includes('Network');
+        if (isNetwork) {
+          setError('Could not load product. Check that NEXT_PUBLIC_API_URL points to your backend (e.g. Render URL) and try again.');
+        } else {
+          setError(err.message || 'Product not found');
+        }
+        setProduct(null);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -102,8 +119,10 @@ export default function ProductDetailPage() {
     return (
       <main className="min-h-[50vh] px-4 py-12">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="font-sans text-2xl font-semibold text-charcoal">Product not found</h1>
-          <p className="mt-2 text-stone-600">This product may have been removed or the link is incorrect.</p>
+          <h1 className="font-sans text-2xl font-semibold text-charcoal">
+            {error === 'Product not found' ? 'Product not found' : 'Could not load product'}
+          </h1>
+          <p className="mt-2 text-stone-600">{error}</p>
           <Link href="/" className="mt-6 inline-block text-charcoal underline hover:no-underline">
             ← Back to home
           </Link>

@@ -33,25 +33,34 @@ router.get(
       }
       const emailLower = email.toLowerCase();
       const allowed = getAllowedEmails();
+      const isAdminEmail = allowed.length > 0 && allowed.includes(emailLower);
 
-      // Admin: email in ALLOWED_ADMIN_EMAILS → admin JWT, redirect to admin callback
-      if (allowed.length > 0 && allowed.includes(emailLower)) {
+      // Find or create user and set/update role from ALLOWED_ADMIN_EMAILS
+      let user = await User.findOne({ googleId: id });
+      if (!user) {
+        user = await User.create({
+          googleId: id,
+          email: emailLower,
+          name: name || '',
+          role: isAdminEmail ? 'admin' : 'user',
+        });
+      } else {
+        user.role = isAdminEmail ? 'admin' : 'user';
+        if (name && user.name !== name) user.name = name;
+        await user.save();
+      }
+
+      // Admin: issue JWT with role admin, redirect to admin callback
+      if (user.role === 'admin') {
         const token = jwt.sign(
-          { email: emailLower, sub: id },
+          { sub: user._id.toString(), role: 'admin', email: emailLower },
           JWT_SECRET,
           { expiresIn: JWT_EXPIRY }
         );
         return res.redirect(`${FRONTEND_URL}/admin/auth/callback?token=${encodeURIComponent(token)}`);
       }
 
-      // User: create/find User, issue user JWT, redirect to login callback (no admin access)
-      let user = await User.findOne({ googleId: id });
-      if (!user) {
-        user = await User.create({ googleId: id, email: emailLower, name: name || '' });
-      } else if (name && user.name !== name) {
-        user.name = name;
-        await user.save();
-      }
+      // User: issue user JWT, redirect to login callback
       const token = jwt.sign(
         { sub: user._id.toString(), role: 'user' },
         JWT_SECRET,

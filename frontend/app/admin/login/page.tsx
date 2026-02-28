@@ -1,43 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { setAdminKey, clearAdminKey, apiGet, getApiBase } from '@/lib/api';
+import { useSearchParams } from 'next/navigation';
+import { getApiBase } from '@/lib/api';
 
 export default function AdminLoginPage() {
-  const [key, setKey] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
-
+  const [error, setError] = useState('');
   useEffect(() => {
     const err = searchParams.get('error');
     if (err === 'not_allowed') setError('Your Google account is not allowed to access admin.');
     else if (err === 'google_denied') setError('Google sign-in was cancelled or failed.');
-    else if (err === 'google_not_configured') setError('Google sign-in is not configured. Use admin key.');
+    else if (err === 'google_not_configured') setError('Google sign-in is not configured.');
   }, [searchParams]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!key.trim()) {
-      setError('Enter the admin key.');
-      return;
-    }
-    setLoading(true);
-    try {
-      setAdminKey(key.trim());
-      await apiGet('/api/admin/products', true);
-      router.push('/admin');
-      router.refresh();
-    } catch {
-      setError('Invalid admin key.');
-      clearAdminKey();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const googleLoginUrl = `${getApiBase()}/api/auth/google`;
 
@@ -45,7 +20,7 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-stone-100 p-4">
       <div className="w-full max-w-sm rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold text-charcoal">BLURE Admin</h1>
-        <p className="mt-1 text-sm text-stone-500">Sign in with Google or use your admin key.</p>
+        <p className="mt-1 text-sm text-stone-500">Sign in with Google. Only accounts with admin role can access.</p>
 
         <a
           href={googleLoginUrl}
@@ -60,30 +35,7 @@ export default function AdminLoginPage() {
           Sign in with Google
         </a>
 
-        <div className="mt-4 flex items-center gap-3 text-stone-400">
-          <span className="flex-1 border-t border-stone-200" />
-          <span className="text-xs">or</span>
-          <span className="flex-1 border-t border-stone-200" />
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-4">
-          <input
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="Admin key"
-            className="w-full rounded border border-stone-300 px-3 py-2 text-charcoal placeholder-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-            autoComplete="off"
-          />
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-4 w-full rounded bg-charcoal px-3 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-          >
-            {loading ? 'Checking…' : 'Sign in with key'}
-          </button>
-        </form>
+        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       </div>
     </div>
   );

@@ -32,20 +32,24 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   const key = getAdminKey();
   const isLoginPage = pathname === '/admin/login';
+  const isAuthCallbackPage = pathname === '/admin/auth/callback';
 
-  // No admin key: redirect to home (visitors and customers cannot access any /admin route, including /admin/login)
-  if (!key) {
-    router.replace('/');
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-100">
-        <span className="text-stone-500">Redirecting…</span>
-      </div>
-    );
+  // Allow login and auth callback pages without a token
+  if (isLoginPage || isAuthCallbackPage) {
+    if (key && isLoginPage) {
+      router.replace('/admin');
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-stone-100">
+          <span className="text-stone-500">Redirecting…</span>
+        </div>
+      );
+    }
+    return <>{children}</>;
   }
 
-  // Already admin and on login page → go to dashboard
-  if (isLoginPage) {
-    router.replace('/admin');
+  // No admin token: redirect to admin login
+  if (!key) {
+    router.replace('/admin/login');
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-100">
         <span className="text-stone-500">Redirecting…</span>

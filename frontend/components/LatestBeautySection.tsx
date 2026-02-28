@@ -241,6 +241,27 @@ export default function LatestBeautySection() {
             </div>
           ))}
         </div>
+
+        {/* Dots - show when there are multiple slider positions */}
+        {products.length > 0 && (
+          <div className="mt-14 flex items-center justify-center gap-2">
+            {Array.from({ length: maxIndex + 1 }, (_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setCurrentIndex(index)}
+                className="h-1.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-charcoal/30"
+                style={{
+                  width: index === currentIndex ? '2rem' : '1.5rem',
+                  backgroundColor:
+                    index === currentIndex ? 'rgb(41 37 36)' : 'rgb(214 211 209)',
+                }}
+                aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === currentIndex ? 'true' : undefined}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

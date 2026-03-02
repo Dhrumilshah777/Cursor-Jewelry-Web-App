@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const { createShipment } = require('../services/shiprocket');
 
 exports.list = async (req, res) => {
   try {
@@ -22,15 +23,41 @@ exports.getOne = async (req, res) => {
   }
 };
 
+const ALLOWED_STATUSES = ['pending_payment', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+
 exports.updateStatus = async (req, res) => {
   try {
     const { status, tracking } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (status && ['pending_payment', 'paid', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(status)) {
-      order.status = status;
+
+    let didShiprocket = false;
+    if (status && ALLOWED_STATUSES.includes(status)) {
+      if (status === 'processing') {
+        if (order.shiprocketShipmentId) {
+          order.status = 'shipped';
+        } else {
+          const orderWithUser = await Order.findById(req.params.id).populate('user', 'email');
+          if (!orderWithUser) return res.status(404).json({ error: 'Order not found' });
+          try {
+            const shipment = await createShipment(orderWithUser);
+            order.shiprocketShipmentId = String(shipment.shipment_id);
+            order.tracking = shipment.awb_code || order.tracking;
+            order.courier = shipment.courier_name || order.courier;
+            order.status = 'shipped';
+            didShiprocket = true;
+          } catch (shipErr) {
+            return res.status(400).json({
+              error: 'Shiprocket shipment failed',
+              message: shipErr.message || 'Could not create shipment',
+            });
+          }
+        }
+      } else {
+        order.status = status;
+      }
     }
-    if (tracking !== undefined) order.tracking = String(tracking);
+    if (tracking !== undefined && !didShiprocket) order.tracking = String(tracking);
     await order.save();
     res.json(order);
   } catch (err) {

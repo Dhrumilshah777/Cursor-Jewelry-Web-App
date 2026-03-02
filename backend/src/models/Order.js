@@ -32,12 +32,14 @@ const orderSchema = new mongoose.Schema(
     subtotal: { type: Number, required: true },
     status: {
       type: String,
-      enum: ['pending_payment', 'paid', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+      enum: ['pending_payment', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'pending_payment',
     },
     razorpayOrderId: { type: String, default: '' },
     razorpayPaymentId: { type: String, default: '' },
     tracking: { type: String, default: '' },
+    courier: { type: String, default: '' },
+    shiprocketShipmentId: { type: String, default: '' },
   },
   { timestamps: true }
 );

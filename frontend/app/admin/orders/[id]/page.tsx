@@ -15,6 +15,7 @@ type Order = {
   subtotal: number;
   status: string;
   tracking?: string;
+  courier?: string;
   createdAt: string;
 };
 
@@ -54,8 +55,10 @@ export default function AdminOrderDetailPage() {
     if (!id) return;
     setSaving(true);
     try {
-      await apiPatch(`/api/admin/orders/${id}`, { status, tracking }, true);
-      setOrder((o) => (o ? { ...o, status, tracking } : null));
+      const updated = await apiPatch<Order>(`/api/admin/orders/${id}`, { status, tracking }, true);
+      setOrder(updated);
+      setStatus(updated.status);
+      setTracking(updated.tracking || '');
     } catch (_) {}
     setSaving(false);
   };
@@ -110,6 +113,7 @@ export default function AdminOrderDetailPage() {
             >
               <option value="pending_payment">Pending payment</option>
               <option value="paid">Paid</option>
+              <option value="processing">Processing (create Shiprocket shipment)</option>
               <option value="packed">Packed</option>
               <option value="shipped">Shipped</option>
               <option value="out_for_delivery">Out for delivery</option>
@@ -126,6 +130,9 @@ export default function AdminOrderDetailPage() {
               placeholder="Tracking number"
               className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
             />
+            {order.courier && (
+              <p className="mt-1 text-sm text-stone-500">Courier: {order.courier}</p>
+            )}
           </div>
           <div className="flex items-end">
             <button

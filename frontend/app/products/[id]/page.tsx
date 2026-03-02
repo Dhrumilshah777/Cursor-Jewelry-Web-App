@@ -11,6 +11,7 @@ type Product = {
   category: string;
   price: string;
   image: string;
+  subImages?: string[];
   weight?: string;
   carat?: string;
   colors?: string[];
@@ -32,9 +33,11 @@ export default function ProductDetailPage() {
   const [error, setError] = useState('');
   const [wishlisted, setWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     setImageError(false);
+    setSelectedImageIndex(0);
   }, [id]);
 
   useEffect(() => {
@@ -131,14 +134,14 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Image: full URL as-is; otherwise ensure /uploads/ path and use backend base URL
-  const rawImage = product.image || '';
-  const normalized = rawImage.startsWith('/') ? rawImage : `/${rawImage}`;
-  const imageSrc = rawImage.startsWith('http')
-    ? rawImage
-    : normalized.startsWith('/uploads/')
-      ? assetUrl(normalized)
-      : normalized; // frontend public images like /instagram-1.jpg
+  // Build gallery: main image + sub images; resolve URL for each
+  const resolveSrc = (raw: string) => {
+    if (!raw) return '';
+    const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+    return raw.startsWith('http') ? raw : normalized.startsWith('/uploads/') ? assetUrl(normalized) : normalized;
+  };
+  const allImages = [product.image, ...(product.subImages || [])].filter(Boolean);
+  const selectedSrc = allImages[selectedImageIndex] ? resolveSrc(allImages[selectedImageIndex]) : '';
 
   return (
     <main className="min-h-[50vh] px-4 py-8 sm:py-12">
@@ -152,19 +155,38 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="aspect-square w-full overflow-hidden rounded-lg bg-stone-100">
-            {!imageError && imageSrc ? (
-              <img
-                src={imageSrc}
-                alt={product.name}
-                className="h-full w-full object-cover"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
-                <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+          <div>
+            <div className="aspect-square w-full overflow-hidden rounded-lg bg-stone-100">
+              {!imageError && selectedSrc ? (
+                <img
+                  key={selectedImageIndex}
+                  src={selectedSrc}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
+                  <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            {allImages.length > 1 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {allImages.map((raw, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { setSelectedImageIndex(i); setImageError(false); }}
+                    className={`h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
+                      selectedImageIndex === i ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
+                    }`}
+                  >
+                    <img src={resolveSrc(raw)} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>

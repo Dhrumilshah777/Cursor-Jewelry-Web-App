@@ -12,6 +12,7 @@ type Product = {
   category: string;
   price: string;
   image: string;
+  subImages?: string[];
   weight?: string;
   carat?: string;
   colors?: string[];
@@ -22,9 +23,10 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', weight: '', carat: '', colors: [] });
+  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [] });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [subImageUrlInput, setSubImageUrlInput] = useState('');
 
   const load = async () => {
     try {
@@ -56,6 +58,31 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleSubImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await uploadFile(file);
+      setForm((f) => ({ ...f, subImages: [...(f.subImages || []), url] }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+    e.target.value = '';
+  };
+
+  const addSubImageUrl = (url: string) => {
+    const trimmed = url?.trim();
+    if (!trimmed) return;
+    setForm((f) => ({ ...f, subImages: [...(f.subImages || []), trimmed] }));
+  };
+
+  const removeSubImage = (index: number) => {
+    setForm((f) => ({ ...f, subImages: (f.subImages || []).filter((_, i) => i !== index) }));
+  };
+
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name?.trim() || !form.price?.trim() || !form.image?.trim()) {
@@ -70,7 +97,7 @@ export default function AdminProductsPage() {
       } else {
         await apiPost('/api/admin/products', form, true);
       }
-      setForm({ name: '', category: 'Accessories', price: '', image: '', weight: '', carat: '', colors: [] });
+      setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [] });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -163,6 +190,36 @@ export default function AdminProductsPage() {
               <img src={form.image.startsWith('http') ? form.image : assetUrl(form.image)} alt="" className="mt-2 h-20 w-20 rounded object-cover" />
             )}
           </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-stone-700">Sub images (extra gallery images)</label>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <input
+                type="url"
+                placeholder="Paste image URL"
+                value={subImageUrlInput}
+                onChange={(e) => setSubImageUrlInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSubImageUrl(subImageUrlInput); setSubImageUrlInput(''); } }}
+                className="rounded border border-stone-300 px-3 py-2 text-sm w-48"
+              />
+              <button type="button" onClick={() => { addSubImageUrl(subImageUrlInput); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-3 py-2 text-sm hover:bg-stone-50">
+                Add URL
+              </button>
+              <label className="rounded border border-stone-300 px-3 py-2 text-sm hover:bg-stone-50 cursor-pointer">
+                Upload image
+                <input type="file" accept="image/*" onChange={handleSubImageUpload} className="hidden" disabled={uploading} />
+              </label>
+            </div>
+            {(form.subImages && form.subImages.length > 0) && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {form.subImages.map((src, i) => (
+                  <span key={i} className="relative inline-block">
+                    <img src={src.startsWith('http') ? src : assetUrl(src)} alt="" className="h-16 w-16 rounded object-cover border border-stone-200" />
+                    <button type="button" onClick={() => removeSubImage(i)} className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs leading-none hover:bg-red-600" aria-label="Remove">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           <div>
             <label className="block text-sm font-medium text-stone-700">Weight</label>
             <input
@@ -215,7 +272,7 @@ export default function AdminProductsPage() {
             {editingId ? 'Update' : 'Add'} product
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', weight: '', carat: '', colors: [] }); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [] }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
               Cancel
             </button>
           )}
@@ -233,7 +290,7 @@ export default function AdminProductsPage() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => { setForm({ ...p }); setEditingId(p._id); setError(''); }}
+                onClick={() => { setForm({ ...p, subImages: p.subImages || [] }); setEditingId(p._id); setError(''); setSubImageUrlInput(''); }}
                 className="rounded border border-stone-300 px-3 py-1 text-sm hover:bg-stone-50"
               >
                 Edit

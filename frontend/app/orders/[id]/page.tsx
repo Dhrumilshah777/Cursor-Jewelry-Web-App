@@ -24,6 +24,36 @@ function imageSrc(image: string) {
   return image.startsWith('/') ? image : `/${image}`;
 }
 
+const TIMELINE_STEPS = [
+  { key: 'paid', label: 'Confirmed' },
+  { key: 'packed', label: 'Packed' },
+  { key: 'shipped', label: 'Dispatched' },
+  { key: 'out_for_delivery', label: 'Out for Delivery' },
+  { key: 'delivered', label: 'Delivered' },
+];
+
+const STATUS_ORDER = ['pending_payment', 'paid', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+
+function isStepDone(orderStatus: string, stepKey: string): boolean {
+  if (orderStatus === 'cancelled') return false;
+  const currentIndex = STATUS_ORDER.indexOf(orderStatus);
+  const stepIndex = STATUS_ORDER.indexOf(stepKey);
+  if (currentIndex < 0 || stepIndex < 0) return false;
+  return currentIndex >= stepIndex;
+}
+
+function statusLabel(status: string): string {
+  return status.replace(/_/g, ' ');
+}
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatDateShort(d: Date): string {
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -49,8 +79,8 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[50vh] px-4 py-12">
-        <div className="mx-auto max-w-4xl">
+      <main className="min-h-[50vh] px-4 py-8">
+        <div className="mx-auto max-w-2xl">
           <p className="text-stone-500">Loading order…</p>
         </div>
       </main>
@@ -59,9 +89,9 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <main className="min-h-[50vh] px-4 py-12">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="font-sans text-2xl font-semibold text-charcoal">Order not found</h1>
+      <main className="min-h-[50vh] px-4 py-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="font-sans text-xl font-semibold text-charcoal">Order not found</h1>
           <Link href="/orders" className="mt-4 inline-block text-charcoal underline hover:no-underline">
             ← My orders
           </Link>
@@ -70,70 +100,128 @@ export default function OrderDetailPage() {
     );
   }
 
-  return (
-    <main className="min-h-[50vh] px-4 py-12">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
-          Order #{order._id.slice(-8).toUpperCase()}
-        </h1>
-        <p className="mt-1 text-sm text-stone-500">
-          Placed on {new Date(order.createdAt).toLocaleString()}
-        </p>
-        <span
-          className={`mt-2 inline-block rounded px-2 py-0.5 text-xs font-medium ${
-            order.status === 'delivered'
-              ? 'bg-green-100 text-green-800'
-              : order.status === 'out_for_delivery'
-              ? 'bg-blue-100 text-blue-800'
-              : order.status === 'shipped' || order.status === 'packed'
-              ? 'bg-indigo-100 text-indigo-800'
-              : order.status === 'paid'
-              ? 'bg-green-100 text-green-800'
-              : order.status === 'pending_payment'
-              ? 'bg-amber-100 text-amber-800'
-              : order.status === 'cancelled'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-stone-100 text-stone-700'
-          }`}
-        >
-          {order.status.replace(/_/g, ' ')}
-        </span>
-        {order.tracking && (
-          <p className="mt-2 text-sm text-stone-600">Tracking: {order.tracking}</p>
-        )}
+  const orderDate = new Date(order.createdAt);
+  const isDelivered = order.status === 'delivered';
 
-        <div className="mt-8 grid gap-8 md:grid-cols-2">
-          <div>
-            <h2 className="font-medium text-charcoal">Items</h2>
-            <ul className="mt-4 space-y-3">
-              {order.items.map((item, i) => (
-                <li key={i} className="flex gap-3 text-sm">
-                  {item.image && (
-                    <img src={imageSrc(item.image)} alt="" className="h-14 w-14 rounded object-cover" />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-medium text-charcoal">{item.name}</p>
-                    <p className="text-stone-500">{item.quantity} × ₹{item.price}</p>
+  return (
+    <main className="min-h-[50vh] px-4 py-6 pb-12">
+      <div className="mx-auto max-w-2xl">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <Link href="/orders" className="flex items-center gap-1 text-stone-600 hover:text-charcoal">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Orders
+          </Link>
+        </div>
+
+        {/* Prominent status */}
+        <div className="mb-6">
+          <h1 className="font-sans text-2xl font-bold capitalize text-charcoal">
+            {statusLabel(order.status)}
+          </h1>
+          {isDelivered && (
+            <p className="mt-1 flex items-center gap-2 text-sm text-green-700">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Delivered on {formatDateShort(orderDate)}
+            </p>
+          )}
+          {order.status === 'pending_payment' && (
+            <p className="mt-1 text-sm text-amber-700">Complete payment to confirm your order.</p>
+          )}
+        </div>
+
+        {/* Product card(s) */}
+        <div className="rounded-xl bg-stone-50/80 p-4 mb-6">
+          {order.items.map((item, i) => (
+            <div key={i} className="flex gap-4">
+              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-200">
+                {item.image ? (
+                  <img src={imageSrc(item.image)} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-stone-400">
+                    <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+                    </svg>
                   </div>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 font-semibold text-charcoal">Subtotal: ₹{Number(order.subtotal).toFixed(2)}</p>
-          </div>
-          <div>
-            <h2 className="font-medium text-charcoal">Shipping address</h2>
-            <address className="mt-4 text-sm text-stone-600 not-italic">
-              {order.shippingAddress.name}<br />
-              {order.shippingAddress.phone}<br />
-              {order.shippingAddress.line1}<br />
-              {order.shippingAddress.line2 && <>{order.shippingAddress.line2}<br /></>}
-              {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}
-            </address>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-charcoal">{item.name}</p>
+                <p className="text-sm text-stone-500">
+                  Qty: {item.quantity} × ₹{item.price}
+                </p>
+                <p className="mt-1 text-sm font-medium text-charcoal">
+                  ₹{(Number(item.price.replace(/[^0-9.]/g, '')) * item.quantity).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          ))}
+          <div className="mt-4 border-t border-stone-200 pt-3">
+            <p className="text-sm font-semibold text-charcoal">
+              Subtotal: ₹{Number(order.subtotal).toFixed(2)}
+            </p>
           </div>
         </div>
 
+        {/* Delivery timeline */}
+        <div className="mb-6">
+          <h2 className="font-medium text-charcoal mb-4">Order timeline</h2>
+          <div className="relative pl-6">
+            <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-stone-200" />
+            {TIMELINE_STEPS.map((step, index) => {
+              const done = isStepDone(order.status, step.key);
+              const showDate = step.key === 'paid' ? formatDate(orderDate) : (done ? '—' : '—');
+              return (
+                <div key={step.key} className="relative flex gap-3 pb-6 last:pb-0">
+                  <div
+                    className={`absolute left-0 top-1.5 h-3 w-3 -translate-x-[5px] rounded-full ${
+                      done ? 'bg-green-500' : 'bg-stone-300'
+                    }`}
+                  />
+                  <div className="flex-1">
+                    <p className={`font-medium ${done ? 'text-charcoal' : 'text-stone-400'}`}>
+                      {step.label}
+                    </p>
+                    <p className="text-sm text-stone-500">{showDate}</p>
+                  </div>
+                  {done && (
+                    <span className="text-green-600 shrink-0">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {order.tracking && (
+          <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4">
+            <h2 className="font-medium text-charcoal mb-1">Tracking</h2>
+            <p className="text-sm text-stone-600">{order.tracking}</p>
+          </div>
+        )}
+
+        {/* Delivery address */}
+        <div className="rounded-lg border border-stone-200 bg-white p-4">
+          <h2 className="font-medium text-charcoal mb-2">Delivery address</h2>
+          <address className="text-sm text-stone-600 not-italic">
+            {order.shippingAddress.name}<br />
+            {order.shippingAddress.phone}<br />
+            {order.shippingAddress.line1}
+            {order.shippingAddress.line2 && <>, {order.shippingAddress.line2}</>}<br />
+            {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}
+          </address>
+        </div>
+
         <p className="mt-8">
-          <Link href="/orders" className="text-sm text-charcoal underline hover:no-underline">
+          <Link href="/orders" className="text-sm font-medium text-charcoal underline hover:no-underline">
             ← My orders
           </Link>
         </p>

@@ -8,6 +8,7 @@ import { getAdminKey, clearAdminKey } from '@/lib/api';
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/products', label: 'Latest Beauty Products' },
+  { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/hero', label: 'Hero Sliders' },
   { href: '/admin/video', label: 'Home Page Video' },
   { href: '/admin/instagram', label: 'Instagram Section' },

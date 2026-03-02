@@ -17,6 +17,12 @@ export default function LoginPage() {
   useEffect(() => {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const err = params?.get('error');
+    const returnTo = params?.get('returnTo');
+    if (returnTo && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('login-return-to', returnTo);
+      } catch (_) {}
+    }
     if (err === 'google_denied') setError('Google sign-in was cancelled or failed.');
     else if (err === 'google_not_configured') setError('Google sign-in is not configured.');
     else if (err === 'no_email') setError('Could not get your email from Google.');
@@ -31,6 +37,7 @@ export default function LoginPage() {
   };
 
   const googleLoginUrl = `${getApiBase()}/api/auth/google`;
+  const returnTo = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('returnTo') : null;
 
   return (
     <main className="min-h-[60vh] px-4 py-16 sm:py-24">
@@ -74,9 +81,14 @@ export default function LoginPage() {
           Don&apos;t have an account? You&apos;ll create one when you sign in with Google.
         </p>
         <p className="mt-4 text-center">
-          <Link href="/" className="text-sm text-charcoal underline hover:no-underline">
+          <Link href={returnTo || '/'} className="text-sm text-charcoal underline hover:no-underline">
             ← Back to home
           </Link>
+          {returnTo && (
+            <span className="ml-2">
+              <Link href="/cart" className="text-sm text-charcoal underline hover:no-underline">Cart</Link>
+            </span>
+          )}
         </p>
       </div>
     </main>

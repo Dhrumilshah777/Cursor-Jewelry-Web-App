@@ -32,8 +32,13 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/site', require('./routes/site'));
 
+// User API (requires Authorization: Bearer <user JWT>)
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/orders'));
+
 // Admin API (requires x-admin-key header)
 app.use('/api/admin/products', require('./routes/admin/products'));
+app.use('/api/admin/orders', require('./routes/admin/orders'));
 app.use('/api/admin/hero', require('./routes/admin/hero'));
 app.use('/api/admin/video', require('./routes/admin/video'));
 app.use('/api/admin/instagram', require('./routes/admin/instagram'));

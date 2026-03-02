@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
+import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart } from '@/lib/api';
 
 type Product = {
   _id: string;
@@ -196,7 +196,7 @@ export default function ProductDetailPage() {
               {product.name}
             </h1>
             <p className="mt-2 text-sm text-stone-500">{product.category}</p>
-            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">{product.price}$</p>
+            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">₹{product.price}</p>
 
             {(product.weight || product.carat) && (
               <dl className="mt-4 space-y-1 text-sm text-stone-600">
@@ -222,6 +222,16 @@ export default function ProductDetailPage() {
             )}
 
             <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => addToCart({ id: product._id, name: product.name, price: product.price, image: product.image })}
+                className="flex items-center gap-2 rounded border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                </svg>
+                Add to cart
+              </button>
               <button
                 type="button"
                 onClick={toggleWishlist}

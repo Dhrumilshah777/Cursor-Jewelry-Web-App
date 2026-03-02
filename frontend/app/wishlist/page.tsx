@@ -79,7 +79,7 @@ export default function WishlistPage() {
                       {product.name}
                     </h2>
                     <p className="mt-1 text-xs text-stone-500">{product.category}</p>
-                    <p className="mt-2 font-sans text-sm font-semibold text-charcoal">{product.price}$</p>
+                    <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
                   </div>
                 </Link>
                 <div className="border-t border-stone-100 p-2">

@@ -285,7 +285,7 @@ export default function AdminProductsPage() {
             <img src={p.image.startsWith('http') ? p.image : assetUrl(p.image)} alt="" className="h-16 w-16 rounded object-cover" />
             <div className="min-w-0 flex-1">
               <p className="font-medium text-charcoal">{p.name}</p>
-              <p className="text-sm text-stone-500">{p.category} · {p.price}${p.weight ? ` · ${p.weight}` : ''}{p.carat ? ` · ${p.carat}` : ''}</p>
+              <p className="text-sm text-stone-500">{p.category} · ₹{p.price}{p.weight ? ` · ${p.weight}` : ''}{p.carat ? ` · ${p.carat}` : ''}</p>
             </div>
             <div className="flex gap-2">
               <button

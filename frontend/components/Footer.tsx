@@ -2,7 +2,9 @@ import Link from 'next/link';
 
 const links = [
   { href: '/products', label: 'Products' },
+  { href: '/cart', label: 'Cart' },
   { href: '/wishlist', label: 'Wishlist' },
+  { href: '/orders', label: 'My orders' },
   { href: '/login', label: 'Login' },
   { href: '/register', label: 'Register' },
 ];

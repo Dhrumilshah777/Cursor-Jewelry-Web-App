@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import SearchOverlay from '@/components/SearchOverlay';
+import { getCartCount, getCartFromApi, getUserToken } from '@/lib/api';
 
 const navLinks = [
   { href: '/products', label: 'COLLECTION' },
@@ -18,6 +19,7 @@ export default function Header() {
   const [langOpen, setLangOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const checkScroll = () => {
@@ -27,6 +29,21 @@ export default function Header() {
     checkScroll();
     window.addEventListener('scroll', checkScroll, { passive: true });
     return () => window.removeEventListener('scroll', checkScroll);
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (getUserToken()) {
+        getCartFromApi()
+          .then((items) => setCartCount(items.reduce((s, i) => s + i.quantity, 0)))
+          .catch(() => setCartCount(0));
+      } else {
+        setCartCount(getCartCount());
+      }
+    };
+    refresh();
+    window.addEventListener('cart-updated', refresh);
+    return () => window.removeEventListener('cart-updated', refresh);
   }, []);
 
   const isSticky = scrolled;
@@ -75,9 +92,19 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
             </Link>
-            <Link href="/wishlist" className={`hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Wishlist">
+            <Link href="/cart" className={`relative hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Cart">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-charcoal text-[10px] font-medium text-white">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
+            <Link href="/wishlist" className={`hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Wishlist">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </Link>
             <div className="relative hidden md:block">
@@ -162,6 +189,7 @@ export default function Header() {
                 {label}
               </Link>
             ))}
+            <Link href="/cart" onClick={() => setMobileOpen(false)} className="font-sans text-xs uppercase tracking-wider text-white">Cart{cartCount > 0 ? ` (${cartCount})` : ''}</Link>
             <Link href="/login" onClick={() => setMobileOpen(false)} className="font-sans text-xs uppercase tracking-wider text-white">Login</Link>
             <Link href="/register" onClick={() => setMobileOpen(false)} className="font-sans text-xs uppercase tracking-wider text-white">Register</Link>
           </nav>

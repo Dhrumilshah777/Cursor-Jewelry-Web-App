@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { apiGet, assetUrl } from '@/lib/api';
+import { apiGet, assetUrl, addToCart } from '@/lib/api';
 
 type Product = {
   _id: string;
@@ -130,9 +130,18 @@ function ProductsContent() {
                       {product.name}
                     </h2>
                     <p className="mt-1 text-xs text-stone-500">{product.category}</p>
-                    <p className="mt-2 font-sans text-sm font-semibold text-charcoal">{product.price}$</p>
+                    <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
                   </div>
                 </Link>
+                <div className="border-t border-stone-100 p-3">
+                  <button
+                    type="button"
+                    onClick={() => addToCart({ id: product._id, name: product.name, price: product.price, image: product.image })}
+                    className="w-full rounded border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
+                  >
+                    Add to cart
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

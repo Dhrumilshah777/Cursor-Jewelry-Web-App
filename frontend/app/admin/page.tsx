@@ -15,6 +15,7 @@ type Product = {
 
 const cards = [
   { href: '/admin/products', title: 'Latest Beauty Products', desc: 'Add, edit, or remove products shown in the Latest Beauty section.' },
+  { href: '/admin/orders', title: 'Orders', desc: 'View and update order status (paid, shipped, tracking).' },
   { href: '/admin/hero', title: 'Hero Sliders', desc: 'Manage hero slides (images, video, titles, and CTAs).' },
   { href: '/admin/video', title: 'Home Page Video', desc: 'Set the full-width video that appears on the home page.' },
   { href: '/admin/instagram', title: 'Instagram Section', desc: 'Manage the Instagram feed images.' },
@@ -83,7 +84,7 @@ export default function AdminDashboardPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-charcoal truncate">{p.name}</p>
                   <p className="text-sm text-stone-500">{p.category}</p>
-                  <p className="mt-0.5 text-sm font-medium text-charcoal">{p.price}$</p>
+                  <p className="mt-0.5 text-sm font-medium text-charcoal">₹{p.price}</p>
                   <Link
                     href="/admin/products"
                     className="mt-2 inline-block text-xs text-stone-500 underline hover:text-charcoal"

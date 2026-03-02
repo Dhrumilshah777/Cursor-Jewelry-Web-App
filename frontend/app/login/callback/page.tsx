@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { setUserToken, clearAdminKey } from '@/lib/api';
+import { setUserToken, clearAdminKey, getCart, setCart, mergeCartApi } from '@/lib/api';
 
 function LoginCallbackContent() {
   const router = useRouter();
@@ -17,9 +17,20 @@ function LoginCallbackContent() {
     }
     clearAdminKey();
     setUserToken(token);
-    setStatus('ok');
-    router.replace('/');
-    router.refresh();
+    (async () => {
+      const guestCart = getCart();
+      if (guestCart.length > 0) {
+        try {
+          await mergeCartApi(guestCart);
+          setCart([]);
+        } catch (_) {}
+      }
+      const returnTo = typeof window !== 'undefined' ? localStorage.getItem('login-return-to') : null;
+      if (typeof window !== 'undefined') localStorage.removeItem('login-return-to');
+      setStatus('ok');
+      router.replace(returnTo || '/');
+      router.refresh();
+    })();
   }, [searchParams, router]);
 
   if (status === 'error') {

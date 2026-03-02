@@ -152,6 +152,7 @@ export default function CheckoutPage() {
                 },
                 { user: true }
               );
+              if (typeof window !== 'undefined') window.dispatchEvent(new Event('cart-updated'));
               router.replace(`/orders/success?orderId=${orderId}`);
             } catch (err) {
               setError(err instanceof Error ? err.message : 'Payment verification failed.');

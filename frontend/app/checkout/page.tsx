@@ -183,7 +183,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const token = getUserToken();
+  const token = isUserLoggedIn();
   if (!token) {
     return (
       <main className="min-h-[50vh] px-4 py-12">

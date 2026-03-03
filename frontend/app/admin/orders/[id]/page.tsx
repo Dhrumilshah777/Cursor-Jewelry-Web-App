@@ -35,6 +35,7 @@ export default function AdminOrderDetailPage() {
   const [status, setStatus] = useState('');
   const [tracking, setTracking] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -55,6 +56,7 @@ export default function AdminOrderDetailPage() {
     e.preventDefault();
     if (!id) return;
     setSaveError(null);
+    setSaveErrorDetail(null);
     setSaving(true);
     try {
       const updated = await apiPatch<Order>(`/api/admin/orders/${id}`, { status, tracking }, true);
@@ -62,11 +64,10 @@ export default function AdminOrderDetailPage() {
       setStatus(updated.status);
       setTracking(updated.tracking || '');
     } catch (err) {
-      let msg = err instanceof Error ? err.message : 'Failed to save';
-      if (msg === 'Bad Request' || msg === '400 Bad Request') {
-        msg = 'Server returned 400. Open DevTools (F12) → Network → click the red PATCH request → Response tab to see the real error from Shiprocket.';
-      }
+      const ex = err as Error & { responseBody?: string };
+      let msg = ex instanceof Error ? ex.message : 'Failed to save';
       setSaveError(msg);
+      if (ex.responseBody) setSaveErrorDetail(ex.responseBody);
     }
     setSaving(false);
   };
@@ -113,7 +114,12 @@ export default function AdminOrderDetailPage() {
         <h2 className="font-medium text-charcoal">Update status</h2>
         {saveError && (
           <div className="mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {saveError}
+            <p className="font-medium">{saveError}</p>
+            {saveErrorDetail && (
+              <pre className="mt-2 overflow-auto rounded bg-red-100/50 p-2 text-xs whitespace-pre-wrap break-all">
+                {saveErrorDetail}
+              </pre>
+            )}
           </div>
         )}
         <div className="mt-4 flex flex-wrap gap-4">

@@ -43,7 +43,9 @@ export async function api<T>(
       if (text) err.message = text.slice(0, 200);
     }
     const msg = err.error || err.message || res.statusText;
-    throw new Error(msg);
+    const e = new Error(msg) as Error & { responseBody?: string };
+    e.responseBody = text.slice(0, 500);
+    throw e;
   }
   return res.json().catch(() => ({} as T));
 }

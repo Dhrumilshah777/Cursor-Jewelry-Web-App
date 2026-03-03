@@ -34,6 +34,7 @@ export default function AdminOrderDetailPage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
   const [tracking, setTracking] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -53,13 +54,16 @@ export default function AdminOrderDetailPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
+    setSaveError(null);
     setSaving(true);
     try {
       const updated = await apiPatch<Order>(`/api/admin/orders/${id}`, { status, tracking }, true);
       setOrder(updated);
       setStatus(updated.status);
       setTracking(updated.tracking || '');
-    } catch (_) {}
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save');
+    }
     setSaving(false);
   };
 
@@ -103,6 +107,11 @@ export default function AdminOrderDetailPage() {
 
       <form onSubmit={handleSave} className="mt-8 rounded-lg border border-stone-200 bg-white p-6">
         <h2 className="font-medium text-charcoal">Update status</h2>
+        {saveError && (
+          <div className="mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {saveError}
+          </div>
+        )}
         <div className="mt-4 flex flex-wrap gap-4">
           <div>
             <label className="block text-sm font-medium text-stone-700">Status</label>

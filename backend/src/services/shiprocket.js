@@ -95,12 +95,42 @@ async function createShipment(order) {
     throw new Error(data.message || data.errors?.join?.(' ') || data.error || 'Shiprocket order create failed');
   }
 
-  const awb = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';
-  const courier = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
-  const shipmentId = data.order?.id ?? data.shipment_id ?? data.id ?? '';
+  const orderId = data.order?.id ?? data.id ?? data.order_id;
+  const shipmentId = data.order?.shipment_id ?? data.shipment_id ?? orderId;
+  if (!orderId && !shipmentId) {
+    throw new Error('Shiprocket did not return order or shipment id');
+  }
+
+  const awbFromCreate = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';
+  const courierFromCreate = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
+  if (awbFromCreate) {
+    return {
+      shipment_id: String(shipmentId || orderId),
+      awb_code: String(awbFromCreate),
+      courier_name: String(courierFromCreate),
+    };
+  }
+
+  const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      shipment_id: Number(shipmentId) || shipmentId,
+      order_id: Number(orderId) || orderId,
+    }),
+  });
+  const assignData = await assignRes.json().catch(() => ({}));
+  if (!assignRes.ok) {
+    throw new Error(assignData.message || assignData.errors?.join?.(' ') || assignData.error || 'Shiprocket AWB assign failed');
+  }
+  const awb = assignData.awb_code ?? assignData.data?.awb_code ?? assignData.courier_awb ?? '';
+  const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';
 
   return {
-    shipment_id: shipmentId,
+    shipment_id: String(shipmentId || orderId),
     awb_code: String(awb),
     courier_name: String(courier),
   };

@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema(
     subtotal: { type: Number, required: true },
     status: {
       type: String,
-      enum: ['pending_payment', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+      enum: ['pending_payment', 'paid', 'stock_failed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'pending_payment',
     },
     idempotencyKey: { type: String, default: '' },

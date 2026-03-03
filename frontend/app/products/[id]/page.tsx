@@ -5,6 +5,18 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart } from '@/lib/api';
 
+type PriceBreakup = {
+  baseGold: number;
+  wastage: number;
+  makingCharges: number;
+  subtotal: number;
+  gst: number;
+  total: number;
+  goldPurity?: string;
+  netWeight?: number;
+  pricePerGram?: number;
+};
+
 type Product = {
   _id: string;
   name: string;
@@ -15,6 +27,8 @@ type Product = {
   weight?: string;
   carat?: string;
   colors?: string[];
+  calculatedPrice?: number;
+  priceBreakup?: PriceBreakup | null;
 };
 
 const MOCK_PRODUCTS: Array<Pick<Product, '_id' | 'name' | 'category' | 'price' | 'image'>> = [
@@ -101,7 +115,7 @@ export default function ProductDetailPage() {
         id: product._id,
         name: product.name,
         category: product.category,
-        price: product.price,
+        price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price,
         image: product.image,
       });
       setWishlisted(true);
@@ -196,7 +210,20 @@ export default function ProductDetailPage() {
               {product.name}
             </h1>
             <p className="mt-2 text-sm text-stone-500">{product.category}</p>
-            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">₹{product.price}</p>
+            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
+              ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
+            </p>
+            {product.priceBreakup && (
+              <dl className="mt-3 rounded border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
+                <dt className="font-medium text-charcoal">Price breakdown (incl. 3% GST)</dt>
+                <dd className="mt-2 space-y-1">
+                  <span className="block">Gold ({product.priceBreakup.goldPurity}): ₹{product.priceBreakup.baseGold?.toFixed(2)}</span>
+                  <span className="block">Wastage: ₹{product.priceBreakup.wastage?.toFixed(2)}</span>
+                  <span className="block">Making charges: ₹{product.priceBreakup.makingCharges?.toFixed(2)}</span>
+                  <span className="block border-t border-stone-200 pt-1 font-medium">Total: ₹{product.priceBreakup.total?.toFixed(2)}</span>
+                </dd>
+              </dl>
+            )}
 
             {(product.weight || product.carat) && (
               <dl className="mt-4 space-y-1 text-sm text-stone-600">
@@ -224,7 +251,7 @@ export default function ProductDetailPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => addToCart({ id: product._id, name: product.name, price: product.price, image: product.image })}
+                onClick={() => addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image })}
                 className="flex items-center gap-2 rounded border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">

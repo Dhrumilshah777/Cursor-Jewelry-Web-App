@@ -8,6 +8,7 @@ import { getApiBase, isAdminLoggedIn, clearAdminLoggedIn } from '@/lib/api';
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/products', label: 'Latest Beauty Products' },
+  { href: '/admin/gold-rates', label: 'Gold Rates' },
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/hero', label: 'Hero Sliders' },
   { href: '/admin/video', label: 'Home Page Video' },
@@ -18,10 +19,34 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [sessionVerified, setSessionVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Verify admin cookie with backend when on protected page
+  useEffect(() => {
+    if (!mounted || pathname === '/admin/login' || pathname === '/admin/auth/callback') return;
+    if (!isAdminLoggedIn()) {
+      setSessionVerified(false);
+      return;
+    }
+    fetch(`${getApiBase()}/api/admin/me`, { credentials: 'include' })
+      .then((res) => {
+        if (res.ok) setSessionVerified(true);
+        else {
+          clearAdminLoggedIn();
+          setSessionVerified(false);
+          router.replace('/admin/login');
+        }
+      })
+      .catch(() => {
+        clearAdminLoggedIn();
+        setSessionVerified(false);
+        router.replace('/admin/login');
+      });
+  }, [mounted, pathname, router]);
 
   if (!mounted) {
     return (
@@ -54,6 +79,22 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-100">
         <span className="text-stone-500">Redirecting…</span>
+      </div>
+    );
+  }
+
+  // Wait for session verification (cookie valid?) before showing admin UI
+  if (sessionVerified === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-stone-100">
+        <span className="text-stone-500">Redirecting…</span>
+      </div>
+    );
+  }
+  if (sessionVerified !== true) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-stone-100">
+        <span className="text-stone-500">Verifying…</span>
       </div>
     );
   }

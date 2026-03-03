@@ -1,5 +1,6 @@
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const { getProductPrice } = require('../services/priceCalculator');
 
 exports.get = async (req, res) => {
   try {
@@ -28,11 +29,11 @@ exports.getValidated = async (req, res) => {
       if (!product || product.active !== true) continue;
       const qty = Math.min(it.quantity, product.stock);
       if (qty < 1) continue;
-      const price = parseFloat(product.price) || 0;
+      const { price } = await getProductPrice(product);
       validated.push({
         productId: String(product._id),
         name: product.name,
-        price: String(product.price),
+        price: String(price),
         image: product.image || '',
         quantity: qty,
       });
@@ -81,7 +82,8 @@ exports.addItem = async (req, res) => {
     let cart = await Cart.findOne({ user: req.userId });
     if (!cart) cart = await Cart.create({ user: req.userId, items: [] });
     const existing = (cart.items || []).find((i) => String(i.productId) === String(productId));
-    const priceStr = String(product.price);
+    const { price } = await getProductPrice(product);
+    const priceStr = String(price);
     if (existing) {
       const newQty = existing.quantity + qty;
       if (product.stock < newQty) {
@@ -127,10 +129,11 @@ exports.merge = async (req, res) => {
       const current = map.get(key);
       const newQty = current ? current.quantity + qty : qty;
       if (product.stock < newQty) continue;
+      const { price } = await getProductPrice(product);
       map.set(key, {
         productId: key,
         name: product.name,
-        price: String(product.price),
+        price: String(price),
         image: product.image || '',
         quantity: newQty,
       });

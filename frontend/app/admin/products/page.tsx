@@ -17,13 +17,20 @@ type Product = {
   carat?: string;
   colors?: string[];
   order?: number;
+  active?: boolean;
+  stock?: number;
+  goldPurity?: string;
+  netWeight?: number | null;
+  makingChargeType?: 'percentage' | 'fixed';
+  makingChargeValue?: number;
+  wastagePercent?: number;
 };
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [] });
+  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, wastagePercent: 0 });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [subImageUrlInput, setSubImageUrlInput] = useState('');
@@ -85,8 +92,13 @@ export default function AdminProductsPage() {
 
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name?.trim() || !form.price?.trim() || !form.image?.trim()) {
-      setError('Name, price, and image are required.');
+    const hasGold = ['18K', '22K', '24K'].includes((form.goldPurity || '').trim().toUpperCase()) && Number(form.netWeight) > 0;
+    if (!form.name?.trim() || !form.image?.trim()) {
+      setError('Name and image are required.');
+      return;
+    }
+    if (!hasGold && !form.price?.trim()) {
+      setError('Either enter a fixed price or set Gold pricing (purity + net weight).');
       return;
     }
     setError('');
@@ -97,7 +109,7 @@ export default function AdminProductsPage() {
       } else {
         await apiPost('/api/admin/products', form, true);
       }
-      setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [] });
+      setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, wastagePercent: 0 });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -160,13 +172,24 @@ export default function AdminProductsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-stone-700">Price (e.g. 52.00)</label>
+            <label className="block text-sm font-medium text-stone-700">Price (fixed, e.g. 52.00) — or use Gold pricing below</label>
             <input
               value={form.price || ''}
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
               className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
-              required
+              placeholder="Leave empty if using gold pricing"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700">Stock</label>
+            <input
+              type="number"
+              min={0}
+              value={form.stock ?? 1}
+              onChange={(e) => setForm((f) => ({ ...f, stock: Math.max(0, parseInt(e.target.value, 10) || 0) }))}
+              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+            />
+            <p className="mt-0.5 text-xs text-stone-500">At 0, product is out of stock until you increase it.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-stone-700">Image</label>
@@ -242,6 +265,80 @@ export default function AdminProductsPage() {
               ))}
             </select>
           </div>
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <input
+              type="checkbox"
+              id="active"
+              checked={form.active !== false}
+              onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+              className="h-4 w-4 rounded border-stone-300"
+            />
+            <label htmlFor="active" className="text-sm font-medium text-stone-700">Active (visible and available to customers)</label>
+          </div>
+        </div>
+        <div className="mt-6 border-t border-stone-200 pt-6">
+          <h3 className="font-medium text-charcoal">Gold-based pricing (optional)</h3>
+          <p className="mt-1 text-sm text-stone-500">If set, final price is calculated from current gold rate + wastage + making charges + 3% GST. Leave empty to use fixed price above.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Gold purity</label>
+              <select
+                value={form.goldPurity || ''}
+                onChange={(e) => setForm((f) => ({ ...f, goldPurity: e.target.value }))}
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+              >
+                <option value="">— Fixed price only —</option>
+                <option value="18K">18K</option>
+                <option value="22K">22K</option>
+                <option value="24K">24K</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Net weight (grams)</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={form.netWeight ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, netWeight: e.target.value === '' ? undefined : parseFloat(e.target.value) }))}
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+                placeholder="e.g. 8.5"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Making charge type</label>
+              <select
+                value={form.makingChargeType || 'percentage'}
+                onChange={(e) => setForm((f) => ({ ...f, makingChargeType: e.target.value as 'percentage' | 'fixed' }))}
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+              >
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed amount</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Making charge value (%) or ₹</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={form.makingChargeValue ?? 0}
+                onChange={(e) => setForm((f) => ({ ...f, makingChargeValue: parseFloat(e.target.value) || 0 }))}
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Wastage %</label>
+              <input
+                type="number"
+                min={0}
+                step={0.1}
+                value={form.wastagePercent ?? 0}
+                onChange={(e) => setForm((f) => ({ ...f, wastagePercent: parseFloat(e.target.value) || 0 }))}
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+              />
+            </div>
+          </div>
         </div>
         <div className="mt-4">
           <div className="flex items-center gap-2">
@@ -272,7 +369,7 @@ export default function AdminProductsPage() {
             {editingId ? 'Update' : 'Add'} product
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [] }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, wastagePercent: 0 }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
               Cancel
             </button>
           )}
@@ -285,12 +382,25 @@ export default function AdminProductsPage() {
             <img src={p.image.startsWith('http') ? p.image : assetUrl(p.image)} alt="" className="h-16 w-16 rounded object-cover" />
             <div className="min-w-0 flex-1">
               <p className="font-medium text-charcoal">{p.name}</p>
-              <p className="text-sm text-stone-500">{p.category} · ₹{p.price}{p.weight ? ` · ${p.weight}` : ''}{p.carat ? ` · ${p.carat}` : ''}</p>
+              <p className="text-sm text-stone-500">{p.category} · {p.price ? `₹${p.price}` : 'Gold-based'}{p.weight ? ` · ${p.weight}` : ''}{p.carat ? ` · ${p.carat}` : ''} · Stock: {p.stock ?? 0}{p.active === false ? ' · Inactive' : ''}</p>
+              {(p.stock ?? 0) === 0 && (
+                <span className="mt-1 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Out of stock</span>
+              )}
             </div>
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => { setForm({ ...p, subImages: p.subImages || [] }); setEditingId(p._id); setError(''); setSubImageUrlInput(''); }}
+                onClick={() => { setForm({
+                  ...p,
+                  subImages: p.subImages || [],
+                  stock: p.stock ?? 1,
+                  active: p.active !== false,
+                  goldPurity: (p as Product).goldPurity ?? '',
+                  netWeight: (p as Product).netWeight ?? undefined,
+                  makingChargeType: (p as Product).makingChargeType ?? 'percentage',
+                  makingChargeValue: (p as Product).makingChargeValue ?? 0,
+                  wastagePercent: (p as Product).wastagePercent ?? 0,
+                }); setEditingId(p._id); setError(''); setSubImageUrlInput(''); }}
                 className="rounded border border-stone-300 px-3 py-1 text-sm hover:bg-stone-50"
               >
                 Edit

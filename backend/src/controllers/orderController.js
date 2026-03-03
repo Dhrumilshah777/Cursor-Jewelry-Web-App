@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const { getProductPrice } = require('../services/priceCalculator');
 const Razorpay = require('razorpay');
 
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
@@ -41,11 +42,11 @@ exports.create = async (req, res) => {
       if (!product || product.active !== true) continue;
       const qty = Math.min(it.quantity, product.stock);
       if (qty < 1) continue;
-      const price = parseFloat(product.price) || 0;
+      const { price } = await getProductPrice(product);
       validated.push({
         productId: String(product._id),
         name: product.name,
-        price: String(product.price),
+        price: String(price),
         image: product.image || '',
         quantity: qty,
       });
@@ -100,7 +101,9 @@ exports.create = async (req, res) => {
   }
 };
 
-/** Verify Razorpay payment and mark order paid. */
+const { completePaidOrder } = require('./razorpayWebhookController');
+
+/** Verify Razorpay payment (frontend callback). Uses same transactional stock decrement as webhook. */
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
@@ -120,21 +123,16 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
-    order.status = 'paid';
-    order.razorpayPaymentId = razorpayPaymentId;
-    await order.save();
-
-    for (const it of order.items || []) {
-      const product = await Product.findById(it.productId);
-      if (product && product.stock >= (it.quantity || 0)) {
-        product.stock -= it.quantity || 0;
-        await product.save();
+    const result = await completePaidOrder(order._id.toString(), razorpayPaymentId);
+    if (!result.ok) {
+      if (result.reason === 'insufficient_stock') {
+        return res.status(400).json({ error: 'Payment received but item is out of stock. Support will contact you.' });
       }
+      return res.status(500).json({ error: 'Could not complete order' });
     }
 
-    await Cart.findOneAndUpdate({ user: req.userId }, { $set: { items: [] } });
-
-    res.json({ order: order.toObject ? order.toObject() : order, verified: true });
+    const updated = await Order.findById(order._id);
+    res.json({ order: updated?.toObject ? updated.toObject() : updated, verified: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

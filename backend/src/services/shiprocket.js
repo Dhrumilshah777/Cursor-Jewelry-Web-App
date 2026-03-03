@@ -65,8 +65,12 @@ async function createShipment(order) {
   const billingPhone = toTenDigitPhone(addr.phone);
 
   const pickupLocation = process.env.SHIPROCKET_PICKUP_LOCATION || 'Home';
+  // Shiprocket expects order_id as numeric string (avoid hex/letters) for compatibility with assign AWB etc.
+  const numericOrderId = String(
+    (Date.parse(order.createdAt || Date.now()) || Date.now()) + parseInt(orderId.slice(-6), 16)
+  ).slice(0, 50);
   const payload = {
-    order_id: orderId.slice(0, 50),
+    order_id: numericOrderId,
     order_date: orderDate,
     pickup_location: pickupLocation,
     billing_customer_name: truncate(addr.name || 'Customer', 50),
@@ -114,9 +118,11 @@ async function createShipment(order) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const parts = [data.message || data.error || 'Shiprocket order create failed'];
+    const parts = ['Create order failed: ' + (data.message || data.error || 'Shiprocket order create failed')];
     if (Array.isArray(data.errors)) parts.push(data.errors.join('; '));
     else if (data.errors && typeof data.errors === 'object') parts.push(JSON.stringify(data.errors));
+    const bodyStr = JSON.stringify(data);
+    if (bodyStr.length > 0 && bodyStr.length < 400) parts.push('Response: ' + bodyStr);
     throw new Error(parts.join(' — '));
   }
 
@@ -142,20 +148,23 @@ async function createShipment(order) {
     };
   }
 
+  const sid = Number(shipmentId) || shipmentId;
+  const oid = Number(srOrderId) || srOrderId;
+  const assignBody = { shipment_id: sid };
+  if (oid && !Number.isNaN(Number(oid))) assignBody.order_id = oid;
   const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      shipment_id: Number(shipmentId) || shipmentId,
-      order_id: Number(srOrderId) || srOrderId,
-    }),
+    body: JSON.stringify(assignBody),
   });
   const assignData = await assignRes.json().catch(() => ({}));
   if (!assignRes.ok) {
-    throw new Error(assignData.message || assignData.errors?.join?.(' ') || assignData.error || 'Shiprocket AWB assign failed');
+    const assignMsg = assignData.message || assignData.errors?.join?.(' ') || assignData.error || 'Shiprocket AWB assign failed';
+    const assignBodyStr = JSON.stringify(assignData);
+    throw new Error('Assign AWB failed: ' + assignMsg + (assignBodyStr.length > 0 && assignBodyStr.length < 300 ? ' — Response: ' + assignBodyStr : ''));
   }
   const awb = assignData.awb_code ?? assignData.data?.awb_code ?? assignData.courier_awb ?? '';
   const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';

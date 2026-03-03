@@ -119,10 +119,16 @@ async function createShipment(order) {
     throw new Error(parts.join(' — '));
   }
 
-  const srOrderId = data.order?.id ?? data.id ?? data.order_id;
-  const shipmentId = data.order?.shipment_id ?? data.shipment_id ?? srOrderId;
+  // Shiprocket success: status_code 1; ids at top level or in data/order
+  const raw = data.data || data.order || data;
+  const srOrderId =
+    raw.order_id ?? raw.id ?? data.order_id ?? data.order?.id ?? data.id;
+  const shipmentId =
+    raw.shipment_id ?? data.shipment_id ?? data.order?.shipment_id ?? srOrderId;
+
   if (!srOrderId && !shipmentId) {
-    throw new Error('Shiprocket did not return order or shipment id');
+    const hint = JSON.stringify(data).slice(0, 300);
+    throw new Error(`Shiprocket did not return order or shipment id. Response: ${hint}`);
   }
 
   const awbFromCreate = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';

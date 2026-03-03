@@ -16,6 +16,7 @@ type Order = {
   status: string;
   tracking?: string;
   courier?: string;
+  shiprocketShipmentId?: string;
   createdAt: string;
 };
 
@@ -151,6 +152,9 @@ export default function AdminOrderDetailPage() {
             />
             {order.courier && (
               <p className="mt-1 text-sm text-stone-500">Courier: {order.courier}</p>
+            )}
+            {order.shiprocketShipmentId && !order.tracking && (
+              <p className="mt-1 text-sm text-amber-600">Order is in Shiprocket. Assign AWB from Shiprocket dashboard (Orders) and paste the tracking number here, then Save.</p>
             )}
           </div>
           <div className="flex items-end">

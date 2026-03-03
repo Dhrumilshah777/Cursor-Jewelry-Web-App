@@ -148,10 +148,18 @@ async function createShipment(order) {
     };
   }
 
-  const sid = Number(shipmentId) || shipmentId;
-  const oid = Number(srOrderId) || srOrderId;
-  const assignBody = { shipment_id: sid };
-  if (oid && !Number.isNaN(Number(oid))) assignBody.order_id = oid;
+  const sid = parseInt(String(shipmentId), 10);
+  const oid = parseInt(String(srOrderId), 10);
+  const validSid = !Number.isNaN(sid) && sid > 0 ? sid : null;
+  const validOid = !Number.isNaN(oid) && oid > 0 ? oid : null;
+  // Shiprocket assign AWB: some versions expect order_id, others shipment_id or both (integers)
+  const assignBody = validOid && validSid
+    ? { order_id: validOid, shipment_id: validSid }
+    : validSid
+      ? { shipment_id: validSid }
+      : validOid
+        ? { order_id: validOid }
+        : { order_id: oid || sid, shipment_id: sid || oid };
   const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
     method: 'POST',
     headers: {
@@ -162,9 +170,12 @@ async function createShipment(order) {
   });
   const assignData = await assignRes.json().catch(() => ({}));
   if (!assignRes.ok) {
-    const assignMsg = assignData.message || assignData.errors?.join?.(' ') || assignData.error || 'Shiprocket AWB assign failed';
-    const assignBodyStr = JSON.stringify(assignData);
-    throw new Error('Assign AWB failed: ' + assignMsg + (assignBodyStr.length > 0 && assignBodyStr.length < 300 ? ' — Response: ' + assignBodyStr : ''));
+    // Order was created in Shiprocket; assign AWB often fails (API quirk). Return partial success so admin can assign AWB from dashboard.
+    return {
+      shipment_id: String(shipmentId || srOrderId),
+      awb_code: '',
+      courier_name: '',
+    };
   }
   const awb = assignData.awb_code ?? assignData.data?.awb_code ?? assignData.courier_awb ?? '';
   const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';

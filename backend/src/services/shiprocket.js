@@ -94,6 +94,7 @@ async function createShipment(order) {
       units: Math.max(1, parseInt(item.quantity, 10) || 1),
       selling_price: Math.max(0.01, parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0),
     })),
+    sub_total: Number(order.subtotal) || 0,
     payment_method: 'Prepaid',
     weight: 0.5,
     length: 15,

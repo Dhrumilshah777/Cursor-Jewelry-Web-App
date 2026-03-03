@@ -1,23 +1,41 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { setAdminLoggedIn, apiGet } from '@/lib/api';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { setAdminLoggedIn, apiGet, getApiBase } from '@/lib/api';
 
 function AdminAuthCallbackContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
-    apiGet('/api/admin/me', true)
-      .then(() => {
-        setAdminLoggedIn();
-        setStatus('ok');
-        router.replace('/admin');
-        router.refresh();
-      })
-      .catch(() => setStatus('error'));
-  }, [router]);
+    const tokenFromUrl = searchParams.get('token');
+    (async () => {
+      let ok = false;
+      try {
+        await apiGet('/api/admin/me', true);
+        ok = true;
+      } catch {
+        if (tokenFromUrl) {
+          const res = await fetch(`${getApiBase()}/api/auth/set-admin-cookie`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenFromUrl}` },
+          });
+          ok = res.ok;
+        }
+      }
+      if (!ok) {
+        setStatus('error');
+        return;
+      }
+      setAdminLoggedIn();
+      setStatus('ok');
+      router.replace('/admin');
+      router.refresh();
+    })();
+  }, [router, searchParams]);
 
   if (status === 'error') {
     return (

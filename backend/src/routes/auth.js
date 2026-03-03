@@ -63,7 +63,7 @@ router.get(
         await user.save();
       }
 
-      // Admin: issue JWT, set httpOnly cookie, redirect to admin callback (no token in URL)
+      // Admin: issue JWT, set httpOnly cookie, and pass token in URL (fallback when cookie is blocked cross-origin)
       if (user.role === 'admin') {
         const token = jwt.sign(
           { sub: user._id.toString(), role: 'admin', email: emailLower },
@@ -71,23 +71,49 @@ router.get(
           { expiresIn: JWT_EXPIRY }
         );
         res.cookie('admin_token', token, cookieOptions(token, 'admin_token'));
-        return res.redirect(`${FRONTEND_URL}/admin/auth/callback`);
+        return res.redirect(`${FRONTEND_URL}/admin/auth/callback?token=${encodeURIComponent(token)}`);
       }
 
-      // User: issue JWT, set httpOnly cookie, redirect to login callback (no token in URL)
+      // User: issue JWT, set httpOnly cookie, and pass token in URL (fallback when cookie is blocked cross-origin)
       const token = jwt.sign(
         { sub: user._id.toString(), role: 'user' },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRY }
       );
       res.cookie('user_token', token, cookieOptions(token, 'user_token'));
-      res.redirect(`${FRONTEND_URL}/login/callback`);
+      res.redirect(`${FRONTEND_URL}/login/callback?token=${encodeURIComponent(token)}`);
     } catch (err) {
       console.error('Google auth callback error:', err);
       res.redirect(`${FRONTEND_URL}/login?error=server_error`);
     }
   }
 );
+
+// Fallback: set cookie from token (when redirect cookie is blocked cross-origin). Token in Authorization header.
+router.post('/set-cookie', (req, res) => {
+  const token = req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+  if (!token) return res.status(400).json({ error: 'Missing token' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'user' && decoded.role !== 'admin') return res.status(403).json({ error: 'Invalid token' });
+    res.cookie('user_token', token, cookieOptions(token, 'user_token'));
+    return res.json({ ok: true });
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
+router.post('/set-admin-cookie', (req, res) => {
+  const token = req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+  if (!token) return res.status(400).json({ error: 'Missing token' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    res.cookie('admin_token', token, cookieOptions(token, 'admin_token'));
+    return res.json({ ok: true });
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
 
 // Cookie-based auth: /me and /logout
 router.get('/me', async (req, res) => {

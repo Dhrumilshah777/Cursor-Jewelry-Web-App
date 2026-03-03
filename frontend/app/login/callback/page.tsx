@@ -1,19 +1,33 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { setUserLoggedIn, clearAdminLoggedIn, getCart, setCart, mergeCartApi, apiGet } from '@/lib/api';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { setUserLoggedIn, clearAdminLoggedIn, getCart, setCart, mergeCartApi, apiGet, getApiBase } from '@/lib/api';
 
 function LoginCallbackContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
     clearAdminLoggedIn();
     (async () => {
+      const tokenFromUrl = searchParams.get('token');
+      let cookieOk = false;
       try {
         await apiGet<{ user: unknown }>('/api/auth/me', { user: true });
+        cookieOk = true;
       } catch {
+        if (tokenFromUrl) {
+          const res = await fetch(`${getApiBase()}/api/auth/set-cookie`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenFromUrl}` },
+          });
+          cookieOk = res.ok;
+        }
+      }
+      if (!cookieOk) {
         setStatus('error');
         return;
       }
@@ -31,7 +45,7 @@ function LoginCallbackContent() {
       router.replace(returnTo || '/');
       router.refresh();
     })();
-  }, [router]);
+  }, [router, searchParams]);
 
   if (status === 'error') {
     return (

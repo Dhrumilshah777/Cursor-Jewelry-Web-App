@@ -8,7 +8,7 @@ import {
   setCartApi,
   removeFromCart,
   updateCartQuantity,
-  getUserToken,
+  isUserLoggedIn,
   assetUrl,
   type CartItem,
 } from '@/lib/api';
@@ -29,7 +29,7 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const isUser = typeof window !== 'undefined' && !!getUserToken();
+  const isUser = typeof window !== 'undefined' && !!isUserLoggedIn();
 
   useEffect(() => {
     setMounted(true);
@@ -37,7 +37,7 @@ export default function CartPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    if (getUserToken()) {
+    if (isUserLoggedIn()) {
       getCartFromApi()
         .then(setItems)
         .catch(() => setItems([]))
@@ -49,7 +49,7 @@ export default function CartPage() {
   }, [mounted]);
 
   const handleRemove = async (productId: string) => {
-    if (getUserToken()) {
+    if (isUserLoggedIn()) {
       const next = items.filter((i) => i.id !== productId);
       try {
         await setCartApi(next);
@@ -66,7 +66,7 @@ export default function CartPage() {
       handleRemove(productId);
       return;
     }
-    if (getUserToken()) {
+    if (isUserLoggedIn()) {
       const next = items.map((i) => (i.id === productId ? { ...i, quantity } : i));
       try {
         await setCartApi(next);
@@ -188,14 +188,14 @@ export default function CartPage() {
                   Continue shopping
                 </Link>
                 <Link
-                  href={getUserToken() ? '/checkout' : '/login?returnTo=/checkout'}
+                  href={isUserLoggedIn() ? '/checkout' : '/login?returnTo=/checkout'}
                   className="rounded bg-charcoal px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800"
                 >
                   Proceed to checkout
                 </Link>
               </div>
             </div>
-            {!getUserToken() && (
+            {!isUserLoggedIn() && (
               <p className="mt-4 text-sm text-stone-500">
                 Sign in when you proceed to checkout; your cart will be kept.
               </p>

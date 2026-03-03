@@ -1,23 +1,23 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { setUserToken, clearAdminKey, getCart, setCart, mergeCartApi } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { setUserLoggedIn, clearAdminLoggedIn, getCart, setCart, mergeCartApi, apiGet } from '@/lib/api';
 
 function LoginCallbackContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token) {
-      setStatus('error');
-      return;
-    }
-    clearAdminKey();
-    setUserToken(token);
+    clearAdminLoggedIn();
     (async () => {
+      try {
+        await apiGet<{ user: unknown }>('/api/auth/me', { user: true });
+      } catch {
+        setStatus('error');
+        return;
+      }
+      setUserLoggedIn();
       const guestCart = getCart();
       if (guestCart.length > 0) {
         try {
@@ -31,7 +31,7 @@ function LoginCallbackContent() {
       router.replace(returnTo || '/');
       router.refresh();
     })();
-  }, [searchParams, router]);
+  }, [router]);
 
   if (status === 'error') {
     return (

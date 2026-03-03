@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { getUserToken, apiGet, assetUrl } from '@/lib/api';
+import { isUserLoggedIn, apiGet, assetUrl } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; image?: string; quantity: number };
 type Address = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
@@ -67,7 +67,7 @@ export default function OrderDetailPage() {
       setLoading(false);
       return;
     }
-    const token = getUserToken();
+    const token = isUserLoggedIn();
     if (!token) {
       router.replace('/login?returnTo=/orders/' + id);
       return;

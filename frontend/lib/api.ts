@@ -11,9 +11,23 @@ export function assetUrl(path: string): string {
   return `${BASE}${path}`;
 }
 
+const ADMIN_LOGGED_IN_KEY = 'admin_logged_in';
+const USER_LOGGED_IN_KEY = 'user_logged_in';
+
+export function isAdminLoggedIn(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(ADMIN_LOGGED_IN_KEY) === '1';
+}
+export function setAdminLoggedIn() {
+  if (typeof window !== 'undefined') localStorage.setItem(ADMIN_LOGGED_IN_KEY, '1');
+}
+export function clearAdminLoggedIn() {
+  if (typeof window !== 'undefined') localStorage.removeItem(ADMIN_LOGGED_IN_KEY);
+}
+
+/** @deprecated Use isAdminLoggedIn; cookie holds the token */
 export function getAdminKey(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('admin-key');
+  return null;
 }
 
 export async function api<T>(
@@ -25,15 +39,8 @@ export async function api<T>(
   if (init.body && typeof init.body === 'string' && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
-  if (admin) {
-    const key = getAdminKey();
-    if (key) headers['x-admin-key'] = key;
-  }
-  if (user) {
-    const token = getUserToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
-  const res = await fetch(`${BASE}${path}`, { ...init, headers });
+  // Auth via httpOnly cookies; send credentials so cookies are included
+  const res = await fetch(`${BASE}${path}`, { ...init, headers, credentials: 'include' });
   if (!res.ok) {
     const text = await res.text();
     let err: { error?: string; message?: string } = { message: res.statusText };
@@ -62,31 +69,41 @@ export const apiPatch = <T>(path: string, body?: unknown, opts?: boolean | ApiOp
 export const apiDelete = <T>(path: string, opts?: boolean | ApiOpts) =>
   api<T>(path, { method: 'DELETE', ...(typeof opts === 'boolean' ? { admin: opts } : opts) });
 
-export function setAdminKey(key: string) {
-  if (typeof window !== 'undefined') localStorage.setItem('admin-key', key);
+/** @deprecated Token is in httpOnly cookie; use setAdminLoggedIn after callback */
+export function setAdminKey(_key: string) {
+  setAdminLoggedIn();
 }
 export function clearAdminKey() {
-  if (typeof window !== 'undefined') localStorage.removeItem('admin-key');
+  clearAdminLoggedIn();
 }
 
-const USER_TOKEN_KEY = 'user-token';
-export function getUserToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(USER_TOKEN_KEY);
+export function isUserLoggedIn(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(USER_LOGGED_IN_KEY) === '1';
 }
-export function setUserToken(token: string) {
-  if (typeof window !== 'undefined') localStorage.setItem(USER_TOKEN_KEY, token);
+export function setUserLoggedIn() {
+  if (typeof window !== 'undefined') localStorage.setItem(USER_LOGGED_IN_KEY, '1');
+}
+export function clearUserLoggedIn() {
+  if (typeof window !== 'undefined') localStorage.removeItem(USER_LOGGED_IN_KEY);
+}
+
+/** @deprecated Use isUserLoggedIn; cookie holds the token */
+export function getUserToken(): string | null {
+  return isUserLoggedIn() ? 'cookie' : null;
+}
+/** @deprecated Token is in httpOnly cookie; use setUserLoggedIn after callback */
+export function setUserToken(_token: string) {
+  setUserLoggedIn();
 }
 export function clearUserToken() {
-  if (typeof window !== 'undefined') localStorage.removeItem(USER_TOKEN_KEY);
+  clearUserLoggedIn();
 }
 
 export async function uploadFile(file: File, admin = true): Promise<{ url: string; filename: string }> {
   const form = new FormData();
   form.append('file', file);
-  const headers: HeadersInit = {};
-  if (admin && getAdminKey()) headers['x-admin-key'] = getAdminKey()!;
-  const res = await fetch(`${BASE}/api/admin/upload/single`, { method: 'POST', body: form, headers });
+  const res = await fetch(`${BASE}/api/admin/upload/single`, { method: 'POST', body: form, credentials: 'include' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(err.error || err.message || res.statusText);
@@ -97,9 +114,7 @@ export async function uploadFile(file: File, admin = true): Promise<{ url: strin
 export async function uploadFiles(files: File[], admin = true): Promise<{ urls: string[]; filenames: string[] }> {
   const form = new FormData();
   files.forEach((f) => form.append('files', f));
-  const headers: HeadersInit = {};
-  if (admin && getAdminKey()) headers['x-admin-key'] = getAdminKey()!;
-  const res = await fetch(`${BASE}/api/admin/upload/multiple`, { method: 'POST', body: form, headers });
+  const res = await fetch(`${BASE}/api/admin/upload/multiple`, { method: 'POST', body: form, credentials: 'include' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(err.error || err.message || res.statusText);

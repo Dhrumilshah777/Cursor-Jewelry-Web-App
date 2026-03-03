@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import SearchOverlay from '@/components/SearchOverlay';
-import { getCartCount, getCartFromApi, getUserToken } from '@/lib/api';
+import { getCartCount, getCartFromApi, isUserLoggedIn } from '@/lib/api';
 
 const navLinks = [
   { href: '/products', label: 'COLLECTION' },
@@ -33,7 +33,7 @@ export default function Header() {
 
   useEffect(() => {
     const refresh = () => {
-      if (getUserToken()) {
+      if (isUserLoggedIn()) {
         getCartFromApi()
           .then((items) => setCartCount(items.reduce((s, i) => s + i.quantity, 0)))
           .catch(() => setCartCount(0));

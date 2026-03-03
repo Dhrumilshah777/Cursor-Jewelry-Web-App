@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  getUserToken,
+  isUserLoggedIn,
   getCartFromApi,
   assetUrl,
   apiPost,
@@ -66,7 +66,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    const token = getUserToken();
+    const token = isUserLoggedIn();
     if (!token) {
       router.replace('/login?returnTo=/checkout');
       return;

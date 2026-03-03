@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getApiBase, getUserToken, clearUserToken } from '@/lib/api';
+import { getApiBase, isUserLoggedIn, clearUserToken } from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -29,9 +29,12 @@ export default function LoginPage() {
     else if (err === 'server_error') setError('Something went wrong. Please try again.');
   }, []);
 
-  const isLoggedIn = mounted && !!getUserToken();
+  const isLoggedIn = mounted && isUserLoggedIn();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch(`${getApiBase()}/api/auth/logout`, { credentials: 'include' });
+    } catch (_) {}
     clearUserToken();
     router.refresh();
   };

@@ -1,29 +1,23 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { setAdminKey, apiGet } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { setAdminLoggedIn, apiGet } from '@/lib/api';
 
 function AdminAuthCallbackContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token) {
-      setStatus('error');
-      return;
-    }
-    setAdminKey(token);
-    apiGet('/api/admin/products', true)
+    apiGet('/api/admin/me', true)
       .then(() => {
+        setAdminLoggedIn();
         setStatus('ok');
         router.replace('/admin');
         router.refresh();
       })
       .catch(() => setStatus('error'));
-  }, [searchParams, router]);
+  }, [router]);
 
   if (status === 'error') {
     return (

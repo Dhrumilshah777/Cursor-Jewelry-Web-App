@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { getAdminKey, clearAdminKey } from '@/lib/api';
+import { getApiBase, isAdminLoggedIn, clearAdminLoggedIn } from '@/lib/api';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
@@ -31,13 +31,13 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     );
   }
 
-  const key = getAdminKey();
+  const isAdmin = isAdminLoggedIn();
   const isLoginPage = pathname === '/admin/login';
   const isAuthCallbackPage = pathname === '/admin/auth/callback';
 
   // Allow login and auth callback pages without a token
   if (isLoginPage || isAuthCallbackPage) {
-    if (key && isLoginPage) {
+    if (isAdmin && isLoginPage) {
       router.replace('/admin');
       return (
         <div className="flex min-h-screen items-center justify-center bg-stone-100">
@@ -48,8 +48,8 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     return <>{children}</>;
   }
 
-  // No admin token: redirect to admin login
-  if (!key) {
+  // No admin session: redirect to admin login
+  if (!isAdmin) {
     router.replace('/admin/login');
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-100">
@@ -83,8 +83,11 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
           </Link>
           <button
             type="button"
-            onClick={() => {
-              clearAdminKey();
+            onClick={async () => {
+              try {
+                await fetch(`${getApiBase()}/api/auth/admin-logout`, { credentials: 'include' });
+              } catch (_) {}
+              clearAdminLoggedIn();
               router.push('/');
             }}
             className="mt-2 block text-sm text-stone-500 hover:text-charcoal"

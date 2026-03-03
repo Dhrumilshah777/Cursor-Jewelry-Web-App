@@ -2,15 +2,21 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const connectDB = require('./config/db');
 require('./config/passport');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// Middleware
-app.use(cors());
+// Middleware: CORS with credentials so frontend can send httpOnly cookies
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(express.json({ strict: true }));
 app.use((err, req, res, next) => {
   if (err && err.status === 400 && err.type === 'entity.parse.failed') {
@@ -43,7 +49,9 @@ app.use('/api/site', require('./routes/site'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 
-// Admin API (requires x-admin-key header)
+// Admin API (cookie admin_token or x-admin-key header)
+const adminAuth = require('./middleware/adminAuth');
+app.get('/api/admin/me', adminAuth, (req, res) => res.json({ ok: true }));
 app.use('/api/admin/products', require('./routes/admin/products'));
 app.use('/api/admin/orders', require('./routes/admin/orders'));
 app.use('/api/admin/hero', require('./routes/admin/hero'));

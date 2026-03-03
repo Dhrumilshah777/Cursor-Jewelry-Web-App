@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getUserToken, apiGet } from '@/lib/api';
+import { isUserLoggedIn, apiGet } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; quantity: number };
 type Order = {
@@ -20,7 +20,7 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = getUserToken();
+    const token = isUserLoggedIn();
     if (!token) {
       router.replace('/login?returnTo=/orders');
       return;

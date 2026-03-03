@@ -7,8 +7,10 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'change
  * Use for cart, orders, etc.
  */
 function userAuth(req, res, next) {
+  const fromCookie = req.cookies?.user_token;
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const fromHeader = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = fromCookie || fromHeader;
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }

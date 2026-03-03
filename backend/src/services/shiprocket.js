@@ -95,9 +95,9 @@ async function createShipment(order) {
     throw new Error(data.message || data.errors?.join?.(' ') || data.error || 'Shiprocket order create failed');
   }
 
-  const orderId = data.order?.id ?? data.id ?? data.order_id;
-  const shipmentId = data.order?.shipment_id ?? data.shipment_id ?? orderId;
-  if (!orderId && !shipmentId) {
+  const srOrderId = data.order?.id ?? data.id ?? data.order_id;
+  const shipmentId = data.order?.shipment_id ?? data.shipment_id ?? srOrderId;
+  if (!srOrderId && !shipmentId) {
     throw new Error('Shiprocket did not return order or shipment id');
   }
 
@@ -105,7 +105,7 @@ async function createShipment(order) {
   const courierFromCreate = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
   if (awbFromCreate) {
     return {
-      shipment_id: String(shipmentId || orderId),
+      shipment_id: String(shipmentId || srOrderId),
       awb_code: String(awbFromCreate),
       courier_name: String(courierFromCreate),
     };
@@ -119,7 +119,7 @@ async function createShipment(order) {
     },
     body: JSON.stringify({
       shipment_id: Number(shipmentId) || shipmentId,
-      order_id: Number(orderId) || orderId,
+      order_id: Number(srOrderId) || srOrderId,
     }),
   });
   const assignData = await assignRes.json().catch(() => ({}));
@@ -130,7 +130,7 @@ async function createShipment(order) {
   const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';
 
   return {
-    shipment_id: String(shipmentId || orderId),
+    shipment_id: String(shipmentId || srOrderId),
     awb_code: String(awb),
     courier_name: String(courier),
   };

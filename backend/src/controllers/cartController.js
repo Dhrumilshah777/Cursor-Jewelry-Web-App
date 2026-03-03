@@ -82,8 +82,8 @@ exports.addItem = async (req, res) => {
     let cart = await Cart.findOne({ user: req.userId });
     if (!cart) cart = await Cart.create({ user: req.userId, items: [] });
     const existing = (cart.items || []).find((i) => String(i.productId) === String(productId));
-    const { price } = await getProductPrice(product);
-    const priceStr = String(price);
+    const { price: productPrice } = await getProductPrice(product);
+    const priceStr = String(productPrice);
     if (existing) {
       const newQty = existing.quantity + qty;
       if (product.stock < newQty) {

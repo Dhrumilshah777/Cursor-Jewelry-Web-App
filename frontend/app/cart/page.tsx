@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   getCart,
-  getCartFromApi,
+  getValidatedCartFromApi,
   setCartApi,
   removeFromCart,
   updateCartQuantity,
@@ -27,6 +27,7 @@ function imageSrc(image: string) {
 
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [subtotal, setSubtotal] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const isUser = typeof window !== 'undefined' && !!isUserLoggedIn();
@@ -38,26 +39,40 @@ export default function CartPage() {
   useEffect(() => {
     if (!mounted) return;
     if (isUserLoggedIn()) {
-      getCartFromApi()
-        .then(setItems)
+      getValidatedCartFromApi()
+        .then(({ items: validated, subtotal: total }) => {
+          setItems(validated);
+          setSubtotal(total);
+        })
         .catch(() => setItems([]))
         .finally(() => setLoading(false));
     } else {
       setItems(getCart());
+      setSubtotal(getCart().reduce((sum, i) => sum + (parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0) * i.quantity, 0));
       setLoading(false);
     }
   }, [mounted]);
+
+  const refreshValidated = () => {
+    if (isUserLoggedIn()) {
+      getValidatedCartFromApi().then(({ items: validated, subtotal: total }) => {
+        setItems(validated);
+        setSubtotal(total);
+      }).catch(() => {});
+    }
+  };
 
   const handleRemove = async (productId: string) => {
     if (isUserLoggedIn()) {
       const next = items.filter((i) => i.id !== productId);
       try {
         await setCartApi(next);
-        setItems(next);
+        refreshValidated();
       } catch (_) {}
     } else {
       removeFromCart(productId);
       setItems(getCart());
+      setSubtotal(getCart().reduce((sum, i) => sum + (parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0) * i.quantity, 0));
     }
   };
 
@@ -70,15 +85,16 @@ export default function CartPage() {
       const next = items.map((i) => (i.id === productId ? { ...i, quantity } : i));
       try {
         await setCartApi(next);
-        setItems(next);
+        refreshValidated();
       } catch (_) {}
     } else {
       updateCartQuantity(productId, quantity);
       setItems(getCart());
+      setSubtotal(getCart().reduce((sum, i) => sum + (parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0) * i.quantity, 0));
     }
   };
 
-  const subtotal = items.reduce((sum, i) => sum + cartItemSubtotal(i), 0);
+  const displaySubtotal = isUser ? subtotal : items.reduce((sum, i) => sum + cartItemSubtotal(i), 0);
 
   if (!mounted || loading) {
     return (
@@ -178,7 +194,7 @@ export default function CartPage() {
 
             <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <p className="font-sans text-lg font-semibold text-charcoal">
-                Subtotal: ₹{subtotal.toFixed(2)}
+                Subtotal: ₹{displaySubtotal.toFixed(2)}
               </p>
               <div className="flex gap-3">
                 <Link

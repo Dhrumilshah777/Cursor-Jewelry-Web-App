@@ -11,6 +11,8 @@ const productSchema = new mongoose.Schema(
     carat: { type: String, default: '' },
     colors: [{ type: String }],
     order: { type: Number, default: 0 },
+    active: { type: Boolean, default: true },
+    stock: { type: Number, default: 999 },
   },
   { timestamps: true }
 );

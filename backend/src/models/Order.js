@@ -35,6 +35,7 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending_payment', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'pending_payment',
     },
+    idempotencyKey: { type: String, default: '' },
     razorpayOrderId: { type: String, default: '' },
     razorpayPaymentId: { type: String, default: '' },
     tracking: { type: String, default: '' },

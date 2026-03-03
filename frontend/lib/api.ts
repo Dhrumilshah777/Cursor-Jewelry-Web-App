@@ -229,6 +229,20 @@ export async function getCartFromApi(): Promise<CartItem[]> {
   return raw.map((i) => ({ id: i.productId, name: i.name, price: i.price, image: i.image || '', quantity: i.quantity }));
 }
 
+/** Validated cart: server re-fetches products and returns items + backend-calculated subtotal. Use for cart page and checkout. */
+export type ValidatedCart = { items: CartItem[]; subtotal: number };
+export async function getValidatedCartFromApi(): Promise<ValidatedCart> {
+  const raw = await apiGet<{ items: { productId: string; name: string; price: string; image: string; quantity: number }[]; subtotal: number }>(
+    '/api/cart/validated',
+    { user: true }
+  );
+  const items = Array.isArray(raw?.items)
+    ? raw.items.map((i) => ({ id: i.productId, name: i.name, price: i.price, image: i.image || '', quantity: i.quantity }))
+    : [];
+  const subtotal = typeof raw?.subtotal === 'number' ? raw.subtotal : 0;
+  return { items, subtotal };
+}
+
 export async function setCartApi(items: CartItem[]): Promise<void> {
   const body = items.map((i) => ({ productId: i.id, name: i.name, price: i.price, image: i.image, quantity: i.quantity }));
   await apiPut('/api/cart', { items: body }, { user: true });

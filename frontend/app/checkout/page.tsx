@@ -5,11 +5,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   isUserLoggedIn,
-  getCartFromApi,
+  getValidatedCartFromApi,
   assetUrl,
   apiPost,
   type CartItem,
 } from '@/lib/api';
+
+function generateIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 function cartItemSubtotal(item: CartItem): number {
   const p = parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
@@ -57,6 +66,7 @@ export default function CheckoutPage() {
     state: '',
     pincode: '',
   });
+  const [subtotal, setSubtotal] = useState(0);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
 
@@ -71,13 +81,14 @@ export default function CheckoutPage() {
       router.replace('/login?returnTo=/checkout');
       return;
     }
-    getCartFromApi()
-      .then(setItems)
+    getValidatedCartFromApi()
+      .then(({ items: validated, subtotal: total }) => {
+        setItems(validated);
+        setSubtotal(total);
+      })
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, [mounted, router]);
-
-  const subtotal = items.reduce((sum, i) => sum + cartItemSubtotal(i), 0);
 
   const loadRazorpay = (): Promise<void> => {
     if (typeof window !== 'undefined' && window.Razorpay) return Promise.resolve();
@@ -104,13 +115,13 @@ export default function CheckoutPage() {
     setPlacing(true);
     try {
       const res = await apiPost<{
-        order: { _id: string; razorpayOrderId?: string };
+        order: { _id: string; razorpayOrderId?: string; subtotal?: number };
         razorpayOrderId?: string;
         razorpayKeyId?: string;
       }>(
         '/api/orders',
         {
-          items: items.map((i) => ({ id: i.id, name: i.name, price: i.price, image: i.image, quantity: i.quantity })),
+          idempotencyKey: generateIdempotencyKey(),
           shippingAddress: {
             name: address.name.trim(),
             phone: address.phone.trim(),
@@ -120,7 +131,6 @@ export default function CheckoutPage() {
             state: address.state.trim(),
             pincode: address.pincode.trim(),
           },
-          subtotal,
         },
         { user: true }
       );

@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 const Razorpay = require('razorpay');
 
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
@@ -9,28 +10,56 @@ if (razorpayKeyId && razorpayKeySecret) {
   razorpayInstance = new Razorpay({ key_id: razorpayKeyId, key_secret: razorpayKeySecret });
 }
 
-/** Create order (pending_payment). Returns order + razorpayOrderId if Razorpay configured. */
+/** Create order (pending_payment). Requires idempotencyKey + shippingAddress. Items and total come from DB cart; duplicate key returns existing order. */
 exports.create = async (req, res) => {
   try {
-    const { items, shippingAddress, subtotal } = req.body;
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Items required' });
+    const { shippingAddress, idempotencyKey } = req.body;
+    if (!idempotencyKey || typeof idempotencyKey !== 'string' || !idempotencyKey.trim()) {
+      return res.status(400).json({ error: 'idempotencyKey required' });
     }
+    const key = idempotencyKey.trim();
     if (!shippingAddress || !shippingAddress.name || !shippingAddress.phone || !shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode) {
       return res.status(400).json({ error: 'Valid shipping address required' });
     }
-    const total = typeof subtotal === 'number' ? subtotal : parseFloat(String(subtotal).replace(/[^0-9.]/g, '')) || 0;
-    if (total <= 0) return res.status(400).json({ error: 'Invalid subtotal' });
+
+    const existing = await Order.findOne({ user: req.userId, idempotencyKey: key });
+    if (existing) {
+      return res.status(200).json({
+        order: existing.toObject ? existing.toObject() : existing,
+        razorpayOrderId: existing.razorpayOrderId || null,
+        razorpayKeyId: razorpayKeyId || null,
+      });
+    }
+
+    let cart = await Cart.findOne({ user: req.userId });
+    if (!cart) cart = { items: [] };
+    const raw = cart.items || [];
+    const validated = [];
+    let subtotal = 0;
+    for (const it of raw) {
+      const product = await Product.findById(it.productId);
+      if (!product || product.active !== true) continue;
+      const qty = Math.min(it.quantity, product.stock);
+      if (qty < 1) continue;
+      const price = parseFloat(product.price) || 0;
+      validated.push({
+        productId: String(product._id),
+        name: product.name,
+        price: String(product.price),
+        image: product.image || '',
+        quantity: qty,
+      });
+      subtotal += price * qty;
+    }
+    const total = Math.round(subtotal * 100) / 100;
+    if (validated.length === 0 || total <= 0) {
+      return res.status(400).json({ error: 'Cart is empty or invalid' });
+    }
 
     const order = await Order.create({
       user: req.userId,
-      items: items.map((i) => ({
-        productId: i.id || i.productId,
-        name: i.name,
-        price: i.price,
-        image: i.image || '',
-        quantity: Math.max(1, parseInt(i.quantity, 10) || 1),
-      })),
+      idempotencyKey: key,
+      items: validated,
       shippingAddress: {
         name: shippingAddress.name,
         phone: shippingAddress.phone,
@@ -95,7 +124,14 @@ exports.verifyPayment = async (req, res) => {
     order.razorpayPaymentId = razorpayPaymentId;
     await order.save();
 
-    const Cart = require('../models/Cart');
+    for (const it of order.items || []) {
+      const product = await Product.findById(it.productId);
+      if (product && product.stock >= (it.quantity || 0)) {
+        product.stock -= it.quantity || 0;
+        await product.save();
+      }
+    }
+
     await Cart.findOneAndUpdate({ user: req.userId }, { $set: { items: [] } });
 
     res.json({ order: order.toObject ? order.toObject() : order, verified: true });

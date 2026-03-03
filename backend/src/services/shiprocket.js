@@ -1,6 +1,6 @@
 /**
  * Shiprocket API v2 – login and create adhoc order (shipment).
- * Env: SHIPROCKET_EMAIL, SHIPROCKET_PASSWORD
+ * Env: SHIPROCKET_EMAIL, SHIPROCKET_PASSWORD, SHIPROCKET_PICKUP_LOCATION (optional, default: Home)
  */
 
 const SHIPROCKET_BASE = 'https://apiv2.shiprocket.in/v1/external';
@@ -64,10 +64,11 @@ async function createShipment(order) {
   const billingPincode = toPincodeInt(addr.pincode);
   const billingPhone = toTenDigitPhone(addr.phone);
 
+  const pickupLocation = process.env.SHIPROCKET_PICKUP_LOCATION || 'Home';
   const payload = {
     order_id: orderId.slice(0, 50),
     order_date: orderDate,
-    pickup_location: 'Primary',
+    pickup_location: pickupLocation,
     billing_customer_name: truncate(addr.name || 'Customer', 50),
     billing_last_name: '',
     billing_address: billingAddress1,

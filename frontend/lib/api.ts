@@ -35,8 +35,15 @@ export async function api<T>(
   }
   const res = await fetch(`${BASE}${path}`, { ...init, headers });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.error || err.message || res.statusText);
+    const text = await res.text();
+    let err: { error?: string; message?: string } = { message: res.statusText };
+    try {
+      err = JSON.parse(text) || err;
+    } catch {
+      if (text) err.message = text.slice(0, 200);
+    }
+    const msg = err.error || err.message || res.statusText;
+    throw new Error(msg);
   }
   return res.json().catch(() => ({} as T));
 }

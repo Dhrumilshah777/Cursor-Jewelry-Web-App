@@ -37,42 +37,62 @@ async function getToken() {
  * @param {object} order - Mongoose order doc with items, shippingAddress, _id, createdAt
  * @returns {Promise<{ shipment_id: number, awb_code: string, courier_name: string }>}
  */
+function toTenDigitPhone(val) {
+  const digits = String(val || '').replace(/\D/g, '');
+  if (digits.length >= 10) return digits.slice(-10);
+  return digits.padStart(10, '0').slice(0, 10) || '0000000000';
+}
+
+function toPincodeInt(val) {
+  const n = parseInt(String(val || '0').replace(/\D/g, ''), 10);
+  return Number.isFinite(n) && n > 0 ? n : 395009;
+}
+
+function truncate(str, max) {
+  const s = String(str || '').trim();
+  return s.length > max ? s.slice(0, max) : s;
+}
+
 async function createShipment(order) {
   const token = await getToken();
   const addr = order.shippingAddress || {};
   const orderId = order._id.toString();
   const orderDate = new Date(order.createdAt || Date.now()).toISOString().split('T')[0];
 
+  const billingAddress1 = truncate(addr.line1 || 'Address', 95);
+  const billingAddress2 = truncate(addr.line2 || '', 95);
+  const billingPincode = toPincodeInt(addr.pincode);
+  const billingPhone = toTenDigitPhone(addr.phone);
+
   const payload = {
-    order_id: orderId,
+    order_id: orderId.slice(0, 50),
     order_date: orderDate,
-    channel_id: '',
     pickup_location: 'Primary',
-    billing_customer_name: addr.name || 'Customer',
+    billing_customer_name: truncate(addr.name || 'Customer', 50),
     billing_last_name: '',
-    billing_address: addr.line1 || '',
-    billing_address_2: addr.line2 || '',
-    billing_city: addr.city || '',
-    billing_pincode: String(addr.pincode || ''),
-    billing_state: addr.state || '',
+    billing_address: billingAddress1,
+    billing_address_2: billingAddress2,
+    billing_city: truncate(addr.city || 'City', 50),
+    billing_pincode: billingPincode,
+    billing_state: truncate(addr.state || 'State', 50),
     billing_country: 'India',
-    billing_email: order.user?.email || 'customer@example.com',
-    billing_phone: String(addr.phone || ''),
+    billing_email: (order.user?.email || 'customer@example.com').slice(0, 100),
+    billing_phone: billingPhone,
     shipping_is_billing: 1,
-    shipping_customer_name: addr.name || 'Customer',
+    shipping_customer_name: truncate(addr.name || 'Customer', 50),
     shipping_last_name: '',
-    shipping_address: addr.line1 || '',
-    shipping_address_2: addr.line2 || '',
-    shipping_city: addr.city || '',
-    shipping_pincode: String(addr.pincode || ''),
-    shipping_state: addr.state || '',
+    shipping_address: billingAddress1,
+    shipping_address_2: billingAddress2,
+    shipping_city: truncate(addr.city || 'City', 50),
+    shipping_pincode: billingPincode,
+    shipping_state: truncate(addr.state || 'State', 50),
     shipping_country: 'India',
-    shipping_phone: String(addr.phone || ''),
+    shipping_phone: billingPhone,
     order_items: (order.items || []).map((item, i) => ({
-      name: item.name || 'Product',
-      sku: item.productId || `item-${i + 1}`,
-      units: item.quantity || 1,
-      selling_price: parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0,
+      name: truncate(item.name || 'Product', 100),
+      sku: String(item.productId || `item-${i + 1}`).slice(0, 50),
+      units: Math.max(1, parseInt(item.quantity, 10) || 1),
+      selling_price: Math.max(0.01, parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0),
     })),
     payment_method: 'Prepaid',
     weight: 0.5,
@@ -92,7 +112,10 @@ async function createShipment(order) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message || data.errors?.join?.(' ') || data.error || 'Shiprocket order create failed');
+    const parts = [data.message || data.error || 'Shiprocket order create failed'];
+    if (Array.isArray(data.errors)) parts.push(data.errors.join('; '));
+    else if (data.errors && typeof data.errors === 'object') parts.push(JSON.stringify(data.errors));
+    throw new Error(parts.join(' — '));
   }
 
   const srOrderId = data.order?.id ?? data.id ?? data.order_id;

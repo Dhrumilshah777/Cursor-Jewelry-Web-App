@@ -11,7 +11,14 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ strict: true }));
+app.use((err, req, res, next) => {
+  if (err && err.status === 400 && err.type === 'entity.parse.failed') {
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+  next(err);
+});
 app.use(passport.initialize());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

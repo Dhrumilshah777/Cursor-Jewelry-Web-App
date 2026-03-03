@@ -47,10 +47,9 @@ exports.updateStatus = async (req, res) => {
             order.status = 'shipped';
             didShiprocket = true;
           } catch (shipErr) {
-            return res.status(400).json({
-              error: shipErr.message || 'Shiprocket shipment failed',
-              message: 'Could not create shipment',
-            });
+            const msg = (shipErr && shipErr.message) ? String(shipErr.message) : 'Shiprocket shipment failed';
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(400).json({ error: msg });
           }
         }
       } else {

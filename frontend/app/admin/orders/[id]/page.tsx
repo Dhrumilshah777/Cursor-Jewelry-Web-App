@@ -62,7 +62,11 @@ export default function AdminOrderDetailPage() {
       setStatus(updated.status);
       setTracking(updated.tracking || '');
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save');
+      let msg = err instanceof Error ? err.message : 'Failed to save';
+      if (msg === 'Bad Request' || msg === '400 Bad Request') {
+        msg = 'Server returned 400. Open DevTools (F12) → Network → click the red PATCH request → Response tab to see the real error from Shiprocket.';
+      }
+      setSaveError(msg);
     }
     setSaving(false);
   };

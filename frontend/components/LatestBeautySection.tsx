@@ -82,7 +82,7 @@ function ProductCard({ product }: { product: Product }) {
         <p className="text-sm text-stone-500">{product.category}</p>
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-base font-semibold">₹{product.price}</span>
+          <span className="text-base font-semibold">₹{product.price || '0'}</span>
           <div className="flex items-center gap-1">
             {/* Cart icon (add to cart) */}
             <button

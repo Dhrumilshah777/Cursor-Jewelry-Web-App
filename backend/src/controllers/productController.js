@@ -4,7 +4,13 @@ const { getProductPrice } = require('../services/priceCalculator');
 exports.list = async (req, res) => {
   try {
     const products = await Product.find().sort({ order: 1, createdAt: -1 });
-    res.json(products);
+    const withPrices = [];
+    for (const p of products) {
+      const { price } = await getProductPrice(p);
+      const po = p.toObject ? p.toObject() : p;
+      withPrices.push({ ...po, price: String(po.price || price || '0'), calculatedPrice: price });
+    }
+    res.json(withPrices);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -43,6 +43,11 @@ export default function BeautyInMotionSection() {
     : MIN_CARD_WIDTH;
 
   const maxIndex = Math.max(0, videos.length - 1);
+  const hasWrapped = videos.length >= 2;
+  const displayVideos = hasWrapped
+    ? [videos[videos.length - 1], ...videos, videos[0]]
+    : videos;
+  const centerDisplayIndex = hasWrapped ? currentIndex + 1 : 0;
 
   useEffect(() => {
     if (videos.length <= 1 || maxIndex === 0) return;
@@ -53,7 +58,7 @@ export default function BeautyInMotionSection() {
   }, [videos.length, maxIndex]);
 
   const translateX = containerWidth > 0
-    ? containerWidth / 2 - cardWidth / 2 - currentIndex * (cardWidth + CARD_GAP)
+    ? containerWidth / 2 - cardWidth / 2 - centerDisplayIndex * (cardWidth + CARD_GAP)
     : 0;
 
   if (videos.length === 0) return null;
@@ -64,7 +69,7 @@ export default function BeautyInMotionSection() {
         Beauty in Motion
       </h2>
 
-      <div ref={containerRef} className="overflow-hidden w-full max-w-7xl mx-auto px-3 sm:px-6">
+      <div ref={containerRef} className="overflow-hidden w-full max-w-7xl mx-auto px-2 sm:px-6">
         <div
           className="flex transition-transform duration-700 ease-out will-change-transform"
           style={{
@@ -72,16 +77,16 @@ export default function BeautyInMotionSection() {
             transform: `translateX(${translateX}px)`,
           }}
         >
-          {videos.map((url, i) => {
+          {displayVideos.map((url, i) => {
             const src = resolveVideoSrc(url);
             if (!src) return null;
-            const distance = Math.abs(i - currentIndex);
+            const distance = Math.abs(i - centerDisplayIndex);
             const isCenter = distance === 0;
             const scale = isCenter ? 1 : distance === 1 ? 0.88 : 0.78;
             const opacity = isCenter ? 1 : distance === 1 ? 0.78 : 0.5;
             return (
               <div
-                key={`${i}-${url}`}
+                key={hasWrapped ? `disp-${i}-${url}` : `${i}-${url}`}
                 className="flex-shrink-0 overflow-hidden rounded-xl bg-stone-200 shadow-lg transition-[transform,opacity] duration-700 ease-out"
                 style={{
                   width: cardWidth,

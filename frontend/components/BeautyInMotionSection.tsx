@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
 
-const CARD_WIDTH = 300;
 const CARD_GAP = 16;
+const PEEK_PX = 44;
 const SLIDE_INTERVAL_MS = 5000;
+const MIN_CARD_WIDTH = 200;
+const MAX_CARD_WIDTH = 340;
 
 function resolveVideoSrc(url: string): string {
   if (!url) return '';
@@ -14,17 +16,10 @@ function resolveVideoSrc(url: string): string {
   return url.startsWith('/') ? url : `/${url}`;
 }
 
-function getVisibleCount(containerWidth: number): number {
-  if (containerWidth >= 1200) return 4;
-  if (containerWidth >= 768) return 3;
-  if (containerWidth >= 480) return 2;
-  return 1;
-}
-
 export default function BeautyInMotionSection() {
   const [videos, setVideos] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(1);
+  const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,53 +31,64 @@ export default function BeautyInMotionSection() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const update = () => {
-      setVisibleCount(getVisibleCount(el.getBoundingClientRect().width));
-    };
+    const update = () => setContainerWidth(el.getBoundingClientRect().width);
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const maxIndex = Math.max(0, videos.length - visibleCount);
+  const cardWidth = containerWidth > 0
+    ? Math.min(MAX_CARD_WIDTH, Math.max(MIN_CARD_WIDTH, containerWidth - PEEK_PX * 2))
+    : MIN_CARD_WIDTH;
+
+  const maxIndex = Math.max(0, videos.length - 1);
 
   useEffect(() => {
-    if (videos.length <= visibleCount || maxIndex === 0) return;
+    if (videos.length <= 1 || maxIndex === 0) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, SLIDE_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [videos.length, visibleCount, maxIndex]);
+  }, [videos.length, maxIndex]);
 
-  const slideOffset = currentIndex * (CARD_WIDTH + CARD_GAP);
+  const translateX = containerWidth > 0
+    ? containerWidth / 2 - cardWidth / 2 - currentIndex * (cardWidth + CARD_GAP)
+    : 0;
 
   if (videos.length === 0) return null;
 
   return (
-    <section className="bg-stone-100 py-16">
+    <section className="bg-stone-100 py-16 overflow-hidden">
       <h2 className="text-center text-3xl font-thin uppercase tracking-wide text-charcoal mb-12">
         Beauty in Motion
       </h2>
 
-      <div ref={containerRef} className="overflow-hidden max-w-7xl mx-auto px-4">
+      <div ref={containerRef} className="overflow-hidden w-full max-w-7xl mx-auto px-2 sm:px-4">
         <div
-          className="flex transition-transform duration-700 ease-in-out"
+          className="flex transition-transform duration-700 ease-out will-change-transform"
           style={{
             gap: CARD_GAP,
-            transform: `translateX(-${slideOffset}px)`,
+            transform: `translateX(${translateX}px)`,
           }}
         >
           {videos.map((url, i) => {
             const src = resolveVideoSrc(url);
             if (!src) return null;
+            const distance = Math.abs(i - currentIndex);
+            const isCenter = distance === 0;
+            const scale = isCenter ? 1 : distance === 1 ? 0.92 : 0.86;
+            const opacity = isCenter ? 1 : distance === 1 ? 0.82 : 0.6;
             return (
               <div
                 key={`${i}-${url}`}
-                className="flex-shrink-0 overflow-hidden rounded-sm bg-stone-200 shadow-md"
+                className="flex-shrink-0 overflow-hidden rounded-lg bg-stone-200 shadow-md transition-transform duration-700 transition-opacity duration-700 ease-out"
                 style={{
-                  width: CARD_WIDTH,
-                  aspectRatio: '3 / 4',
+                  width: cardWidth,
+                  aspectRatio: '9 / 16',
+                  transform: `scale(${scale})`,
+                  opacity,
+                  transformOrigin: 'center center',
                 }}
               >
                 <video

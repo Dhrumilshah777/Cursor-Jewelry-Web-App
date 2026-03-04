@@ -6,12 +6,10 @@ import { useParams } from 'next/navigation';
 import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart } from '@/lib/api';
 
 type PriceBreakup = {
-  baseGold: number;
-  wastage: number;
-  makingCharges: number;
-  subtotal: number;
+  goldValue: number;
+  makingCharge: number;
   gst: number;
-  total: number;
+  totalPrice: number;
   goldPurity?: string;
   netWeight?: number;
   pricePerGram?: number;
@@ -215,12 +213,12 @@ export default function ProductDetailPage() {
             </p>
             {product.priceBreakup && (
               <dl className="mt-3 rounded border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
-                <dt className="font-medium text-charcoal">Price breakdown (incl. 3% GST)</dt>
+                <dt className="font-medium text-charcoal">Price breakdown (3% GST)</dt>
                 <dd className="mt-2 space-y-1">
-                  <span className="block">Gold ({product.priceBreakup.goldPurity}): ₹{product.priceBreakup.baseGold?.toFixed(2)}</span>
-                  <span className="block">Wastage: ₹{product.priceBreakup.wastage?.toFixed(2)}</span>
-                  <span className="block">Making charges: ₹{product.priceBreakup.makingCharges?.toFixed(2)}</span>
-                  <span className="block border-t border-stone-200 pt-1 font-medium">Total: ₹{product.priceBreakup.total?.toFixed(2)}</span>
+                  <span className="block">Gold value ({product.priceBreakup.goldPurity}): ₹{product.priceBreakup.goldValue?.toFixed(2)}</span>
+                  <span className="block">Making charge (incl. CZ): ₹{product.priceBreakup.makingCharge?.toFixed(2)}</span>
+                  <span className="block">GST: ₹{product.priceBreakup.gst?.toFixed(2)}</span>
+                  <span className="block border-t border-stone-200 pt-1 font-medium">Total: ₹{product.priceBreakup.totalPrice?.toFixed(2)}</span>
                 </dd>
               </dl>
             )}

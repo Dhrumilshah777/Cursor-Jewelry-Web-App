@@ -23,14 +23,13 @@ type Product = {
   netWeight?: number | null;
   makingChargeType?: 'percentage' | 'fixed';
   makingChargeValue?: number;
-  wastagePercent?: number;
 };
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, wastagePercent: 0 });
+  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [subImageUrlInput, setSubImageUrlInput] = useState('');
@@ -109,7 +108,7 @@ export default function AdminProductsPage() {
       } else {
         await apiPost('/api/admin/products', form, true);
       }
-      setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, wastagePercent: 0 });
+      setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -278,7 +277,7 @@ export default function AdminProductsPage() {
         </div>
         <div className="mt-6 border-t border-stone-200 pt-6">
           <h3 className="font-medium text-charcoal">Gold-based pricing (optional)</h3>
-          <p className="mt-1 text-sm text-stone-500">If set, final price is calculated from current gold rate + wastage + making charges + 3% GST. Leave empty to use fixed price above.</p>
+          <p className="mt-1 text-sm text-stone-500">Gold + making charge (incl. American diamond/CZ) → 3% GST. Leave empty to use fixed price above.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-stone-700">Gold purity</label>
@@ -317,7 +316,7 @@ export default function AdminProductsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700">Making charge value (%) or ₹</label>
+              <label className="block text-sm font-medium text-stone-700">Making charge value (% of gold value or ₹ fixed)</label>
               <input
                 type="number"
                 min={0}
@@ -326,17 +325,7 @@ export default function AdminProductsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, makingChargeValue: parseFloat(e.target.value) || 0 }))}
                 className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-stone-700">Wastage %</label>
-              <input
-                type="number"
-                min={0}
-                step={0.1}
-                value={form.wastagePercent ?? 0}
-                onChange={(e) => setForm((f) => ({ ...f, wastagePercent: parseFloat(e.target.value) || 0 }))}
-                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
-              />
+              <p className="mt-0.5 text-xs text-stone-500">American diamond (CZ) cost is included in making charge.</p>
             </div>
           </div>
         </div>
@@ -369,7 +358,7 @@ export default function AdminProductsPage() {
             {editingId ? 'Update' : 'Add'} product
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, wastagePercent: 0 }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
               Cancel
             </button>
           )}
@@ -399,7 +388,6 @@ export default function AdminProductsPage() {
                   netWeight: (p as Product).netWeight ?? undefined,
                   makingChargeType: (p as Product).makingChargeType ?? 'percentage',
                   makingChargeValue: (p as Product).makingChargeValue ?? 0,
-                  wastagePercent: (p as Product).wastagePercent ?? 0,
                 }); setEditingId(p._id); setError(''); setSubImageUrlInput(''); }}
                 className="rounded border border-stone-300 px-3 py-1 text-sm hover:bg-stone-50"
               >

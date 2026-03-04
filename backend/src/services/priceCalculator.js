@@ -4,9 +4,10 @@ const GoldRate = require('../models/GoldRate');
 const GST_RATE = 0.03; // 3%
 
 /**
- * Get effective price for a product (calculated from gold or fixed).
+ * Price formula: Gold Value + Making Charge (incl. CZ stones) = Subtotal; GST 3% on Subtotal; Final = Subtotal + GST.
+ * No wastage. Making charge = % of gold value OR fixed amount.
  * @param {Object} product - Product doc (plain or mongoose)
- * @param {Map<string, number>} [goldRatesMap] - Optional map of purity -> pricePerGram (e.g. { '22K': 6100 })
+ * @param {Map<string, number>} [goldRatesMap] - Optional map of purity -> pricePerGram
  * @returns {Promise<{ price: number, breakup: object | null }>}
  */
 async function getProductPrice(product, goldRatesMap = null) {
@@ -33,24 +34,20 @@ async function getProductPrice(product, goldRatesMap = null) {
 
   const makingType = p.makingChargeType === 'fixed' ? 'fixed' : 'percentage';
   const makingValue = parseFloat(p.makingChargeValue) || 0;
-  const wastagePercent = parseFloat(p.wastagePercent) || 0;
 
-  const baseGold = netWeight * pricePerGram;
-  const wastage = baseGold * (wastagePercent / 100);
-  const makingCharges = makingType === 'percentage' ? baseGold * (makingValue / 100) : makingValue;
-  const subtotal = baseGold + wastage + makingCharges;
+  const goldValue = netWeight * pricePerGram;
+  const makingCharge = makingType === 'percentage' ? goldValue * (makingValue / 100) : makingValue;
+  const subtotal = goldValue + makingCharge;
   const gst = subtotal * GST_RATE;
-  const total = subtotal + gst;
+  const totalPrice = subtotal + gst;
 
   return {
-    price: Math.round(total * 100) / 100,
+    price: Math.round(totalPrice * 100) / 100,
     breakup: {
-      baseGold: Math.round(baseGold * 100) / 100,
-      wastage: Math.round(wastage * 100) / 100,
-      makingCharges: Math.round(makingCharges * 100) / 100,
-      subtotal: Math.round(subtotal * 100) / 100,
+      goldValue: Math.round(goldValue * 100) / 100,
+      makingCharge: Math.round(makingCharge * 100) / 100,
       gst: Math.round(gst * 100) / 100,
-      total: Math.round(total * 100) / 100,
+      totalPrice: Math.round(totalPrice * 100) / 100,
       goldPurity: purity,
       netWeight,
       pricePerGram,

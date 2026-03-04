@@ -108,7 +108,7 @@ export default function AdminGoldRatesPage() {
       </div>
 
       <p className="mt-6 text-sm text-stone-500">
-        Product final price = (net weight × rate) + wastage % + making charges, then + 3% GST. Ensure rates are set before adding gold-priced products.
+        Formula: Gold value (net weight × rate) + Making charge (incl. American diamond/CZ) = Subtotal; 3% GST on subtotal; Final = Subtotal + GST. No wastage.
       </p>
     </div>
   );

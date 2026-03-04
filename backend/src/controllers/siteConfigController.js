@@ -50,6 +50,26 @@ exports.updateVideo = async (req, res) => {
   }
 };
 
+exports.getBeautyInMotionVideos = async (req, res) => {
+  try {
+    const config = await getConfig();
+    res.json({ videos: config.beautyInMotionVideos || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateBeautyInMotionVideos = async (req, res) => {
+  try {
+    const config = await getConfig();
+    config.beautyInMotionVideos = Array.isArray(req.body.videos) ? req.body.videos.filter(Boolean) : [];
+    await config.save();
+    res.json({ videos: config.beautyInMotionVideos });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 exports.getInstagram = async (req, res) => {
   try {
     const config = await getConfig();

@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/hero', label: 'Hero Sliders' },
   { href: '/admin/video', label: 'Home Page Video' },
+  { href: '/admin/beauty-in-motion', label: 'Beauty in Motion' },
   { href: '/admin/instagram', label: 'Instagram Section' },
 ];
 

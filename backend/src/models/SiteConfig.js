@@ -15,6 +15,7 @@ const siteConfigSchema = new mongoose.Schema(
     key: { type: String, required: true, unique: true },
     heroSlides: [heroSlideSchema],
     homeVideoUrl: { type: String, default: '' },
+    beautyInMotionVideos: { type: [String], default: [] },
     instagramImages: [{ src: String, alt: { type: String, default: 'Instagram' } }],
   },
   { timestamps: true }

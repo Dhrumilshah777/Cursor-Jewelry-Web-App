@@ -2,6 +2,7 @@ import Link from 'next/link';
 import HeroSlider from '@/components/HeroSlider';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import LatestBeautySection from '@/components/LatestBeautySection';
+import BeautyInMotionSection from '@/components/BeautyInMotionSection';
 import ViewByCategoriesSection from '@/components/ViewByCategoriesSection';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import KindWordsSection from '@/components/KindWordsSection';
@@ -14,7 +15,7 @@ export default function Home() {
 
       <LatestBeautySection />
 
-      {/* <HomePageVideoSection /> */}
+      <BeautyInMotionSection />
 
       <ViewByCategoriesSection />
 

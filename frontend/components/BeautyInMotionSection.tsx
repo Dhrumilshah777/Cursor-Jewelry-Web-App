@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
 
-const CARD_WIDTH = 280;
+const CARD_WIDTH = 360;
 const CARD_GAP = 16;
-const CARD_ASPECT = 9 / 16;
 
 function resolveVideoSrc(url: string): string {
   if (!url) return '';
@@ -45,7 +44,7 @@ export default function BeautyInMotionSection() {
                 className="flex-shrink-0 overflow-hidden rounded-sm bg-stone-200 shadow-md"
                 style={{
                   width: CARD_WIDTH,
-                  aspectRatio: `${1} / ${CARD_ASPECT}`,
+                  aspectRatio: '9 / 16',
                 }}
               >
                 <video

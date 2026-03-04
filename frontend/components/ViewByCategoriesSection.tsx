@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { assetUrl } from '@/lib/api';
+import { assetUrl, apiGet } from '@/lib/api';
 
 type Category = {
   id: string;
@@ -11,13 +11,7 @@ type Category = {
   slug: string;
 };
 
-const CATEGORIES: Category[] = [
-  { id: '1', name: 'knots', image: '/instagram-1.jpg', slug: 'knots' },
-  { id: '2', name: 'pearl', image: '/instagram-2.jpg', slug: 'pearl' },
-  { id: '3', name: 'sea cut', image: '/instagram-3.jpg', slug: 'sea-cut' },
-  { id: '4', name: 'mystic', image: '/instagram-4.jpg', slug: 'mystic' },
-  { id: '5', name: 'undersea', image: '/instagram-5.jpg', slug: 'undersea' },
-];
+type ApiCategory = { _id?: string; name: string; image: string; slug: string };
 
 const AUTOPLAY_MS = 5000;
 const MOBILE_GRID_BREAKPOINT = 768;
@@ -64,10 +58,25 @@ function CategoryCard({ category }: { category: Category }) {
 }
 
 export default function ViewByCategoriesSection() {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isMobileGrid, setIsMobileGrid] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    apiGet<ApiCategory[]>('/api/site/view-by-categories')
+      .then((list) => {
+        const mapped: Category[] = (Array.isArray(list) ? list : []).map((c, i) => ({
+          id: c._id ?? String(i),
+          name: c.name || 'Category',
+          image: c.image || '',
+          slug: c.slug || c.name?.toLowerCase().replace(/\s+/g, '-') || 'category',
+        }));
+        setCategories(mapped);
+      })
+      .catch(() => setCategories([]));
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -85,9 +94,9 @@ export default function ViewByCategoriesSection() {
 
   // Mobile: page-based (4 per page, 2x2). Desktop: item-based (5 visible in a row). Before measure, assume mobile.
   const isMobile = containerWidth === 0 ? true : isMobileGrid;
-  const pageCountMobile = Math.ceil(CATEGORIES.length / ITEMS_PER_PAGE_MOBILE);
+  const pageCountMobile = Math.ceil(categories.length / ITEMS_PER_PAGE_MOBILE);
   const maxIndexMobile = Math.max(0, pageCountMobile - 1);
-  const maxIndexDesktop = Math.max(0, CATEGORIES.length - VISIBLE_DESKTOP);
+  const maxIndexDesktop = Math.max(0, categories.length - VISIBLE_DESKTOP);
   const maxIndex = isMobile ? maxIndexMobile : maxIndexDesktop;
 
   useEffect(() => {
@@ -106,7 +115,7 @@ export default function ViewByCategoriesSection() {
     setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
   };
 
-  if (containerWidth === 0 && CATEGORIES.length === 0) return null;
+  if (categories.length === 0) return null;
 
   return (
     <section className="w-full overflow-hidden bg-cream py-16 sm:py-10">
@@ -134,7 +143,7 @@ export default function ViewByCategoriesSection() {
           >
             {Array.from({ length: pageCountMobile }, (_, page) => {
               const start = page * ITEMS_PER_PAGE_MOBILE;
-              const items = CATEGORIES.slice(start, start + ITEMS_PER_PAGE_MOBILE);
+              const items = categories.slice(start, start + ITEMS_PER_PAGE_MOBILE);
               const slideW = containerWidth || 400;
               return (
                 <div
@@ -164,8 +173,8 @@ export default function ViewByCategoriesSection() {
             const itemWidthVw = 100 / VISIBLE_DESKTOP;
             const usePx = containerWidth > 0;
             const trackWidth = usePx
-              ? CATEGORIES.length * itemWidthPx + (CATEGORIES.length - 1) * gapPx
-              : (100 / VISIBLE_DESKTOP) * CATEGORIES.length;
+              ? categories.length * itemWidthPx + (categories.length - 1) * gapPx
+              : (100 / VISIBLE_DESKTOP) * categories.length;
             const step = usePx ? itemWidthPx + gapPx : itemWidthVw;
             return (
               <div
@@ -177,7 +186,7 @@ export default function ViewByCategoriesSection() {
                     : `translateX(-${currentIndex * step}vw)`,
                 }}
               >
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <div
                     key={cat.id}
                     className="flex-shrink-0 overflow-visible"

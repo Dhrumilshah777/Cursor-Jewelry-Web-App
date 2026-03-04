@@ -70,6 +70,50 @@ exports.updateBeautyInMotionVideos = async (req, res) => {
   }
 };
 
+function slugFromName(name) {
+  return String(name || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'category';
+}
+
+exports.getViewByCategories = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const list = (config.viewByCategories || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    res.json(list.map((c, i) => ({
+      _id: c._id?.toString() || String(i),
+      name: c.name,
+      image: c.image,
+      slug: c.slug || slugFromName(c.name),
+      order: c.order ?? i,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateViewByCategories = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const raw = Array.isArray(req.body.categories) ? req.body.categories : [];
+    config.viewByCategories = raw.map((c, i) => ({
+      name: String(c.name || '').trim() || 'Category',
+      image: String(c.image || '').trim() || '',
+      slug: String(c.slug || slugFromName(c.name)).trim() || slugFromName(c.name),
+      order: i,
+    })).filter((c) => c.image);
+    await config.save();
+    const list = (config.viewByCategories || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    res.json(list.map((c, i) => ({
+      _id: c._id?.toString() || String(i),
+      name: c.name,
+      image: c.image,
+      slug: c.slug || slugFromName(c.name),
+      order: c.order ?? i,
+    })));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 exports.getInstagram = async (req, res) => {
   try {
     const config = await getConfig();

@@ -76,6 +76,7 @@ app.use('/api/admin/orders', require('./routes/admin/orders'));
 app.use('/api/admin/hero', require('./routes/admin/hero'));
 app.use('/api/admin/video', require('./routes/admin/video'));
 app.use('/api/admin/beauty-in-motion', require('./routes/admin/beautyInMotion'));
+app.use('/api/admin/view-by-categories', require('./routes/admin/viewByCategories'));
 app.use('/api/admin/instagram', require('./routes/admin/instagram'));
 app.use('/api/admin/gold-rates', require('./routes/admin/goldRates'));
 app.use('/api/admin/upload', require('./routes/admin/upload'));

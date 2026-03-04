@@ -5,6 +5,7 @@ const siteConfigController = require('../controllers/siteConfigController');
 router.get('/hero', siteConfigController.getHero);
 router.get('/video', siteConfigController.getVideo);
 router.get('/beauty-in-motion', siteConfigController.getBeautyInMotionVideos);
+router.get('/view-by-categories', siteConfigController.getViewByCategories);
 router.get('/instagram', siteConfigController.getInstagram);
 
 module.exports = router;

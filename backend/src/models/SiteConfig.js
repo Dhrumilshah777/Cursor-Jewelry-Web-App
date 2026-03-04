@@ -17,6 +17,12 @@ const siteConfigSchema = new mongoose.Schema(
     homeVideoUrl: { type: String, default: '' },
     beautyInMotionVideos: { type: [String], default: [] },
     instagramImages: [{ src: String, alt: { type: String, default: 'Instagram' } }],
+    viewByCategories: [{
+      name: { type: String, required: true },
+      image: { type: String, required: true },
+      slug: { type: String, default: '' },
+      order: { type: Number, default: 0 },
+    }],
   },
   { timestamps: true }
 );

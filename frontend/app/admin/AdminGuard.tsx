@@ -13,6 +13,7 @@ const NAV = [
   { href: '/admin/hero', label: 'Hero Sliders' },
   { href: '/admin/video', label: 'Home Page Video' },
   { href: '/admin/beauty-in-motion', label: 'Beauty in Motion' },
+  { href: '/admin/view-by-categories', label: 'View by Categories' },
   { href: '/admin/instagram', label: 'Instagram Section' },
 ];
 

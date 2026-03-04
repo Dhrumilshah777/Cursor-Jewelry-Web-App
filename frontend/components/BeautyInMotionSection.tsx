@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
 
-const CARD_GAP = 16;
-const PEEK_PX = 44;
+const CARD_GAP = 20;
+const PEEK_PX = 56;
 const SLIDE_INTERVAL_MS = 5000;
-const MIN_CARD_WIDTH = 200;
-const MAX_CARD_WIDTH = 340;
+const MIN_CARD_WIDTH = 220;
+const MAX_CARD_WIDTH = 380;
 
 function resolveVideoSrc(url: string): string {
   if (!url) return '';
@@ -64,7 +64,7 @@ export default function BeautyInMotionSection() {
         Beauty in Motion
       </h2>
 
-      <div ref={containerRef} className="overflow-hidden w-full max-w-7xl mx-auto px-2 sm:px-4">
+      <div ref={containerRef} className="overflow-hidden w-full max-w-7xl mx-auto px-3 sm:px-6">
         <div
           className="flex transition-transform duration-700 ease-out will-change-transform"
           style={{
@@ -77,12 +77,12 @@ export default function BeautyInMotionSection() {
             if (!src) return null;
             const distance = Math.abs(i - currentIndex);
             const isCenter = distance === 0;
-            const scale = isCenter ? 1 : distance === 1 ? 0.92 : 0.86;
-            const opacity = isCenter ? 1 : distance === 1 ? 0.82 : 0.6;
+            const scale = isCenter ? 1 : distance === 1 ? 0.88 : 0.78;
+            const opacity = isCenter ? 1 : distance === 1 ? 0.78 : 0.5;
             return (
               <div
                 key={`${i}-${url}`}
-                className="flex-shrink-0 overflow-hidden rounded-lg bg-stone-200 shadow-md transition-transform duration-700 transition-opacity duration-700 ease-out"
+                className="flex-shrink-0 overflow-hidden rounded-xl bg-stone-200 shadow-lg transition-[transform,opacity] duration-700 ease-out"
                 style={{
                   width: cardWidth,
                   aspectRatio: '9 / 16',

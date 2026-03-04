@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiGet, assetUrl, addToCart } from '@/lib/api';
+import FilterSidebar, { type Facets } from '@/components/FilterSidebar';
 
 type Product = {
   _id: string;
@@ -13,6 +14,8 @@ type Product = {
   image: string;
 };
 
+type ProductsResponse = { products: Product[]; facets: Facets };
+
 function productImageSrc(image: string) {
   if (!image) return '';
   if (image.startsWith('http')) return image;
@@ -20,46 +23,47 @@ function productImageSrc(image: string) {
   return image.startsWith('/') ? image : `/${image}`;
 }
 
-/** Normalize for comparison: "Sea cut" / "sea-cut" -> "sea-cut" */
-function categoryToSlug(category: string) {
-  return category.toLowerCase().trim().replace(/\s+/g, '-');
-}
-
-function matchesCategory(productCategory: string, urlCategory: string) {
-  if (!urlCategory) return true;
-  return categoryToSlug(productCategory) === urlCategory.toLowerCase().trim();
-}
+const defaultFacets: Facets = {
+  totalProducts: 0,
+  categories: [],
+  priceRange: { min: 0, max: 0 },
+  colors: [],
+};
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category') || '';
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [data, setData] = useState<ProductsResponse>({ products: [], facets: defaultFacets });
   const [loading, setLoading] = useState(true);
 
+  const queryString = searchParams.toString();
+  const apiUrl = queryString ? `/api/products?${queryString}` : '/api/products';
+
   useEffect(() => {
-    apiGet<Product[] & { _id?: string }[]>('/api/products')
-      .then((list) => {
-        if (Array.isArray(list) && list.length > 0) {
-          setProducts(
-            list.map((p) => ({
-              _id: String((p as { _id?: string })._id ?? ''),
-              name: p.name,
-              category: p.category,
-              price: p.price,
-              image: p.image,
-            }))
-          );
-        }
+    setLoading(true);
+    apiGet<ProductsResponse>(apiUrl)
+      .then((res) => {
+        const products = Array.isArray((res as { products?: Product[] }).products)
+          ? (res as ProductsResponse).products
+          : Array.isArray(res) ? (res as unknown as Product[]) : [];
+        const facets = (res as ProductsResponse).facets || defaultFacets;
+        setData({
+          products: products.map((p) => ({
+            _id: String((p as { _id?: string })._id ?? ''),
+            name: p.name,
+            category: p.category,
+            price: p.price,
+            image: p.image,
+          })),
+          facets,
+        });
       })
-      .catch(() => setProducts([]))
+      .catch(() => setData({ products: [], facets: defaultFacets }))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiUrl]);
 
-  const filteredProducts = categoryParam
-    ? products.filter((p) => matchesCategory(p.category, categoryParam))
-    : products;
-
+  const { products: filteredProducts, facets } = data;
   const categoryLabel = categoryParam
     ? categoryParam.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
@@ -83,77 +87,79 @@ function ProductsContent() {
         <p className="mt-1 text-sm text-stone-500">
           {filteredProducts.length === 0
             ? categoryParam
-              ? `No products in this category.`
+              ? 'No products match these filters.'
               : 'No products yet.'
-            : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}${categoryParam ? ' in this category' : ''}.`}
+            : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}.`}
         </p>
 
-        {categoryParam && (
-          <p className="mt-2">
-            <Link
-              href="/products"
-              className="text-sm text-charcoal underline hover:no-underline"
-            >
-              ← Show all products
-            </Link>
-          </p>
-        )}
-
-        {filteredProducts.length === 0 ? (
-          <div className="mt-8 rounded border border-stone-200 bg-stone-50 p-8 text-center">
-            <p className="text-stone-600">
-              {categoryParam
-                ? 'No products in this category yet.'
-                : 'Products added in the admin will appear here.'}
-            </p>
-            <Link href="/" className="mt-4 inline-block text-sm font-medium text-charcoal underline hover:no-underline">
-              ← Back to home
-            </Link>
-          </div>
-        ) : (
-          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProducts.map((product) => (
-              <li
-                key={product._id}
-                className="group flex flex-col overflow-hidden rounded border border-stone-200 bg-white"
-              >
-                <Link href={`/products/${product._id}`} className="block flex-1">
-                  <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
-                    <img
-                      src={productImageSrc(product.image)}
-                      alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">
-                      {product.name}
-                    </h2>
-                    <p className="mt-1 text-xs text-stone-500">{product.category}</p>
-                    <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
-                  </div>
+        <div className="mt-8 flex flex-col gap-8 lg:flex-row">
+          <FilterSidebar
+            facets={facets}
+            totalCount={filteredProducts.length}
+            className="lg:sticky lg:top-8 lg:self-start"
+          />
+          <div className="min-w-0 flex-1">
+            {filteredProducts.length === 0 ? (
+              <div className="rounded border border-stone-200 bg-stone-50 p-8 text-center">
+                <p className="text-stone-600">
+                  {searchParams.toString()
+                    ? 'Try changing or clearing filters.'
+                    : 'Products added in the admin will appear here.'}
+                </p>
+                <Link href="/products" className="mt-4 inline-block text-sm font-medium text-charcoal underline hover:no-underline">
+                  Clear filters
                 </Link>
-                <div className="border-t border-stone-100 p-3">
-                  <button
-                    type="button"
-                    onClick={() => addToCart({ id: product._id, name: product.name, price: product.price, image: product.image })}
-                    className="w-full rounded border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
+                <span className="mx-2 text-stone-400">|</span>
+                <Link href="/" className="text-sm font-medium text-charcoal underline hover:no-underline">
+                  ← Back to home
+                </Link>
+              </div>
+            ) : (
+              <ul className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredProducts.map((product) => (
+                  <li
+                    key={product._id}
+                    className="group flex flex-col overflow-hidden rounded border border-stone-200 bg-white"
                   >
-                    Add to cart
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+                    <Link href={`/products/${product._id}`} className="block flex-1">
+                      <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
+                        <img
+                          src={productImageSrc(product.image)}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">
+                          {product.name}
+                        </h2>
+                        <p className="mt-1 text-xs text-stone-500">{product.category}</p>
+                        <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
+                      </div>
+                    </Link>
+                    <div className="border-t border-stone-100 p-3">
+                      <button
+                        type="button"
+                        onClick={() => addToCart({ id: product._id, name: product.name, price: product.price, image: product.image })}
+                        className="w-full rounded border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
+                      >
+                        Add to cart
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-        {filteredProducts.length > 0 && (
-          <p className="mt-8">
-            <Link href="/" className="text-sm text-charcoal underline hover:no-underline">
-              ← Back to home
-            </Link>
-          </p>
-        )}
+            {filteredProducts.length > 0 && (
+              <p className="mt-8">
+                <Link href="/" className="text-sm text-charcoal underline hover:no-underline">
+                  ← Back to home
+                </Link>
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );

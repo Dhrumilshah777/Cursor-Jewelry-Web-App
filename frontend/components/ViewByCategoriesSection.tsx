@@ -57,14 +57,30 @@ function CategoryCard({ category }: { category: Category }) {
   );
 }
 
+// Same layout as mock: 5 items for consistent dimensions and slider (2 mobile pages, desktop 4 visible)
+const MOCK_LENGTH = 5;
+
+function SkeletonCard() {
+  return (
+    <div className="block">
+      <div className="relative w-full overflow-hidden rounded-sm bg-stone-200 shadow-md">
+        <div className="aspect-[3/4] w-full animate-pulse bg-stone-300" />
+      </div>
+      <div className="mt-3 h-4 w-16 animate-pulse rounded bg-stone-200 mx-auto" />
+    </div>
+  );
+}
+
 export default function ViewByCategoriesSection() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isMobileGrid, setIsMobileGrid] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setLoading(true);
     apiGet<ApiCategory[]>('/api/site/view-by-categories')
       .then((list) => {
         const mapped: Category[] = (Array.isArray(list) ? list : []).map((c, i) => ({
@@ -75,7 +91,8 @@ export default function ViewByCategoriesSection() {
         }));
         setCategories(mapped);
       })
-      .catch(() => setCategories([]));
+      .catch(() => setCategories([]))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -90,13 +107,19 @@ export default function ViewByCategoriesSection() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [loading, categories.length]);
 
-  // Mobile: page-based (4 per page, 2x2). Desktop: item-based (5 visible in a row). Before measure, assume mobile.
+  // Use mock length for layout when loading or empty so width/height and slider match original
+  const displayList = loading || categories.length === 0
+    ? Array.from({ length: MOCK_LENGTH }, (_, i) => ({ id: `skeleton-${i}`, name: '', image: '', slug: '' }))
+    : categories;
+  const isSkeleton = loading || categories.length === 0;
+
+  // Mobile: page-based (4 per page, 2x2). Desktop: 4 visible. Same as mock.
   const isMobile = containerWidth === 0 ? true : isMobileGrid;
-  const pageCountMobile = Math.ceil(categories.length / ITEMS_PER_PAGE_MOBILE);
+  const pageCountMobile = Math.ceil(displayList.length / ITEMS_PER_PAGE_MOBILE);
   const maxIndexMobile = Math.max(0, pageCountMobile - 1);
-  const maxIndexDesktop = Math.max(0, categories.length - VISIBLE_DESKTOP);
+  const maxIndexDesktop = Math.max(0, displayList.length - VISIBLE_DESKTOP);
   const maxIndex = isMobile ? maxIndexMobile : maxIndexDesktop;
 
   useEffect(() => {
@@ -115,8 +138,6 @@ export default function ViewByCategoriesSection() {
     setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
   };
 
-  if (categories.length === 0) return null;
-
   return (
     <section className="w-full overflow-hidden bg-cream py-16 sm:py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -130,10 +151,10 @@ export default function ViewByCategoriesSection() {
         <div
           ref={containerRef}
           className="relative mt-10 w-full overflow-hidden"
-          style={{ minHeight: 280 }}
-        > 
+          style={{ minHeight: 420 }}
+        >
         {isMobile ? (
-          /* Mobile: each slide is a 2x2 grid of 4 categories */
+          /* Mobile: each slide is a 2x2 grid of 4 categories - same as mock */
           <div
             className="flex flex-nowrap transition-transform duration-500 ease-out"
             style={{
@@ -143,7 +164,7 @@ export default function ViewByCategoriesSection() {
           >
             {Array.from({ length: pageCountMobile }, (_, page) => {
               const start = page * ITEMS_PER_PAGE_MOBILE;
-              const items = categories.slice(start, start + ITEMS_PER_PAGE_MOBILE);
+              const items = displayList.slice(start, start + ITEMS_PER_PAGE_MOBILE);
               const slideW = containerWidth || 400;
               return (
                 <div
@@ -155,15 +176,19 @@ export default function ViewByCategoriesSection() {
                     boxSizing: 'border-box',
                   }}
                 >
-                  {items.map((cat) => (
-                    <CategoryCard key={cat.id} category={cat} />
-                  ))}
+                  {items.map((item, i) =>
+                    isSkeleton ? (
+                      <SkeletonCard key={`skeleton-${page}-${i}`} />
+                    ) : (
+                      <CategoryCard key={(item as Category).id} category={item as Category} />
+                    )
+                  )}
                 </div>
               );
             })}
           </div>
         ) : (
-          /* Desktop: single row, portrait cards, minimal gap (no play/pause icon) */
+          /* Desktop: single row, 4 visible portrait cards - same as mock */
           (() => {
             const gapPx = 8;
             const itemWidthPx =
@@ -173,8 +198,8 @@ export default function ViewByCategoriesSection() {
             const itemWidthVw = 100 / VISIBLE_DESKTOP;
             const usePx = containerWidth > 0;
             const trackWidth = usePx
-              ? categories.length * itemWidthPx + (categories.length - 1) * gapPx
-              : (100 / VISIBLE_DESKTOP) * categories.length;
+              ? displayList.length * itemWidthPx + (displayList.length - 1) * gapPx
+              : (100 / VISIBLE_DESKTOP) * displayList.length;
             const step = usePx ? itemWidthPx + gapPx : itemWidthVw;
             return (
               <div
@@ -186,16 +211,16 @@ export default function ViewByCategoriesSection() {
                     : `translateX(-${currentIndex * step}vw)`,
                 }}
               >
-                {categories.map((cat) => (
+                {displayList.map((item, i) => (
                   <div
-                    key={cat.id}
+                    key={isSkeleton ? `skeleton-${i}` : (item as Category).id}
                     className="flex-shrink-0 overflow-visible"
                     style={{
                       width: usePx ? itemWidthPx : `${itemWidthVw}vw`,
                       minWidth: usePx ? itemWidthPx : `${itemWidthVw}vw`,
                     }}
                   >
-                    <CategoryCard category={cat} />
+                    {isSkeleton ? <SkeletonCard /> : <CategoryCard category={item as Category} />}
                   </div>
                 ))}
               </div>

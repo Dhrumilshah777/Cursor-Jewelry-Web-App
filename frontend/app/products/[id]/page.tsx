@@ -215,6 +215,12 @@ export default function ProductDetailPage() {
               <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
                 <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
                 <ul className="mt-3 space-y-2 text-sm text-stone-700">
+                  {product.priceBreakup.netWeight != null && (
+                    <li className="flex justify-between">
+                      <span>Net weight</span>
+                      <span className="font-medium">{Number(product.priceBreakup.netWeight)} g</span>
+                    </li>
+                  )}
                   <li className="flex justify-between">
                     <span>Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}</span>
                     <span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span>
@@ -235,19 +241,25 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {(product.weight || product.carat) && (
+            {(product.weight || product.priceBreakup?.netWeight != null || product.carat) && (
               <dl className="mt-4 space-y-1 text-sm text-stone-600">
                 {product.weight && (
-                  <>
-                    <dt className="inline font-medium">Weight: </dt>
-                    <dd className="inline">{product.weight}</dd>
-                  </>
+                  <div>
+                    <dt className="font-medium">Gross weight:</dt>
+                    <dd className="mt-0.5">{product.weight}</dd>
+                  </div>
+                )}
+                {product.priceBreakup?.netWeight != null && (
+                  <div>
+                    <dt className="font-medium">Net weight:</dt>
+                    <dd className="mt-0.5">{Number(product.priceBreakup.netWeight)} g</dd>
+                  </div>
                 )}
                 {product.carat && (
-                  <>
-                    <dt className="inline font-medium ml-2">Carat: </dt>
-                    <dd className="inline">{product.carat}</dd>
-                  </>
+                  <div>
+                    <dt className="font-medium">Carat:</dt>
+                    <dd className="mt-0.5">{product.carat}</dd>
+                  </div>
                 )}
               </dl>
             )}

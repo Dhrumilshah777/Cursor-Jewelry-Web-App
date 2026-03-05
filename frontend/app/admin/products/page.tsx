@@ -292,7 +292,7 @@ export default function AdminProductsPage() {
                 step={0.01}
                 value={form.netWeight ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, netWeight: e.target.value === '' ? undefined : parseFloat(e.target.value) }))}
-                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="e.g. 8.5"
                 required
               />

@@ -189,7 +189,7 @@ async function createShipment(order) {
 
 /**
  * Check courier serviceability for a delivery pincode.
- * Uses Shiprocket GET /courier/serviceability with pickup_postcode and delivery_postcode.
+ * Uses Shiprocket GET /courier/serviceability with JSON body (pickup_postcode, delivery_postcode, weight, cod, mode).
  * @param {string|number} deliveryPincode - Customer delivery pincode
  * @param {string|number} [pickupPincode] - Origin pincode (default from env SHIPROCKET_PICKUP_PINCODE or 395009)
  * @returns {Promise<{ serviceable: boolean, estimatedDays: number | null, availableCouriers: Array<{ name: string, etd: string }> }>}
@@ -204,16 +204,36 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
     return { serviceable: false, estimatedDays: null, availableCouriers: [] };
   }
   const validPickup = Number.isFinite(pickup) && pickup > 0 ? pickup : 395009;
+  // Same pincode (e.g. warehouse) often returns no couriers; treat as local delivery 1–2 days
+  if (delivery === validPickup) {
+    return { serviceable: true, estimatedDays: 2, availableCouriers: [{ name: 'Local', etd: '1-2 days' }] };
+  }
   const token = await getToken();
-  const url = `${SHIPROCKET_BASE}/courier/serviceability/?pickup_postcode=${validPickup}&delivery_postcode=${delivery}&weight=0.5`;
-  const res = await fetch(url, {
+  // Shiprocket domestic serviceability: GET with JSON body (cod=0 prepaid, weight in kg, mode Surface or Air)
+  const body = {
+    pickup_postcode: validPickup,
+    delivery_postcode: delivery,
+    weight: 0.5,
+    cod: 0,
+    mode: 'Surface',
+  };
+  const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/`, {
     method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  const companies = data.data?.available_courier_companies ?? data.available_courier_companies ?? [];
+  // Response may be { data: { available_courier_companies: [...] } } or { available_courier_companies: [...] } or nested under data.data
+  const companies =
+    data.data?.available_courier_companies ??
+    data.data?.data?.available_courier_companies ??
+    data.available_courier_companies ??
+    [];
   const availableCouriers = Array.isArray(companies)
-    ? companies.map((c) => ({ name: c.name || c.courier_name || 'Courier', etd: c.etd || c.etd_min_max || '' }))
+    ? companies.map((c) => ({ name: c.name || c.courier_name || 'Courier', etd: c.etd || c.etd_min_max || c.estimated_delivery_days || '' }))
     : [];
   let estimatedDays = null;
   for (const c of availableCouriers) {

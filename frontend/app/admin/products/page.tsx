@@ -234,7 +234,7 @@ export default function AdminProductsPage() {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-stone-700">Weight</label>
+            <label className="block text-sm font-medium text-stone-700">Gross weight (optional)</label>
             <input
               value={form.weight || ''}
               onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))}

@@ -73,8 +73,7 @@ Railway will run `npm install` and `npm start` from the `backend` folder.
 |----------|------------------|
 | `PORT` | `5000` (Railway can override this; you can leave it or omit and let Railway set it.) |
 | `MONGODB_URI` | Your Atlas or Railway MongoDB connection string |
-| `ADMIN_SECRET` | A strong secret (e.g. random string) for admin key login |
-| `JWT_SECRET` | A long random string (e.g. 32+ chars) for JWT signing |
+| `JWT_SECRET` | A long random string (e.g. 32+ chars) for JWT signing (user + admin sessions) |
 | `GOOGLE_CLIENT_ID` | Your Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Your Google OAuth client secret |
 | `ALLOWED_ADMIN_EMAILS` | Comma-separated admin emails, e.g. `you@gmail.com` |
@@ -136,7 +135,7 @@ Replace `your-backend.up.railway.app` with your real Railway backend domain.
 - [ ] Code pushed to GitHub (repo has `backend` folder).
 - [ ] Railway project created, service from GitHub, **Root Directory** = `backend`.
 - [ ] **MONGODB_URI** set (Atlas or Railway MongoDB).
-- [ ] **ADMIN_SECRET**, **JWT_SECRET**, **GOOGLE_***, **ALLOWED_ADMIN_EMAILS** set.
+- [ ] **JWT_SECRET**, **GOOGLE_***, **ALLOWED_ADMIN_EMAILS** set.
 - [ ] **FRONTEND_URL** and **BACKEND_URL** (Railway URL) set.
 - [ ] Domain generated for the backend service.
 - [ ] **NEXT_PUBLIC_API_URL** in frontend set to Railway URL.

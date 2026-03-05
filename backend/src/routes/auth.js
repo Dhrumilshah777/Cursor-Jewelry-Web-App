@@ -5,7 +5,7 @@ const router = express.Router();
 const User = require('../models/User');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 const isProduction = process.env.NODE_ENV === 'production';
 

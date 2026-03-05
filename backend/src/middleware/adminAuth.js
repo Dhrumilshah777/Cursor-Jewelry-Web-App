@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 
 const adminAuth = (req, res, next) => {
   const token = req.cookies?.admin_token || req.headers['x-admin-key'] || req.query.adminKey;

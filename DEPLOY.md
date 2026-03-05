@@ -39,7 +39,7 @@ Google OAuth is removed for now; admin login uses the **admin key** only.
    - **Start Command:** `npm start`
 5. **Environment** (Environment Variables):
    - `MONGODB_URI` = your MongoDB connection string (e.g. from [MongoDB Atlas](https://cloud.mongodb.com))
-   - `ADMIN_SECRET` = your admin key (same value you’ll use to log in to admin)
+   - `JWT_SECRET` = a long random string for JWT signing (user + admin sessions)’ll use to log in to admin)
    - `NODE_ENV` = `production`
 
    You do **not** need Google or JWT vars for now.
@@ -71,7 +71,7 @@ Google OAuth is removed for now; admin login uses the **admin key** only.
 ## Step 4: Admin login
 
 - Go to **`https://YOUR_VERCEL_URL/admin`** → you’ll be sent to **`/admin/login`**.
-- Sign in with the **admin key** you set as `ADMIN_SECRET` on Render.
+- Sign in with **Google** (ensure your email is in `ALLOWED_ADMIN_EMAILS` on the backend). The backend uses `JWT_SECRET` to sign session tokens.
 
 ---
 

@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 
 /**
  * Verify user JWT (role 'user' or 'admin'). Attach req.userId (user's _id from token).

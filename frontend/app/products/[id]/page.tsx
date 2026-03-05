@@ -212,15 +212,27 @@ export default function ProductDetailPage() {
               ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
             </p>
             {product.priceBreakup && (
-              <dl className="mt-3 rounded border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
-                <dt className="font-medium text-charcoal">Price breakdown (3% GST)</dt>
-                <dd className="mt-2 space-y-1">
-                  <span className="block">Gold value ({product.priceBreakup.goldPurity}): ₹{product.priceBreakup.goldValue?.toFixed(2)}</span>
-                  <span className="block">Making charge (incl. CZ): ₹{product.priceBreakup.makingCharge?.toFixed(2)}</span>
-                  <span className="block">GST: ₹{product.priceBreakup.gst?.toFixed(2)}</span>
-                  <span className="block border-t border-stone-200 pt-1 font-medium">Total: ₹{product.priceBreakup.totalPrice?.toFixed(2)}</span>
-                </dd>
-              </dl>
+              <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
+                <ul className="mt-3 space-y-2 text-sm text-stone-700">
+                  <li className="flex justify-between">
+                    <span>Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}</span>
+                    <span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Making charge</span>
+                    <span className="font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>GST charge (3%)</span>
+                    <span className="font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</span>
+                  </li>
+                  <li className="flex justify-between border-t border-stone-200 pt-2 mt-2 font-semibold text-charcoal">
+                    <span>Total</span>
+                    <span>₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</span>
+                  </li>
+                </ul>
+              </div>
             )}
 
             {(product.weight || product.carat) && (

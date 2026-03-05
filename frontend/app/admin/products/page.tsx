@@ -29,7 +29,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
+  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [subImageUrlInput, setSubImageUrlInput] = useState('');
@@ -96,8 +96,8 @@ export default function AdminProductsPage() {
       setError('Name and image are required.');
       return;
     }
-    if (!hasGold && !form.price?.trim()) {
-      setError('Either enter a fixed price or set Gold pricing (purity + net weight).');
+    if (!hasGold) {
+      setError('Gold-based pricing is required. Select gold purity (18K, 22K, or 24K) and enter net weight in grams.');
       return;
     }
     setError('');
@@ -108,7 +108,7 @@ export default function AdminProductsPage() {
       } else {
         await apiPost('/api/admin/products', form, true);
       }
-      setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
+      setForm({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -169,15 +169,6 @@ export default function AdminProductsPage() {
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-stone-700">Price (fixed, e.g. 52.00) — or use Gold pricing below</label>
-            <input
-              value={form.price || ''}
-              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
-              placeholder="Leave empty if using gold pricing"
-            />
           </div>
           <div>
             <label className="block text-sm font-medium text-stone-700">Stock</label>
@@ -276,24 +267,25 @@ export default function AdminProductsPage() {
           </div>
         </div>
         <div className="mt-6 border-t border-stone-200 pt-6">
-          <h3 className="font-medium text-charcoal">Gold-based pricing (optional)</h3>
-          <p className="mt-1 text-sm text-stone-500">Gold + making charge (incl. American diamond/CZ) → 3% GST. Leave empty to use fixed price above.</p>
+          <h3 className="font-medium text-charcoal">Gold-based pricing</h3>
+          <p className="mt-1 text-sm text-stone-500">Price is calculated from gold rates (18K, 22K, 24K). Gold value + making charge (incl. American diamond/CZ) → 3% GST.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-stone-700">Gold purity</label>
+              <label className="block text-sm font-medium text-stone-700">Gold purity <span className="text-red-600">*</span></label>
               <select
                 value={form.goldPurity || ''}
                 onChange={(e) => setForm((f) => ({ ...f, goldPurity: e.target.value }))}
                 className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+                required
               >
-                <option value="">— Fixed price only —</option>
+                <option value="">Select purity</option>
                 <option value="18K">18K</option>
                 <option value="22K">22K</option>
                 <option value="24K">24K</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700">Net weight (grams)</label>
+              <label className="block text-sm font-medium text-stone-700">Net weight (grams) <span className="text-red-600">*</span></label>
               <input
                 type="number"
                 min={0}
@@ -302,6 +294,7 @@ export default function AdminProductsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, netWeight: e.target.value === '' ? undefined : parseFloat(e.target.value) }))}
                 className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
                 placeholder="e.g. 8.5"
+                required
               />
             </div>
             <div>
@@ -358,7 +351,7 @@ export default function AdminProductsPage() {
             {editingId ? 'Update' : 'Add'} product
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', price: '', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
               Cancel
             </button>
           )}

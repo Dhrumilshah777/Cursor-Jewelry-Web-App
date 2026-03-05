@@ -104,8 +104,8 @@ exports.create = async (req, res) => {
   try {
     const body = { ...req.body };
     const hasGold = hasValidGoldPricing(body);
-    if (!hasGold && (!body.price || !String(body.price).trim())) {
-      return res.status(400).json({ error: 'Either fixed price or gold pricing (goldPurity + netWeight) is required' });
+    if (!hasGold) {
+      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (18K, 22K, or 24K) and net weight (grams).' });
     }
     const product = await Product.create(body);
     res.status(201).json(product);
@@ -121,8 +121,8 @@ exports.update = async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Product not found' });
     const merged = { ...existing.toObject(), ...body };
     const hasGold = hasValidGoldPricing(merged);
-    if (!hasGold && (!merged.price || !String(merged.price).trim())) {
-      return res.status(400).json({ error: 'Either fixed price or gold pricing (goldPurity + netWeight) is required' });
+    if (!hasGold) {
+      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (18K, 22K, or 24K) and net weight (grams).' });
     }
     const product = await Product.findByIdAndUpdate(req.params.id, body, { new: true });
     res.json(product);

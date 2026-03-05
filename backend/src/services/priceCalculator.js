@@ -17,8 +17,7 @@ async function getProductPrice(product, goldRatesMap = null) {
   const hasGold = purity && (purity === '18K' || purity === '22K' || purity === '24K') && Number.isFinite(netWeight) && netWeight > 0;
 
   if (!hasGold) {
-    const fixed = parseFloat(String(p.price).replace(/[^0-9.]/g, '')) || 0;
-    return { price: fixed, breakup: null };
+    return { price: 0, breakup: null };
   }
 
   let rates = goldRatesMap;
@@ -28,8 +27,7 @@ async function getProductPrice(product, goldRatesMap = null) {
   }
   const pricePerGram = rates.get(purity);
   if (pricePerGram == null || !Number.isFinite(pricePerGram)) {
-    const fixed = parseFloat(String(p.price).replace(/[^0-9.]/g, '')) || 0;
-    return { price: fixed, breakup: null };
+    return { price: 0, breakup: null };
   }
 
   const makingType = p.makingChargeType === 'fixed' ? 'fixed' : 'percentage';

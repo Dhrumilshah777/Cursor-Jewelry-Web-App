@@ -46,6 +46,10 @@ export default function ProductDetailPage() {
   const [wishlisted, setWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [pincode, setPincode] = useState('');
+  const [deliveryCheck, setDeliveryCheck] = useState<{ message: string; estimatedDate?: string | null; serviceable?: boolean } | null>(null);
+  const [deliveryChecking, setDeliveryChecking] = useState(false);
+  const [deliveryError, setDeliveryError] = useState('');
 
   useEffect(() => {
     setImageError(false);
@@ -102,6 +106,46 @@ export default function ProductDetailPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  const checkDelivery = async () => {
+    const pin = pincode.trim().replace(/\D/g, '');
+    if (pin.length < 6) {
+      setDeliveryError('Enter a valid 6-digit pincode');
+      setDeliveryCheck(null);
+      return;
+    }
+    setDeliveryError('');
+    setDeliveryCheck(null);
+    setDeliveryChecking(true);
+    try {
+      const base = getApiBase();
+      const res = await fetch(`${base}/api/delivery-check?pincode=${encodeURIComponent(pin)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDeliveryCheck({ message: data.message || data.error || 'Could not check delivery', serviceable: false });
+        setDeliveryError(data.error || '');
+        return;
+      }
+      setDeliveryCheck({
+        message: data.message || (data.estimatedDate ? `Delivery by ${formatDeliveryDate(data.estimatedDate)}` : 'Delivery available'),
+        estimatedDate: data.estimatedDate ?? null,
+        serviceable: data.serviceable,
+      });
+    } catch {
+      setDeliveryCheck({ message: 'Unable to check delivery. Please try again.', serviceable: false });
+      setDeliveryError('Request failed');
+    } finally {
+      setDeliveryChecking(false);
+    }
+  };
+
+  function formatDeliveryDate(isoDate: string) {
+    const d = new Date(isoDate + 'T12:00:00Z');
+    const day = d.getUTCDate();
+    const month = d.toLocaleDateString('en-IN', { month: 'long' });
+    const year = d.getUTCFullYear();
+    return `${day} ${month}${year !== new Date().getFullYear() ? ' ' + year : ''}`;
+  }
 
   const toggleWishlist = () => {
     if (!product) return;
@@ -240,6 +284,37 @@ export default function ProductDetailPage() {
                 </ul>
               </div>
             )}
+
+            <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+              <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
+              <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Pincode"
+                  className="w-32 rounded border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
+                />
+                <button
+                  type="button"
+                  onClick={checkDelivery}
+                  disabled={deliveryChecking}
+                  className="rounded border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+                >
+                  {deliveryChecking ? 'Checking…' : 'Check Delivery'}
+                </button>
+              </div>
+              {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
+              {deliveryCheck && !deliveryError && (
+                <p className={`mt-2 text-sm font-medium ${deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'}`}>
+                  {deliveryCheck.message}
+                </p>
+              )}
+            </div>
 
             {(product.weight || product.priceBreakup?.netWeight != null || product.carat) && (
               <dl className="mt-4 space-y-1 text-sm text-stone-600">

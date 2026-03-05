@@ -63,6 +63,8 @@ app.use('/api/auth', authLimiter, require('./routes/auth'));
 // Public API (no auth)
 app.use('/api/products', require('./routes/products'));
 app.use('/api/site', require('./routes/site'));
+const deliveryCheckController = require('./controllers/deliveryCheckController');
+app.get('/api/delivery-check', deliveryCheckController.check);
 
 // User API (requires user auth)
 app.use('/api/cart', require('./routes/cart'));

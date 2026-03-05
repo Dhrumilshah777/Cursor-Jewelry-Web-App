@@ -187,4 +187,48 @@ async function createShipment(order) {
   };
 }
 
-module.exports = { getToken, createShipment };
+/**
+ * Check courier serviceability for a delivery pincode.
+ * Uses Shiprocket GET /courier/serviceability with pickup_postcode and delivery_postcode.
+ * @param {string|number} deliveryPincode - Customer delivery pincode
+ * @param {string|number} [pickupPincode] - Origin pincode (default from env SHIPROCKET_PICKUP_PINCODE or 395009)
+ * @returns {Promise<{ serviceable: boolean, estimatedDays: number | null, availableCouriers: Array<{ name: string, etd: string }> }>}
+ */
+async function checkServiceability(deliveryPincode, pickupPincode = null) {
+  const delivery = parseInt(String(deliveryPincode || '').replace(/\D/g, ''), 10);
+  const pickup =
+    pickupPincode != null
+      ? parseInt(String(pickupPincode).replace(/\D/g, ''), 10)
+      : parseInt(String(process.env.SHIPROCKET_PICKUP_PINCODE || '395009').replace(/\D/g, ''), 10);
+  if (!Number.isFinite(delivery) || delivery <= 0) {
+    return { serviceable: false, estimatedDays: null, availableCouriers: [] };
+  }
+  const validPickup = Number.isFinite(pickup) && pickup > 0 ? pickup : 395009;
+  const token = await getToken();
+  const url = `${SHIPROCKET_BASE}/courier/serviceability/?pickup_postcode=${validPickup}&delivery_postcode=${delivery}&weight=0.5`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  const companies = data.data?.available_courier_companies ?? data.available_courier_companies ?? [];
+  const availableCouriers = Array.isArray(companies)
+    ? companies.map((c) => ({ name: c.name || c.courier_name || 'Courier', etd: c.etd || c.etd_min_max || '' }))
+    : [];
+  let estimatedDays = null;
+  for (const c of availableCouriers) {
+    const etdStr = String(c.etd || '').trim();
+    const match = etdStr.match(/(\d+)\s*-\s*(\d+)/);
+    const days = match ? Math.max(parseInt(match[1], 10), parseInt(match[2], 10)) : parseInt(etdStr.replace(/\D/g, ''), 10);
+    if (Number.isFinite(days) && days > 0) {
+      estimatedDays = estimatedDays == null ? days : Math.min(estimatedDays, days);
+    }
+  }
+  return {
+    serviceable: availableCouriers.length > 0,
+    estimatedDays: estimatedDays ?? (availableCouriers.length > 0 ? 5 : null),
+    availableCouriers,
+  };
+}
+
+module.exports = { getToken, createShipment, checkServiceability };

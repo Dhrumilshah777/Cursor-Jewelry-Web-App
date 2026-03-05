@@ -209,21 +209,17 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
     return { serviceable: true, estimatedDays: 2, availableCouriers: [{ name: 'Local', etd: '1-2 days' }] };
   }
   const token = await getToken();
-  // Shiprocket domestic serviceability: GET with JSON body (cod=0 prepaid, weight in kg, mode Surface or Air)
-  const body = {
-    pickup_postcode: validPickup,
-    delivery_postcode: delivery,
-    weight: 0.5,
-    cod: 0,
+  // Shiprocket domestic serviceability: GET with query params (no body - GET with body is rejected by many runtimes)
+  const params = new URLSearchParams({
+    pickup_postcode: String(validPickup),
+    delivery_postcode: String(delivery),
+    weight: '0.5',
+    cod: '0',
     mode: 'Surface',
-  };
-  const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/`, {
+  });
+  const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/?${params.toString()}`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json().catch(() => ({}));
   // Response may be { data: { available_courier_companies: [...] } } or { available_courier_companies: [...] } or nested under data.data

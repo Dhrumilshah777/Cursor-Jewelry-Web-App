@@ -316,7 +316,7 @@ export default function AdminProductsPage() {
                 step={0.01}
                 value={form.makingChargeValue ?? 0}
                 onChange={(e) => setForm((f) => ({ ...f, makingChargeValue: parseFloat(e.target.value) || 0 }))}
-                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <p className="mt-0.5 text-xs text-stone-500">American diamond (CZ) cost is included in making charge.</p>
             </div>

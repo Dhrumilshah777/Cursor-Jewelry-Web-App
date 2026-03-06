@@ -15,29 +15,31 @@ exports.check = async (req, res) => {
     let estimatedDate = null;
     if (serviceable && estimatedDays != null && estimatedDays > 0) {
       const d = new Date();
-      const daysToAdd = Math.min(Math.ceil(estimatedDays), 7); // show delivery within 7 days max
-      d.setDate(d.getDate() + daysToAdd);
+      d.setDate(d.getDate() + Math.ceil(estimatedDays));
       estimatedDate = d.toISOString().split('T')[0];
     }
+    const message = serviceable
+      ? estimatedDate
+        ? `Delivery by ${formatDeliveryDate(estimatedDate)}`
+        : 'Delivery available'
+      : 'Delivery not available for this pincode';
     res.json({
       serviceable: !!serviceable,
       estimatedDays: estimatedDays ?? null,
       estimatedDate,
       availableCouriers: availableCouriers || [],
-      message: serviceable
-        ? estimatedDate
-          ? `Delivery by ${formatDeliveryDate(estimatedDate)}`
-          : 'Delivery available'
-        : 'Delivery not available for this pincode',
+      message,
     });
   } catch (err) {
     console.error('Delivery check error:', err.message);
-    res.status(500).json({
-      error: err.message || 'Unable to check delivery',
+    // Shiprocket API failed: return 200 with fallback message so frontend can show it
+    res.status(200).json({
       serviceable: false,
       estimatedDays: null,
       estimatedDate: null,
-      message: 'Unable to check delivery. Please try again.',
+      availableCouriers: [],
+      message: 'Estimated delivery: 4–7 business days.',
+      fallback: true,
     });
   }
 };

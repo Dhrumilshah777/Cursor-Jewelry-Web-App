@@ -191,19 +191,20 @@ async function createShipment(order) {
  * Check courier serviceability for a delivery pincode.
  * Uses Shiprocket GET /courier/serviceability with JSON body (pickup_postcode, delivery_postcode, weight, cod, mode).
  * @param {string|number} deliveryPincode - Customer delivery pincode
- * @param {string|number} [pickupPincode] - Origin pincode (default from env SHIPROCKET_PICKUP_PINCODE or 395009)
+ * @param {string|number} [pickupPincode] - Origin pincode (default from env SHIPROCKET_PICKUP_PINCODE or 395003 Surat)
  * @returns {Promise<{ serviceable: boolean, estimatedDays: number | null, availableCouriers: Array<{ name: string, etd: string }> }>}
  */
 async function checkServiceability(deliveryPincode, pickupPincode = null) {
   const delivery = parseInt(String(deliveryPincode || '').replace(/\D/g, ''), 10);
+  // Warehouse pickup pincode: Surat 395003 (env SHIPROCKET_PICKUP_PINCODE overrides)
   const pickup =
     pickupPincode != null
       ? parseInt(String(pickupPincode).replace(/\D/g, ''), 10)
-      : parseInt(String(process.env.SHIPROCKET_PICKUP_PINCODE || '395009').replace(/\D/g, ''), 10);
+      : parseInt(String(process.env.SHIPROCKET_PICKUP_PINCODE || '395003').replace(/\D/g, ''), 10);
   if (!Number.isFinite(delivery) || delivery <= 0) {
     return { serviceable: false, estimatedDays: null, availableCouriers: [] };
   }
-  const validPickup = Number.isFinite(pickup) && pickup > 0 ? pickup : 395009;
+  const validPickup = Number.isFinite(pickup) && pickup > 0 ? pickup : 395003;
   // Same pincode (e.g. warehouse) often returns no couriers; treat as local delivery 1–2 days
   if (delivery === validPickup) {
     return { serviceable: true, estimatedDays: 2, availableCouriers: [{ name: 'Local', etd: '1-2 days' }] };

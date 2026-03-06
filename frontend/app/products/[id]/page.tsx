@@ -47,7 +47,7 @@ export default function ProductDetailPage() {
   const [imageError, setImageError] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [pincode, setPincode] = useState('');
-  const [deliveryCheck, setDeliveryCheck] = useState<{ message: string; estimatedDate?: string | null; serviceable?: boolean } | null>(null);
+  const [deliveryCheck, setDeliveryCheck] = useState<{ message: string; estimatedDate?: string | null; serviceable?: boolean; fallback?: boolean } | null>(null);
   const [deliveryChecking, setDeliveryChecking] = useState(false);
   const [deliveryError, setDeliveryError] = useState('');
 
@@ -126,14 +126,16 @@ export default function ProductDetailPage() {
         setDeliveryError(data.error || '');
         return;
       }
+      setDeliveryError('');
       setDeliveryCheck({
         message: data.message || (data.estimatedDate ? `Delivery by ${formatDeliveryDate(data.estimatedDate)}` : 'Delivery available'),
         estimatedDate: data.estimatedDate ?? null,
         serviceable: data.serviceable,
+        fallback: data.fallback === true,
       });
     } catch {
-      setDeliveryCheck({ message: 'Unable to check delivery. Please try again.', serviceable: false });
-      setDeliveryError('Request failed');
+      setDeliveryCheck({ message: 'Estimated delivery: 4–7 business days.', serviceable: false, fallback: true });
+      setDeliveryError('');
     } finally {
       setDeliveryChecking(false);
     }
@@ -310,7 +312,9 @@ export default function ProductDetailPage() {
               </div>
               {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
               {deliveryCheck && !deliveryError && (
-                <p className={`mt-2 text-sm font-medium ${deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'}`}>
+                <p className={`mt-2 text-sm font-medium ${
+                  deliveryCheck.fallback ? 'text-stone-700' : deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'
+                }`}>
                   {deliveryCheck.message}
                 </p>
               )}

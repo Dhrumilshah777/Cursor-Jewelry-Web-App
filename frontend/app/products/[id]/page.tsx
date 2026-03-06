@@ -50,6 +50,7 @@ export default function ProductDetailPage() {
   const [deliveryCheck, setDeliveryCheck] = useState<{ message: string; estimatedDate?: string | null; serviceable?: boolean; fallback?: boolean } | null>(null);
   const [deliveryChecking, setDeliveryChecking] = useState(false);
   const [deliveryError, setDeliveryError] = useState('');
+  const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
     setImageError(false);
@@ -352,13 +353,17 @@ export default function ProductDetailPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image })}
+                onClick={() => {
+                  addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
+                  setAddedToCart(true);
+                  setTimeout(() => setAddedToCart(false), 2500);
+                }}
                 className="flex items-center gap-2 rounded border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
                 </svg>
-                Add to cart
+                {addedToCart ? 'Added to cart' : 'Add to cart'}
               </button>
               <button
                 type="button"
@@ -383,6 +388,16 @@ export default function ProductDetailPage() {
                 Continue shopping
               </Link>
             </div>
+
+            {addedToCart && (
+              <div
+                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+                role="status"
+                aria-live="polite"
+              >
+                Added to Cart
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -36,6 +36,7 @@ function ProductsContent() {
 
   const [data, setData] = useState<ProductsResponse>({ products: [], facets: defaultFacets });
   const [loading, setLoading] = useState(true);
+  const [addedToCartId, setAddedToCartId] = useState<string | null>(null);
 
   const queryString = searchParams.toString();
   const apiUrl = queryString ? `/api/products?${queryString}` : '/api/products';
@@ -115,7 +116,7 @@ function ProductsContent() {
                 </Link>
               </div>
             ) : (
-              <ul className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <li
                     key={product._id}
@@ -140,15 +141,29 @@ function ProductsContent() {
                     <div className="border-t border-stone-100 p-3">
                       <button
                         type="button"
-                        onClick={() => addToCart({ id: product._id, name: product.name, price: product.price, image: product.image })}
+                        onClick={() => {
+                          addToCart({ id: product._id, name: product.name, price: product.price, image: product.image });
+                          setAddedToCartId(product._id);
+                          setTimeout(() => setAddedToCartId(null), 2500);
+                        }}
                         className="w-full rounded border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
                       >
-                        Add to cart
+                        {addedToCartId === product._id ? 'Added to cart' : 'Add to cart'}
                       </button>
                     </div>
                   </li>
                 ))}
               </ul>
+            )}
+
+            {addedToCartId && (
+              <div
+                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+                role="status"
+                aria-live="polite"
+              >
+                Added to Cart
+              </div>
             )}
 
             {filteredProducts.length > 0 && (

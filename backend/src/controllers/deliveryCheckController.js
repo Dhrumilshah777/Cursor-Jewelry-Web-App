@@ -15,7 +15,8 @@ exports.check = async (req, res) => {
     let estimatedDate = null;
     if (serviceable && estimatedDays != null && estimatedDays > 0) {
       const d = new Date();
-      d.setDate(d.getDate() + Math.ceil(estimatedDays));
+      const daysToAdd = Math.min(Math.ceil(estimatedDays), 7); // show delivery within 7 days max
+      d.setDate(d.getDate() + daysToAdd);
       estimatedDate = d.toISOString().split('T')[0];
     }
     res.json({

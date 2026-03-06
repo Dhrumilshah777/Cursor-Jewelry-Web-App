@@ -231,15 +231,18 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
   const availableCouriers = Array.isArray(companies)
     ? companies.map((c) => ({ name: c.name || c.courier_name || 'Courier', etd: c.etd || c.etd_min_max || c.estimated_delivery_days || '' }))
     : [];
+  const MAX_DAYS = 30; // cap to avoid wrong ETD (e.g. year codes) showing year 2250
   let estimatedDays = null;
   for (const c of availableCouriers) {
     const etdStr = String(c.etd || '').trim();
     const match = etdStr.match(/(\d+)\s*-\s*(\d+)/);
-    const days = match ? Math.max(parseInt(match[1], 10), parseInt(match[2], 10)) : parseInt(etdStr.replace(/\D/g, ''), 10);
+    let days = match ? Math.max(parseInt(match[1], 10), parseInt(match[2], 10)) : parseInt(etdStr.replace(/\D/g, ''), 10);
     if (Number.isFinite(days) && days > 0) {
+      if (days > MAX_DAYS) days = MAX_DAYS; // e.g. "2250" or "81816" from API → cap to 30
       estimatedDays = estimatedDays == null ? days : Math.min(estimatedDays, days);
     }
   }
+  if (estimatedDays != null && estimatedDays > MAX_DAYS) estimatedDays = MAX_DAYS;
   return {
     serviceable: availableCouriers.length > 0,
     estimatedDays: estimatedDays ?? (availableCouriers.length > 0 ? 5 : null),

@@ -15,7 +15,8 @@ exports.check = async (req, res) => {
     let estimatedDate = null;
     if (serviceable && estimatedDays != null && estimatedDays > 0) {
       const d = new Date();
-      d.setDate(d.getDate() + Math.ceil(estimatedDays));
+      const daysWithBuffer = Math.ceil(estimatedDays) + 1; // +1 buffer day
+      d.setDate(d.getDate() + daysWithBuffer);
       estimatedDate = d.toISOString().split('T')[0];
     }
     const message = serviceable
@@ -49,5 +50,5 @@ function formatDeliveryDate(isoDate) {
   const day = d.getUTCDate();
   const month = d.toLocaleDateString('en-IN', { month: 'long' });
   const year = d.getUTCFullYear();
-  return `${day} ${month}${year !== new Date().getFullYear() ? ' ' + year : ''}`;
+  return `${day} ${month} ${year}`;
 }

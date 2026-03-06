@@ -216,7 +216,7 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
     delivery_postcode: String(delivery),
     weight: '0.5',
     cod: '0',
-    mode: 'Air',
+    mode: 'Surface',
   });
   const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/?${params.toString()}`, {
     method: 'GET',

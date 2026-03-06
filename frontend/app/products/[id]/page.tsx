@@ -146,7 +146,7 @@ export default function ProductDetailPage() {
     const day = d.getUTCDate();
     const month = d.toLocaleDateString('en-IN', { month: 'long' });
     const year = d.getUTCFullYear();
-    return `${day} ${month}${year !== new Date().getFullYear() ? ' ' + year : ''}`;
+    return `${day} ${month} ${year}`;
   }
 
   const toggleWishlist = () => {

@@ -82,6 +82,7 @@ export default function ProductDetailPage() {
   const [deliveryChecking, setDeliveryChecking] = useState(false);
   const [deliveryError, setDeliveryError] = useState('');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
 
@@ -266,17 +267,22 @@ export default function ProductDetailPage() {
     const url = window.location.href;
     const title = product.name;
     const text = `Check out ${product.name}`;
+    const copyFallback = () => {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      }
+    };
     if (navigator.share) {
       navigator
         .share({ title, text, url })
         .then(() => { /* shared */ })
         .catch((err) => {
-          if (err?.name !== 'AbortError' && navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(url);
-          }
+          if (err?.name !== 'AbortError') copyFallback();
         });
-    } else if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(url);
+    } else {
+      copyFallback();
     }
   };
 
@@ -405,7 +411,7 @@ export default function ProductDetailPage() {
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Pincode"
-                    className="w-32 border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-32 border border-stone-300 px-3 py-2 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
                   />
                   <button
@@ -516,7 +522,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <div className="hidden md:block">
+          <div className="relative z-10 hidden md:block">
             <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
               SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
             </p>
@@ -527,8 +533,8 @@ export default function ProductDetailPage() {
               </h1>
               <button
                 type="button"
-                onClick={handleShare}
-                className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
+                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
                 aria-label="Share product"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -537,8 +543,8 @@ export default function ProductDetailPage() {
               </button>
               <button
                 type="button"
-                onClick={toggleWishlist}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center border transition-colors ${
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(); }}
+                className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border transition-colors ${
                   wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
                 }`}
                 aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -606,7 +612,7 @@ export default function ProductDetailPage() {
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Pincode"
-                  className="w-32 border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-32 border border-stone-300 px-3 py-2 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
                 />
                 <button
@@ -658,6 +664,15 @@ export default function ProductDetailPage() {
             aria-live="polite"
           >
             Added to Cart
+          </div>
+        )}
+        {linkCopied && (
+          <div
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            role="status"
+            aria-live="polite"
+          >
+            Link copied
           </div>
         )}
       </div>

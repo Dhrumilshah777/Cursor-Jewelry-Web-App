@@ -261,8 +261,27 @@ export default function ProductDetailPage() {
   const allImages = [product.image, ...(product.subImages || [])].filter(Boolean);
   const selectedSrc = allImages[selectedImageIndex] ? resolveSrc(allImages[selectedImageIndex]) : '';
 
+  const handleShare = () => {
+    if (typeof window === 'undefined') return;
+    const url = window.location.href;
+    const title = product.name;
+    const text = `Check out ${product.name}`;
+    if (navigator.share) {
+      navigator
+        .share({ title, text, url })
+        .then(() => { /* shared */ })
+        .catch((err) => {
+          if (err?.name !== 'AbortError' && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(url);
+          }
+        });
+    } else if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url);
+    }
+  };
+
   return (
-    <main className="min-h-[50vh] px-4 py-8 pb-24 sm:py-12 md:pb-8">
+    <main className="min-h-[50vh] px-4 pr-6 py-8 pb-24 sm:py-12 md:px-4 md:pb-8">
       <div className="mx-auto max-w-5xl">
         <nav className="mb-6 text-sm text-stone-500">
           <Link href="/" className="hover:text-charcoal">Home</Link>
@@ -310,27 +329,18 @@ export default function ProductDetailPage() {
 
             {/* Mobile: details below image (before You may also like) */}
             <div className="mt-4 block md:hidden">
-              <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
-              <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+                SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
+              </p>
               <div className="mt-4 flex items-center gap-2">
                 <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
                   {product.name}
                 </h1>
                 <button
                   type="button"
-                  onClick={() => {
-                    const url = typeof window !== 'undefined' ? window.location.href : '';
-                    const title = product.name;
-                    if (typeof navigator !== 'undefined' && navigator.share) {
-                      navigator.share({ title, url }).catch(() => {
-                        if (typeof navigator.clipboard !== 'undefined') navigator.clipboard.writeText(url);
-                      });
-                    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                      navigator.clipboard.writeText(url);
-                    }
-                  }}
+                  onClick={handleShare}
                   className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
-                  aria-label="Share"
+                  aria-label="Share product"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
@@ -507,8 +517,9 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="hidden md:block">
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
-            <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+              SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
+            </p>
 
             <div className="mt-4 flex items-center gap-2">
               <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
@@ -516,19 +527,9 @@ export default function ProductDetailPage() {
               </h1>
               <button
                 type="button"
-                onClick={() => {
-                  const url = typeof window !== 'undefined' ? window.location.href : '';
-                  const title = product.name;
-                  if (typeof navigator !== 'undefined' && navigator.share) {
-                    navigator.share({ title, url }).catch(() => {
-                      if (typeof navigator.clipboard !== 'undefined') navigator.clipboard.writeText(url);
-                    });
-                  } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                    navigator.clipboard.writeText(url);
-                  }
-                }}
+                onClick={handleShare}
                 className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
-                aria-label="Share"
+                aria-label="Share product"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />

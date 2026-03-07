@@ -18,6 +18,9 @@ const productSchema = new mongoose.Schema(
     netWeight: { type: Number, default: null }, // grams
     makingChargeType: { type: String, default: 'percentage' }, // 'percentage' | 'fixed' (incl. CZ/American diamond cost)
     makingChargeValue: { type: Number, default: 0 },
+    description: { type: String, default: '' },
+    ringSize: { type: String, default: '' },
+    sku: { type: String, default: '' },
   },
   { timestamps: true }
 );

@@ -27,6 +27,10 @@ type Product = {
   colors?: string[];
   calculatedPrice?: number;
   priceBreakup?: PriceBreakup | null;
+  description?: string;
+  ringSize?: string;
+  sku?: string;
+  goldPurity?: string;
 };
 
 const MOCK_PRODUCTS: Array<Pick<Product, '_id' | 'name' | 'category' | 'price' | 'image'>> = [
@@ -248,16 +252,7 @@ export default function ProductDetailPage() {
                 ))}
               </div>
             )}
-          </div>
 
-          <div>
-            <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
-              {product.name}
-            </h1>
-            <p className="mt-2 text-sm text-stone-500">{product.category}</p>
-            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
-              ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
-            </p>
             {product.priceBreakup && (
               <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
                 <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
@@ -287,66 +282,42 @@ export default function ProductDetailPage() {
                 </ul>
               </div>
             )}
-
-            <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
-              <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
-              <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Pincode"
-                  className="w-32 rounded border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
-                />
-                <button
-                  type="button"
-                  onClick={checkDelivery}
-                  disabled={deliveryChecking}
-                  className="rounded border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
-                >
-                  {deliveryChecking ? 'Checking…' : 'Check Delivery'}
-                </button>
+            {product.description && (
+              <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Product details</h3>
+                <p className="mt-2 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
               </div>
-              {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
-              {deliveryCheck && !deliveryError && (
-                <p className={`mt-2 text-sm font-medium ${
-                  deliveryCheck.fallback ? 'text-stone-700' : deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'
-                }`}>
-                  {deliveryCheck.message}
-                </p>
-              )}
-            </div>
-
-            {(product.weight || product.priceBreakup?.netWeight != null || product.carat) && (
-              <dl className="mt-4 space-y-1 text-sm text-stone-600">
-                {product.weight && (
-                  <div>
-                    <dt className="font-medium">Gross weight:</dt>
-                    <dd className="mt-0.5">{product.weight}</dd>
-                  </div>
-                )}
-                {product.priceBreakup?.netWeight != null && (
-                  <div>
-                    <dt className="font-medium">Net weight:</dt>
-                    <dd className="mt-0.5">{Number(product.priceBreakup.netWeight)} g</dd>
-                  </div>
-                )}
-                {product.carat && (
-                  <div>
-                    <dt className="font-medium">Carat:</dt>
-                    <dd className="mt-0.5">{product.carat}</dd>
-                  </div>
-                )}
-              </dl>
             )}
+          </div>
+
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
+            <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
+
+            <h1 className="mt-4 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
+              {product.name}
+            </h1>
+
+            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
+              ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
+            </p>
+
             {product.colors && product.colors.length > 0 && (
-              <p className="mt-2 text-sm text-stone-600">
-                <span className="font-medium">Colors: </span>
+              <p className="mt-3 text-sm text-stone-600">
+                <span className="font-medium">Color: </span>
                 {product.colors.join(', ')}
+              </p>
+            )}
+
+            <p className="mt-1 text-sm text-stone-600">
+              <span className="font-medium">Metal Purity: </span>
+              {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
+            </p>
+
+            {product.ringSize && (
+              <p className="mt-1 text-sm text-stone-600">
+                <span className="font-medium">Ring Size: </span>
+                {product.ringSize}
               </p>
             )}
 
@@ -387,6 +358,39 @@ export default function ProductDetailPage() {
               >
                 Continue shopping
               </Link>
+            </div>
+
+            <div className="mt-6 rounded-lg border border-stone-200 bg-stone-50 p-4">
+              <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
+              <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Pincode"
+                  className="w-32 rounded border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
+                />
+                <button
+                  type="button"
+                  onClick={checkDelivery}
+                  disabled={deliveryChecking}
+                  className="rounded border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+                >
+                  {deliveryChecking ? 'Checking…' : 'Check Delivery'}
+                </button>
+              </div>
+              {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
+              {deliveryCheck && !deliveryError && (
+                <p className={`mt-2 text-sm font-medium ${
+                  deliveryCheck.fallback ? 'text-stone-700' : deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'
+                }`}>
+                  {deliveryCheck.message}
+                </p>
+              )}
             </div>
 
             {addedToCart && (

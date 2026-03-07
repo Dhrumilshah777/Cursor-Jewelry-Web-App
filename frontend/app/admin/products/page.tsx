@@ -23,13 +23,16 @@ type Product = {
   netWeight?: number | null;
   makingChargeType?: 'percentage' | 'fixed';
   makingChargeValue?: number;
+  description?: string;
+  ringSize?: string;
+  sku?: string;
 };
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
+  const [form, setForm] = useState<Partial<Product>>({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, description: '', ringSize: '', sku: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [subImageUrlInput, setSubImageUrlInput] = useState('');
@@ -108,7 +111,7 @@ export default function AdminProductsPage() {
       } else {
         await apiPost('/api/admin/products', form, true);
       }
-      setForm({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 });
+      setForm({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, description: '', ringSize: '', sku: '' });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -170,6 +173,18 @@ export default function AdminProductsPage() {
               ))}
             </select>
           </div>
+          {form.category === 'Rings' && (
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Ring size</label>
+              <input
+                type="text"
+                value={form.ringSize ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, ringSize: e.target.value }))}
+                placeholder="e.g. 8, 9, 10"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-stone-700">Stock</label>
             <input
@@ -232,6 +247,16 @@ export default function AdminProductsPage() {
                 ))}
               </div>
             )}
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-stone-700">Product details (description)</label>
+            <textarea
+              value={form.description ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Product description for the detail page"
+              rows={4}
+              className="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-stone-700">Gross weight (optional)</label>
@@ -351,7 +376,7 @@ export default function AdminProductsPage() {
             {editingId ? 'Update' : 'Add'} product
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0 }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', category: 'Accessories', image: '', subImages: [], weight: '', carat: '', colors: [], active: true, stock: 1, goldPurity: '', netWeight: undefined, makingChargeType: 'percentage', makingChargeValue: 0, description: '', ringSize: '', sku: '' }); setSubImageUrlInput(''); }} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
               Cancel
             </button>
           )}
@@ -381,6 +406,9 @@ export default function AdminProductsPage() {
                   netWeight: (p as Product).netWeight ?? undefined,
                   makingChargeType: (p as Product).makingChargeType ?? 'percentage',
                   makingChargeValue: (p as Product).makingChargeValue ?? 0,
+                  description: (p as Product).description ?? '',
+                  ringSize: (p as Product).ringSize ?? '',
+                  sku: (p as Product).sku ?? '',
                 }); setEditingId(p._id); setError(''); setSubImageUrlInput(''); }}
                 className="rounded border border-stone-300 px-3 py-1 text-sm hover:bg-stone-50"
               >

@@ -333,6 +333,32 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {/* Desktop only: share + heart below image (left column, always clickable) */}
+            <div className="mt-4 hidden items-center gap-2 md:flex">
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
+                aria-label="Share product"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={toggleWishlist}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center border transition-colors ${
+                  wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
+                }`}
+                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+              </button>
+            </div>
+
             {/* Mobile: details below image (before You may also like) */}
             <div className="mt-4 block md:hidden">
               <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
@@ -527,38 +553,10 @@ export default function ProductDetailPage() {
               SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
             </p>
 
-            <div className="relative z-20 mt-4 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2">
               <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
                 {product.name}
               </h1>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
-                className="relative z-20 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-charcoal/20"
-                aria-label="Share product"
-              >
-                <svg className="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(); }}
-                className={`relative z-20 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border transition-colors focus:outline-none focus:ring-2 focus:ring-charcoal/20 ${
-                  wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
-                }`}
-                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-              >
-                <svg
-                  className="h-5 w-5 pointer-events-none"
-                  fill={wishlisted ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
-              </button>
             </div>
 
             <p className="mt-4 font-sans text-xl font-semibold text-charcoal">

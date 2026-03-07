@@ -308,10 +308,119 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {/* Mobile: details below image (before You may also like) */}
+            <div className="mt-4 block md:hidden">
+              <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
+              <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
+              <h1 className="mt-4 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
+                {product.name}
+              </h1>
+              <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
+                ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
+              </p>
+              {product.colors && product.colors.length > 0 && (
+                <p className="mt-3 text-sm text-stone-600">
+                  <span className="font-medium">Color: </span>
+                  {product.colors.join(', ')}
+                </p>
+              )}
+              <p className="mt-1 text-sm text-stone-600">
+                <span className="font-medium">Metal Purity: </span>
+                {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
+              </p>
+              {product.ringSize && (
+                <p className="mt-1 text-sm text-stone-600">
+                  <span className="font-medium">Ring Size: </span>
+                  {product.ringSize}
+                </p>
+              )}
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = typeof window !== 'undefined' ? window.location.href : '';
+                    const title = product.name;
+                    if (typeof navigator !== 'undefined' && navigator.share) {
+                      navigator.share({ title, url }).catch(() => {
+                        if (typeof navigator.clipboard !== 'undefined') navigator.clipboard.writeText(url);
+                      });
+                    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                      navigator.clipboard.writeText(url);
+                    }
+                  }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
+                  aria-label="Share"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleWishlist}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center border transition-colors ${
+                    wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
+                  }`}
+                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
+                    setAddedToCart(true);
+                    setTimeout(() => setAddedToCart(false), 2500);
+                  }}
+                  className="flex items-center gap-2 border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                  </svg>
+                  {addedToCart ? 'Added to cart' : 'Add to cart'}
+                </button>
+                <Link href="/" className="flex items-center border border-stone-300 bg-stone-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-900">
+                  Continue shopping
+                </Link>
+              </div>
+              <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
+                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
+                <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Pincode"
+                    className="w-32 border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
+                  />
+                  <button
+                    type="button"
+                    onClick={checkDelivery}
+                    disabled={deliveryChecking}
+                    className="border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+                  >
+                    {deliveryChecking ? 'Checking…' : 'Check Delivery'}
+                  </button>
+                </div>
+                {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
+                {deliveryCheck && !deliveryError && (
+                  <p className={`mt-2 text-sm font-medium ${deliveryCheck.fallback ? 'text-stone-700' : deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'}`}>
+                    {deliveryCheck.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
             {youMayAlsoLike.length > 0 && (
               <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
                 <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">You may also like</h3>
-                <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+                <div className="mt-3 flex gap-4 overflow-x-auto pb-1">
                   {youMayAlsoLike.map((p) => {
                     const imgSrc = p.image.startsWith('http') ? p.image : p.image.startsWith('/') ? (p.image.startsWith('/uploads/') ? assetUrl(p.image) : p.image) : assetUrl(p.image.startsWith('/') ? p.image : `/${p.image}`);
                     const priceStr = typeof p.calculatedPrice === 'number' ? p.calculatedPrice.toFixed(2) : p.price;
@@ -319,14 +428,14 @@ export default function ProductDetailPage() {
                       <Link
                         key={p._id}
                         href={`/products/${p._id}`}
-                        className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white"
+                        className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52"
                       >
                         <div className="aspect-square w-full overflow-hidden bg-stone-100">
                           <img src={imgSrc} alt={p.name} className="h-full w-full object-cover" />
                         </div>
-                        <div className="p-2">
-                          <p className="truncate text-xs font-medium text-charcoal">{p.name}</p>
-                          <p className="text-xs text-stone-600">₹{priceStr}</p>
+                        <div className="p-3">
+                          <p className="font-sans text-sm font-semibold text-charcoal">₹{priceStr}</p>
+                          <p className="mt-0.5 line-clamp-2 text-xs text-stone-600">{p.name}</p>
                         </div>
                       </Link>
                     );
@@ -398,7 +507,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <div>
+          <div className="hidden md:block">
             <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
             <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
 
@@ -523,17 +632,17 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {addedToCart && (
-              <div
-                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
-                role="status"
-                aria-live="polite"
-              >
-                Added to Cart
-              </div>
-            )}
           </div>
         </div>
+        {addedToCart && (
+          <div
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            role="status"
+            aria-live="polite"
+          >
+            Added to Cart
+          </div>
+        )}
       </div>
     </main>
   );

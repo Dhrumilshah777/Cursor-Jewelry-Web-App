@@ -298,7 +298,7 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <div>
+          <div className="min-w-0 md:overflow-hidden">
             <div className="aspect-square w-full overflow-hidden bg-stone-100">
               {!imageError && selectedSrc ? (
                 <img
@@ -522,35 +522,35 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <div className="relative z-10 hidden md:block">
+          <div className="relative z-30 isolate hidden md:block">
             <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
               SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
             </p>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="relative z-20 mt-4 flex items-center gap-2">
               <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
                 {product.name}
               </h1>
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
-                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
+                className="relative z-20 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-charcoal/20"
                 aria-label="Share product"
               >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <svg className="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
                 </svg>
               </button>
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(); }}
-                className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border transition-colors ${
+                className={`relative z-20 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border transition-colors focus:outline-none focus:ring-2 focus:ring-charcoal/20 ${
                   wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
                 }`}
                 aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <svg
-                  className="h-5 w-5"
+                  className="h-5 w-5 pointer-events-none"
                   fill={wishlisted ? 'currentColor' : 'none'}
                   stroke="currentColor"
                   strokeWidth={1.5}

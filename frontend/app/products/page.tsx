@@ -101,7 +101,7 @@ function ProductsContent() {
           />
           <div className="min-w-0 flex-1">
             {filteredProducts.length === 0 ? (
-              <div className="rounded border border-stone-200 bg-stone-50 p-8 text-center">
+              <div className="border border-stone-200 bg-stone-50 p-8 text-center">
                 <p className="text-stone-600">
                   {searchParams.toString()
                     ? 'Try changing or clearing filters.'
@@ -120,7 +120,7 @@ function ProductsContent() {
                 {filteredProducts.map((product) => (
                   <li
                     key={product._id}
-                    className="group flex flex-col overflow-hidden rounded border border-stone-200 bg-white"
+                    className="group flex flex-col overflow-hidden border border-stone-200 bg-white"
                   >
                     <Link href={`/products/${product._id}`} className="block flex-1">
                       <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
@@ -146,7 +146,7 @@ function ProductsContent() {
                           setAddedToCartId(product._id);
                           setTimeout(() => setAddedToCartId(null), 2500);
                         }}
-                        className="w-full rounded border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
+                        className="w-full border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
                       >
                         {addedToCartId === product._id ? 'Added to cart' : 'Add to cart'}
                       </button>
@@ -158,7 +158,7 @@ function ProductsContent() {
 
             {addedToCartId && (
               <div
-                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
                 role="status"
                 aria-live="polite"
               >

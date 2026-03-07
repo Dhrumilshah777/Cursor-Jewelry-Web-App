@@ -33,6 +33,33 @@ type Product = {
   goldPurity?: string;
 };
 
+const RECENTLY_VIEWED_KEY = 'recently_viewed_products';
+const RECENTLY_VIEWED_MAX = 8;
+
+type RecentlyViewedItem = { id: string; name: string; image: string; price: string };
+
+function getRecentlyViewed(): RecentlyViewedItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(RECENTLY_VIEWED_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.slice(0, RECENTLY_VIEWED_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addToRecentlyViewed(item: RecentlyViewedItem) {
+  if (typeof window === 'undefined') return;
+  const list = getRecentlyViewed().filter((p) => p.id !== item.id);
+  list.unshift(item);
+  localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(list.slice(0, RECENTLY_VIEWED_MAX)));
+}
+
+function categoryToSlug(cat: string): string {
+  return String(cat || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
+}
+
 const MOCK_PRODUCTS: Array<Pick<Product, '_id' | 'name' | 'category' | 'price' | 'image'>> = [
   { _id: 'mock-1', name: 'Circle Necklace', category: 'Accessories', price: '52.00', image: '/instagram-1.jpg' },
   { _id: 'mock-2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
@@ -55,6 +82,34 @@ export default function ProductDetailPage() {
   const [deliveryChecking, setDeliveryChecking] = useState(false);
   const [deliveryError, setDeliveryError] = useState('');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
+  const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (!product?.category) return;
+    const slug = categoryToSlug(product.category);
+    if (!slug) return;
+    const base = getApiBase();
+    fetch(`${base}/api/products?category=${encodeURIComponent(slug)}`)
+      .then((res) => res.json())
+      .then((data: { products?: Product[] } | Product[]) => {
+        const list = Array.isArray((data as { products?: Product[] }).products)
+          ? (data as { products: Product[] }).products
+          : Array.isArray(data)
+            ? (data as Product[])
+            : [];
+        const other = list.filter((p) => String(p._id) !== String(product._id)).slice(0, 6);
+        setYouMayAlsoLike(other);
+      })
+      .catch(() => setYouMayAlsoLike([]));
+  }, [product?._id, product?.category]);
+
+  useEffect(() => {
+    if (!product || typeof window === 'undefined') return;
+    const priceStr = typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : (product.price || '');
+    addToRecentlyViewed({ id: product._id, name: product.name, image: product.image, price: priceStr });
+    setRecentlyViewed(getRecentlyViewed().filter((item) => item.id !== product._id));
+  }, [product?._id]);
 
   useEffect(() => {
     setImageError(false);
@@ -219,7 +274,7 @@ export default function ProductDetailPage() {
 
         <div className="grid gap-8 md:grid-cols-2">
           <div>
-            <div className="aspect-square w-full overflow-hidden rounded-lg bg-stone-100">
+            <div className="aspect-square w-full overflow-hidden bg-stone-100">
               {!imageError && selectedSrc ? (
                 <img
                   key={selectedImageIndex}
@@ -243,7 +298,7 @@ export default function ProductDetailPage() {
                     key={i}
                     type="button"
                     onClick={() => { setSelectedImageIndex(i); setImageError(false); }}
-                    className={`h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
+                    className={`h-14 w-14 shrink-0 overflow-hidden border-2 transition-colors ${
                       selectedImageIndex === i ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
                     }`}
                   >
@@ -253,8 +308,61 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {youMayAlsoLike.length > 0 && (
+              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
+                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">You may also like</h3>
+                <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+                  {youMayAlsoLike.map((p) => {
+                    const imgSrc = p.image.startsWith('http') ? p.image : p.image.startsWith('/') ? (p.image.startsWith('/uploads/') ? assetUrl(p.image) : p.image) : assetUrl(p.image.startsWith('/') ? p.image : `/${p.image}`);
+                    const priceStr = typeof p.calculatedPrice === 'number' ? p.calculatedPrice.toFixed(2) : p.price;
+                    return (
+                      <Link
+                        key={p._id}
+                        href={`/products/${p._id}`}
+                        className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white"
+                      >
+                        <div className="aspect-square w-full overflow-hidden bg-stone-100">
+                          <img src={imgSrc} alt={p.name} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="p-2">
+                          <p className="truncate text-xs font-medium text-charcoal">{p.name}</p>
+                          <p className="text-xs text-stone-600">₹{priceStr}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {recentlyViewed.length > 0 && (
+              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
+                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Recently viewed</h3>
+                <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+                  {recentlyViewed.map((item) => {
+                    const imgSrc = item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? (item.image.startsWith('/uploads/') ? assetUrl(item.image) : item.image) : assetUrl(`/${item.image}`);
+                    return (
+                      <Link
+                        key={item.id}
+                        href={`/products/${item.id}`}
+                        className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white"
+                      >
+                        <div className="aspect-square w-full overflow-hidden bg-stone-100">
+                          <img src={imgSrc} alt={item.name} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="p-2">
+                          <p className="truncate text-xs font-medium text-charcoal">{item.name}</p>
+                          <p className="text-xs text-stone-600">₹{item.price}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {product.priceBreakup && (
-              <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
                 <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
                 <ul className="mt-3 space-y-2 text-sm text-stone-700">
                   {product.priceBreakup.netWeight != null && (
@@ -283,7 +391,7 @@ export default function ProductDetailPage() {
               </div>
             )}
             {product.description && (
-              <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
                 <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Product details</h3>
                 <p className="mt-2 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
               </div>
@@ -321,25 +429,34 @@ export default function ProductDetailPage() {
               </p>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => {
-                  addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
-                  setAddedToCart(true);
-                  setTimeout(() => setAddedToCart(false), 2500);
+                  const url = typeof window !== 'undefined' ? window.location.href : '';
+                  const title = product.name;
+                  if (typeof navigator !== 'undefined' && navigator.share) {
+                    navigator.share({ title, url }).catch(() => {
+                      if (typeof navigator.clipboard !== 'undefined') navigator.clipboard.writeText(url);
+                    });
+                  } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                    navigator.clipboard.writeText(url);
+                  }
                 }}
-                className="flex items-center gap-2 rounded border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+                className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
+                aria-label="Share"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
                 </svg>
-                {addedToCart ? 'Added to cart' : 'Add to cart'}
               </button>
               <button
                 type="button"
                 onClick={toggleWishlist}
-                className="flex items-center gap-2 rounded border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center border transition-colors ${
+                  wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
+                }`}
+                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <svg
                   className="h-5 w-5"
@@ -350,17 +467,30 @@ export default function ProductDetailPage() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
-                {wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
+                  setAddedToCart(true);
+                  setTimeout(() => setAddedToCart(false), 2500);
+                }}
+                className="flex items-center gap-2 border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                </svg>
+                {addedToCart ? 'Added to cart' : 'Add to cart'}
               </button>
               <Link
                 href="/"
-                className="flex items-center rounded border border-stone-300 bg-stone-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-900"
+                className="flex items-center border border-stone-300 bg-stone-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-900"
               >
                 Continue shopping
               </Link>
             </div>
 
-            <div className="mt-6 rounded-lg border border-stone-200 bg-stone-50 p-4">
+            <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
               <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
               <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -371,14 +501,14 @@ export default function ProductDetailPage() {
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Pincode"
-                  className="w-32 rounded border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-32 border border-stone-300 px-3 py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
                 />
                 <button
                   type="button"
                   onClick={checkDelivery}
                   disabled={deliveryChecking}
-                  className="rounded border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+                  className="border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
                 >
                   {deliveryChecking ? 'Checking…' : 'Check Delivery'}
                 </button>
@@ -395,7 +525,7 @@ export default function ProductDetailPage() {
 
             {addedToCart && (
               <div
-                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
                 role="status"
                 aria-live="polite"
               >

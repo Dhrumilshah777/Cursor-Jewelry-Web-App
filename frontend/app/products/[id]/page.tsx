@@ -262,7 +262,7 @@ export default function ProductDetailPage() {
   const selectedSrc = allImages[selectedImageIndex] ? resolveSrc(allImages[selectedImageIndex]) : '';
 
   return (
-    <main className="min-h-[50vh] px-4 py-8 sm:py-12">
+    <main className="min-h-[50vh] px-4 py-8 pb-24 sm:py-12 md:pb-8">
       <div className="mx-auto max-w-5xl">
         <nav className="mb-6 text-sm text-stone-500">
           <Link href="/" className="hover:text-charcoal">Home</Link>
@@ -312,29 +312,10 @@ export default function ProductDetailPage() {
             <div className="mt-4 block md:hidden">
               <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
               <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
-              <h1 className="mt-4 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
-                {product.name}
-              </h1>
-              <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
-                ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
-              </p>
-              {product.colors && product.colors.length > 0 && (
-                <p className="mt-3 text-sm text-stone-600">
-                  <span className="font-medium">Color: </span>
-                  {product.colors.join(', ')}
-                </p>
-              )}
-              <p className="mt-1 text-sm text-stone-600">
-                <span className="font-medium">Metal Purity: </span>
-                {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
-              </p>
-              {product.ringSize && (
-                <p className="mt-1 text-sm text-stone-600">
-                  <span className="font-medium">Ring Size: </span>
-                  {product.ringSize}
-                </p>
-              )}
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex items-center gap-2">
+                <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
+                  {product.name}
+                </h1>
                 <button
                   type="button"
                   onClick={() => {
@@ -367,6 +348,27 @@ export default function ProductDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                   </svg>
                 </button>
+              </div>
+              <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
+                ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
+              </p>
+              {product.colors && product.colors.length > 0 && (
+                <p className="mt-3 text-sm text-stone-600">
+                  <span className="font-medium">Color: </span>
+                  {product.colors.join(', ')}
+                </p>
+              )}
+              <p className="mt-1 text-sm text-stone-600">
+                <span className="font-medium">Metal Purity: </span>
+                {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
+              </p>
+              {product.ringSize && (
+                <p className="mt-1 text-sm text-stone-600">
+                  <span className="font-medium">Ring Size: </span>
+                  {product.ringSize}
+                </p>
+              )}
+              <div className="mt-6 hidden flex-wrap items-center gap-3 md:flex">
                 <button
                   type="button"
                   onClick={() => {
@@ -508,34 +510,10 @@ export default function ProductDetailPage() {
             <p className="text-xs font-medium uppercase tracking-wide text-stone-500">SKU</p>
             <p className="mt-0.5 font-mono text-sm text-charcoal">{product.sku || product._id || '—'}</p>
 
-            <h1 className="mt-4 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
-              {product.name}
-            </h1>
-
-            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
-              ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
-            </p>
-
-            {product.colors && product.colors.length > 0 && (
-              <p className="mt-3 text-sm text-stone-600">
-                <span className="font-medium">Color: </span>
-                {product.colors.join(', ')}
-              </p>
-            )}
-
-            <p className="mt-1 text-sm text-stone-600">
-              <span className="font-medium">Metal Purity: </span>
-              {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
-            </p>
-
-            {product.ringSize && (
-              <p className="mt-1 text-sm text-stone-600">
-                <span className="font-medium">Ring Size: </span>
-                {product.ringSize}
-              </p>
-            )}
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="mt-4 flex items-center gap-2">
+              <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
+                {product.name}
+              </h1>
               <button
                 type="button"
                 onClick={() => {
@@ -574,6 +552,32 @@ export default function ProductDetailPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
               </button>
+            </div>
+
+            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
+              ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
+            </p>
+
+            {product.colors && product.colors.length > 0 && (
+              <p className="mt-3 text-sm text-stone-600">
+                <span className="font-medium">Color: </span>
+                {product.colors.join(', ')}
+              </p>
+            )}
+
+            <p className="mt-1 text-sm text-stone-600">
+              <span className="font-medium">Metal Purity: </span>
+              {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
+            </p>
+
+            {product.ringSize && (
+              <p className="mt-1 text-sm text-stone-600">
+                <span className="font-medium">Ring Size: </span>
+                {product.ringSize}
+              </p>
+            )}
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -625,6 +629,27 @@ export default function ProductDetailPage() {
 
           </div>
         </div>
+
+        {/* Sticky Add to cart bar — 768px and below only */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white p-3 md:hidden">
+          <div className="mx-auto max-w-5xl px-4">
+            <button
+              type="button"
+              onClick={() => {
+                addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
+                setAddedToCart(true);
+                setTimeout(() => setAddedToCart(false), 2500);
+              }}
+              className="flex w-full items-center justify-center gap-2 border border-stone-800 bg-charcoal px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+              </svg>
+              {addedToCart ? 'Added to cart' : 'Add to cart'}
+            </button>
+          </div>
+        </div>
+
         {addedToCart && (
           <div
             className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"

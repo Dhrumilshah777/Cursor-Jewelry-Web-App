@@ -381,9 +381,6 @@ export default function ProductDetailPage() {
                   </svg>
                   {addedToCart ? 'Added to cart' : 'Add to cart'}
                 </button>
-                <Link href="/" className="flex items-center border border-stone-300 bg-stone-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-900">
-                  Continue shopping
-                </Link>
               </div>
               <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
                 <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
@@ -591,12 +588,6 @@ export default function ProductDetailPage() {
                 </svg>
                 {addedToCart ? 'Added to cart' : 'Add to cart'}
               </button>
-              <Link
-                href="/"
-                className="flex items-center border border-stone-300 bg-stone-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-900"
-              >
-                Continue shopping
-              </Link>
             </div>
 
             <div className="mt-6 border border-stone-200 bg-stone-50 p-4">

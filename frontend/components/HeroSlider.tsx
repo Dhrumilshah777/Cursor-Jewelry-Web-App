@@ -17,7 +17,17 @@ const DEFAULT_SLIDES: Slide[] = [
 const AUTOPLAY_MS = 6000;
 
 function slideMediaUrl(url: string): string {
-  return url.startsWith('http') ? url : url.startsWith('/uploads/') ? assetUrl(url) : url;
+  const u = (url || '').trim();
+  if (!u) return '';
+  // Full URL (http/https) — use as-is (e.g. ImageKit.io)
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  // Protocol-relative URL (//ik.imagekit.io/...)
+  if (u.startsWith('//')) return `https:${u}`;
+  // Backend upload path
+  if (u.startsWith('/uploads/')) return assetUrl(u);
+  // Domain-like URL pasted without protocol (e.g. ik.imagekit.io/...)
+  if (u.includes('imagekit.io') || /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}\//i.test(u)) return `https://${u}`;
+  return u;
 }
 
 export default function HeroSlider() {

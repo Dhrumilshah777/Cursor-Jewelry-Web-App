@@ -13,11 +13,11 @@ export default function Home() {
     <main className="overflow-x-hidden">
       <HeroSlider />
 
+      <ViewByCategoriesSection />
+
       {/* <CategoryCardsSection /> */}
 
       <LatestBeautySection />
-
-      <ViewByCategoriesSection />
 
       <HeroServicesStrip />
 

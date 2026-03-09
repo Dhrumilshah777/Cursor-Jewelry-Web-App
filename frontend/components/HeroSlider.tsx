@@ -60,11 +60,14 @@ export default function HeroSlider() {
               playsInline
               poster={slide.image ? slideMediaUrl(slide.image) : undefined}
             />
-          ) : (
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-stone-800"
-              style={{ backgroundImage: `url(${slide.image ? slideMediaUrl(slide.image) : ''})` }}
+          ) : slide.image ? (
+            <img
+              src={slideMediaUrl(slide.image)}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover bg-stone-800"
             />
+          ) : (
+            <div className="absolute inset-0 bg-stone-800" />
           )}
         </div>
       ))}

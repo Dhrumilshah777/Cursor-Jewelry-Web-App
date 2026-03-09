@@ -23,6 +23,12 @@ const siteConfigSchema = new mongoose.Schema(
       slug: { type: String, default: '' },
       order: { type: Number, default: 0 },
     }],
+    categoryCards: [{
+      image: { type: String, default: '' },
+      title: { type: String, default: '' },
+      description: { type: String, default: '' },
+      link: { type: String, default: '/products' },
+    }],
   },
   { timestamps: true }
 );

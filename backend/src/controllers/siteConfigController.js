@@ -5,7 +5,7 @@ const DEFAULT_KEY = 'main';
 async function getConfig() {
   let config = await SiteConfig.findOne({ key: DEFAULT_KEY });
   if (!config) {
-    config = await SiteConfig.create({ key: DEFAULT_KEY, heroSlides: [], instagramImages: [] });
+    config = await SiteConfig.create({ key: DEFAULT_KEY, heroSlides: [], instagramImages: [], categoryCards: [] });
   }
   return config;
 }
@@ -129,6 +129,40 @@ exports.updateInstagram = async (req, res) => {
     config.instagramImages = req.body;
     await config.save();
     res.json(config.instagramImages);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+const defaultCategoryCards = [
+  { image: '', title: 'Moissanite', description: 'Browse our best collection of brilliant and durable moissanite jewelry.', link: '/products' },
+  { image: '', title: 'Lab Grown Diamond', description: 'Browse our best collection of Conflict-free lab diamond jewellery.', link: '/products' },
+];
+
+exports.getCategoryCards = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const cards = config.categoryCards && config.categoryCards.length >= 2
+      ? config.categoryCards.slice(0, 2)
+      : defaultCategoryCards;
+    res.json(cards);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateCategoryCards = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const raw = Array.isArray(req.body) ? req.body : [];
+    config.categoryCards = raw.slice(0, 2).map((c, i) => ({
+      image: String(c.image || '').trim(),
+      title: String(c.title || '').trim() || (defaultCategoryCards[i] && defaultCategoryCards[i].title) || '',
+      description: String(c.description || '').trim() || (defaultCategoryCards[i] && defaultCategoryCards[i].description) || '',
+      link: String(c.link || '').trim() || '/products',
+    }));
+    await config.save();
+    res.json(config.categoryCards);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

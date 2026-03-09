@@ -5,18 +5,22 @@ import { useState, useEffect } from 'react';
 import SearchOverlay from '@/components/SearchOverlay';
 import { getCartCount, getCartFromApi, isUserLoggedIn } from '@/lib/api';
 
-const navLinks = [
-  { href: '/products', label: 'COLLECTION' },
+const mainNavLinks = [
+  { href: '/', label: 'HOME' },
+  { href: '/products?category=engagement-rings', label: 'ENGAGEMENT RINGS' },
+  { href: '/products?category=wedding-rings', label: 'WEDDING RINGS' },
+  { href: '/products?category=fine-jewellery', label: 'FINE JEWELLERY' },
+  { href: '/products?category=custom', label: 'CUSTOM DESIGN' },
+  { href: '/products?category=diamonds', label: 'DIAMONDS' },
   { href: '/products', label: 'GIFTS' },
-  { href: '/products', label: 'STORE' },
-  { href: '#contacts', label: 'CONTACTS' },
+  { href: '/blog', label: 'BLOG' },
+  { href: '#contact', label: 'CONTACT' },
 ];
 
-const SCROLL_THRESHOLD = 0.1; // 10% of viewport height
+const SCROLL_THRESHOLD = 0.1;
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
@@ -47,94 +51,90 @@ export default function Header() {
   }, []);
 
   const isSticky = scrolled;
-  const textClass = isSticky ? 'text-charcoal' : 'text-white';
-  const textMutedClass = isSticky ? 'text-charcoal/90' : 'text-white/90';
-  const lineClass = isSticky ? 'bg-charcoal/60' : 'bg-white/60';
+  const headerBg = isSticky ? 'bg-white shadow-sm' : 'bg-white';
 
   return (
     <header
       className={`left-0 right-0 z-50 w-full transition-all duration-300 ${
-        isSticky ? 'fixed top-0 bg-white/95 shadow-md backdrop-blur-sm' : 'absolute top-8 bg-transparent'
+        isSticky ? 'fixed top-0' : 'absolute top-0'
       }`}
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pt-5 pb-4 sm:px-6 lg:px-8">
-        {/* Row 1: Logo (center) + Icons (right) */}
-        <div className="relative flex items-center justify-between">
-          <div className="flex-1 md:min-w-0 mt-10" aria-hidden />
-          <Link href="/" className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center">
-            <span className={`font-serif text-2xl font-medium tracking-wide transition-colors duration-300 sm:text-3xl ${textClass}`}>
-              BLURE
+      {/* 1. Top promotional banner – dark blue */}
+      <div className="bg-[#1e3a5f] py-2 text-center">
+        <p className="text-xs font-medium uppercase tracking-wide text-white sm:text-sm">
+          FLAT 10% OFF FIRST PURCHASE. CODE SAVE10
+        </p>
+      </div>
+
+      {/* 2. Main header – white: left CTA, center logo, right icons */}
+      <div className={`${headerBg} border-b border-stone-100`}>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          {/* Left: Book appointment (invisible spacer on mobile so logo stays centered) */}
+          <div className="flex min-w-0 flex-1 justify-start">
+            <Link
+              href="#appointment"
+              className="hidden text-xs font-medium uppercase tracking-wider text-stone-800 underline underline-offset-2 hover:text-stone-600 md:block"
+            >
+              Book a virtual appointment
+            </Link>
+          </div>
+
+          {/* Center: Logo + brand name */}
+          <Link href="/" className="flex flex-shrink-0 flex-col items-center">
+            <span className="flex items-center justify-center font-serif text-2xl font-semibold tracking-tight text-[#1e3a5f] sm:text-3xl">
+              <span className="relative">
+                TB
+                <svg
+                  className="absolute -right-1 -top-3 h-3 w-3 text-[#1e3a5f] sm:-top-4 sm:h-4 sm:w-4"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <path d="M12 2L14.5 8.5L21 9L16 13.5L17.5 20L12 17L6.5 20L8 13.5L3 9L9.5 8.5L12 2Z" />
+                </svg>
+              </span>
             </span>
-            <span className={`mt-0.5 font-sans text-[10px] font-light uppercase tracking-[0.35em] transition-colors duration-300 ${textMutedClass}`}>
-              THE MAISON BLURE
+            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-stone-800 sm:text-base">
+              The Bride Jewelry
             </span>
-            <span className={`mt-1 block h-px w-12 transition-colors duration-300 ${lineClass}`} aria-hidden />
           </Link>
-          <div className="flex flex-1 items-center justify-end gap-6 md:gap-8">
+
+          {/* Right: Search, Account, Wishlist, Cart (outline icons) */}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-6 md:gap-8">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className={`hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`}
+              className="hidden text-stone-700 transition-opacity hover:opacity-70 md:block"
               aria-label="Search"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </button>
-            <Link href="#" className={`hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Store locations">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
-            </Link>
-            <Link href="/login" className={`hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Account">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <Link href="/login" className="hidden text-stone-700 transition-opacity hover:opacity-70 md:block" aria-label="Account">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
             </Link>
-            <Link href="/cart" className={`relative hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Cart">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <Link href="/wishlist" className="hidden text-stone-700 transition-opacity hover:opacity-70 md:block" aria-label="Wishlist">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </Link>
+            <Link href="/cart" className="relative hidden text-stone-700 transition-opacity hover:opacity-70 md:block" aria-label="Cart">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-charcoal text-[10px] font-medium text-white">
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1e3a5f] text-[10px] font-medium text-white">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </Link>
-            <Link href="/wishlist" className={`hidden transition-opacity hover:opacity-80 md:block ${textMutedClass}`} aria-label="Wishlist">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </Link>
-            <div className="relative hidden md:block">
-              <button
-                type="button"
-                onClick={() => setLangOpen((o) => !o)}
-                className={`flex items-center gap-1 font-sans text-xs font-light uppercase tracking-wider transition-colors duration-300 ${textClass}`}
-                aria-expanded={langOpen}
-                aria-haspopup="listbox"
-                aria-label="Language"
-              >
-                EN
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {langOpen && (
-                <ul
-                  className="absolute right-0 top-full mt-2 min-w-[4rem] rounded border border-white/20 bg-charcoal/95 py-2 backdrop-blur-sm"
-                  role="listbox"
-                >
-                  <li><button type="button" className="w-full px-4 py-1 text-left text-sm text-white hover:bg-white/10" role="option">EN</button></li>
-                  <li><button type="button" className="w-full px-4 py-1 text-left text-sm text-white hover:bg-white/10" role="option">FR</button></li>
-                </ul>
-              )}
-            </div>
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className={`flex h-10 w-10 items-center justify-center transition-colors duration-300 md:hidden ${textClass}`}
+              className="flex h-10 w-10 items-center justify-center text-stone-700 md:hidden"
               aria-expanded={mobileOpen}
               aria-label="Toggle menu"
             >
@@ -151,27 +151,29 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Row 2: Nav links under the logo (hidden on mobile, in hamburger instead) */}
-        <nav className="mt-12 hidden justify-center gap-8 md:flex md:gap-16" aria-label="Main">
-          {navLinks.map(({ href, label }) => (
-            <Link
-              key={label}
-              href={href}
-              className={`font-sans text-xs font-light uppercase tracking-[0.25em] transition-opacity duration-300 hover:opacity-80 ${textClass}`}
-            >
-              {label}
-            </Link>
-          ))}
+        {/* 3. Bottom navigation – white, horizontal links */}
+        <nav className="border-t border-stone-100 py-3" aria-label="Main">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-4 sm:gap-8 sm:px-6 lg:gap-10 lg:px-8">
+            {mainNavLinks.map(({ href, label }) => (
+              <Link
+                key={label}
+                href={href}
+                className="font-sans text-xs font-medium uppercase tracking-[0.15em] text-stone-800 transition-opacity hover:opacity-70"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </nav>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-white/20 bg-charcoal/98 px-4 py-6 backdrop-blur-md md:hidden">
+        <div className="border-t border-stone-200 bg-white px-4 py-6 shadow-lg md:hidden">
           <button
             type="button"
             onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
-            className="mb-4 flex items-center gap-2 font-sans text-xs uppercase tracking-wider text-white"
+            className="mb-4 flex items-center gap-2 font-sans text-xs font-medium uppercase tracking-wider text-stone-700"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -179,23 +181,30 @@ export default function Header() {
             Search
           </button>
           <nav className="flex flex-col gap-4">
-            {navLinks.map(({ href, label }) => (
+            {mainNavLinks.map(({ href, label }) => (
               <Link
                 key={label}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className="font-sans text-xs font-light uppercase tracking-[0.2em] text-white"
+                className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800"
               >
                 {label}
               </Link>
             ))}
-            <Link href="/cart" onClick={() => setMobileOpen(false)} className="font-sans text-xs uppercase tracking-wider text-white">Cart{cartCount > 0 ? ` (${cartCount})` : ''}</Link>
-            <Link href="/login" onClick={() => setMobileOpen(false)} className="font-sans text-xs uppercase tracking-wider text-white">Login</Link>
-            <Link href="/register" onClick={() => setMobileOpen(false)} className="font-sans text-xs uppercase tracking-wider text-white">Register</Link>
+            <Link href="/cart" onClick={() => setMobileOpen(false)} className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800">
+              Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+            </Link>
+            <Link href="/login" onClick={() => setMobileOpen(false)} className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800">
+              Login
+            </Link>
+            <Link href="/register" onClick={() => setMobileOpen(false)} className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800">
+              Register
+            </Link>
           </nav>
         </div>
       )}
-    <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

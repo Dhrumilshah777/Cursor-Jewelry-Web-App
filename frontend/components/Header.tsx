@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SearchOverlay from '@/components/SearchOverlay';
-import { getCartCount, getCartFromApi, isUserLoggedIn } from '@/lib/api';
+import { getCartCount, getCartFromApi, isUserLoggedIn, apiGet, assetUrl } from '@/lib/api';
 
 const mainNavLinks = [
   { href: '/', label: 'HOME' },
@@ -17,10 +17,14 @@ const mainNavLinks = [
   { href: '#contact', label: 'CONTACT' },
 ];
 
+type NavCategory = { id: string; name: string; image: string; slug: string };
+
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [navCategories, setNavCategories] = useState<NavCategory[]>([]);
+  const navSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const refresh = () => {
@@ -37,6 +41,20 @@ export default function Header() {
     return () => window.removeEventListener('cart-updated', refresh);
   }, []);
 
+  useEffect(() => {
+    apiGet<{ _id?: string; name: string; image: string; slug: string }[]>('/api/site/view-by-categories')
+      .then((list) => {
+        const mapped: NavCategory[] = (Array.isArray(list) ? list : []).map((c, i) => ({
+          id: c._id ?? String(i),
+          name: c.name || 'Category',
+          image: c.image || '',
+          slug: c.slug || c.name?.toLowerCase().replace(/\s+/g, '-') || 'category',
+        }));
+        setNavCategories(mapped);
+      })
+      .catch(() => setNavCategories([]));
+  }, []);
+
   return (
     <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       {/* 1. Top promotional banner – dark blue */}
@@ -49,8 +67,18 @@ export default function Header() {
       {/* 2. Main header – white */}
       <div className="border-b border-stone-100 bg-white">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2 sm:px-6 lg:px-8">
-          {/* Left: Book appointment (invisible spacer on mobile so logo stays centered) */}
-          <div className="flex min-w-0 flex-1 justify-start">
+          {/* Left: Search on mobile; Book appointment on desktop */}
+          <div className="flex min-w-0 flex-1 items-center justify-start">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="flex h-10 w-10 items-center justify-center text-stone-700 md:hidden"
+              aria-label="Search"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </button>
             <Link
               href="#appointment"
               className="hidden text-xs font-medium uppercase tracking-wider text-stone-800 underline underline-offset-2 hover:text-stone-600 md:block"
@@ -131,9 +159,9 @@ export default function Header() {
           </div>
         </div>
 
-        {/* 3. Bottom navigation – white, horizontal links */}
+        {/* 3. Bottom navigation – horizontal links (visible only 1024px+) */}
         <nav className="border-t border-stone-100 py-2" aria-label="Main">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-4 sm:gap-8 sm:px-6 lg:gap-10 lg:px-8">
+          <div className="mx-auto hidden max-w-7xl flex-wrap items-center justify-center gap-6 px-4 sm:gap-8 sm:px-6 lg:flex lg:gap-10 lg:px-8">
             {mainNavLinks.map(({ href, label }) => (
               <Link
                 key={label}
@@ -145,6 +173,39 @@ export default function Header() {
             ))}
           </div>
         </nav>
+
+        {/* 4. Category slider – visible only below 1024px (replaces text nav) */}
+        {navCategories.length > 0 && (
+        <div className="border-t border-stone-100 lg:hidden" ref={navSliderRef}>
+          <div className="flex gap-3 overflow-x-auto px-3 py-3" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+            {navCategories.map((cat) => {
+              const imgSrc = cat.image.startsWith('http') ? cat.image : cat.image.startsWith('/uploads/') ? assetUrl(cat.image) : cat.image || '';
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/products?category=${cat.slug}`}
+                  className="group flex flex-shrink-0 flex-col items-center scroll-smooth"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-stone-100 shadow-md transition-shadow group-hover:shadow-lg sm:h-24 sm:w-24">
+                    {imgSrc ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imgSrc} alt={cat.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
+                        <span className="text-xs font-medium uppercase">{cat.name.slice(0, 1)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="mt-1.5 text-center font-sans text-xs font-medium uppercase tracking-wide text-stone-800">
+                    {cat.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+        )}
       </div>
 
       {/* Mobile menu */}

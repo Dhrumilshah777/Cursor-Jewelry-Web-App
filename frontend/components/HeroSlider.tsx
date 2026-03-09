@@ -54,7 +54,7 @@ export default function HeroSlider() {
       {slides.map((slide, index) => (
         <div
           key={index}
-          className="absolute inset-0 transition-opacity duration-700 ease-in-out bg-stone-800"
+          className="absolute inset-0 transition-opacity duration-700 ease-in-out"
           style={{
             opacity: index === current ? 1 : 0,
             pointerEvents: index === current ? 'auto' : 'none',
@@ -62,7 +62,7 @@ export default function HeroSlider() {
         >
           {'video' in slide && slide.video ? (
             <video
-              className="absolute inset-0 h-full w-full object-contain"
+              className="absolute inset-0 h-full w-full object-cover"
               src={slideMediaUrl(slide.video)}
               autoPlay
               muted
@@ -74,7 +74,7 @@ export default function HeroSlider() {
             <img
               src={slideMediaUrl(slide.image)}
               alt=""
-              className="absolute inset-0 h-full w-full object-contain"
+              className="absolute inset-0 h-full w-full object-cover bg-stone-800"
             />
           ) : (
             <div className="absolute inset-0 bg-stone-800" />

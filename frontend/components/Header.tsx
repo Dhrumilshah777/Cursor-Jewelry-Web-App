@@ -60,7 +60,7 @@ export default function Header() {
       }`}
     >
       {/* 1. Top promotional banner – dark blue */}
-      <div className="bg-[#1e3a5f] py-2 text-center">
+      <div className="bg-[#1e3a5f] py-1.5 text-center">
         <p className="text-xs font-medium uppercase tracking-wide text-white sm:text-sm">
           FLAT 10% OFF FIRST PURCHASE. CODE SAVE10
         </p>
@@ -68,7 +68,7 @@ export default function Header() {
 
       {/* 2. Main header – white: left CTA, center logo, right icons */}
       <div className={`${headerBg} border-b border-stone-100`}>
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-2 py-2 sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-2 py-1.5 sm:px-6 lg:px-8">
           {/* Left: Book appointment (invisible spacer on mobile so logo stays centered) */}
           <div className="flex min-w-0 flex-1 justify-start">
             <Link
@@ -152,7 +152,7 @@ export default function Header() {
         </div>
 
         {/* 3. Bottom navigation – white, horizontal links */}
-        <nav className="border-t border-stone-100 py-3" aria-label="Main">
+        <nav className="border-t border-stone-100 py-2" aria-label="Main">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-4 sm:gap-8 sm:px-6 lg:gap-10 lg:px-8">
             {mainNavLinks.map(({ href, label }) => (
               <Link

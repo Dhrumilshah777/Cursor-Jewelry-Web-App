@@ -1,22 +1,17 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
 
 type Slide = {
   image?: string;
   video?: string;
-  title?: string[];
-  subtitle?: string;
-  cta?: string;
-  ctaHref?: string;
 };
 
 const DEFAULT_SLIDES: Slide[] = [
-  { image: '/hero-1.png', title: ['INSPIRED BY HEAVENLY', 'WONDERS'], subtitle: 'The creations suffuse each sign with unique character', cta: 'Discover the collection', ctaHref: '/products' },
-  { video: '/hero-2.mp4', image: '/hero-2.jpg', title: ['TIMELESS ELEGANCE', 'REDEFINED'], subtitle: 'Crafted for those who appreciate the extraordinary', cta: 'Explore the collection', ctaHref: '/products' },
-  { image: '/hero-3.jpg', title: ['EVERY PIECE', 'TELLS A STORY'], subtitle: 'Where artistry meets precision in every detail', cta: 'Discover the collection', ctaHref: '/products' },
+  { image: '/hero-1.png' },
+  { video: '/hero-2.mp4', image: '/hero-2.jpg' },
+  { image: '/hero-3.jpg' },
 ];
 
 const AUTOPLAY_MS = 6000;
@@ -71,33 +66,6 @@ export default function HeroSlider() {
               style={{ backgroundImage: `url(${slide.image ? slideMediaUrl(slide.image) : ''})` }}
             />
           )}
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-amber-900/70 via-stone-800/80 to-stone-900/90"
-            aria-hidden
-          />
-          <div className="absolute inset-0 bg-black/20" aria-hidden />
-
-          <div
-            key={`slide-text-${index}-${current}`}
-            className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-16 text-center font-poppins font-extralight sm:pt-20"
-          >
-            <h1 className="text-4xl leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-              <span className="animate-hero-text inline-block">{slide.title?.[0] ?? ''}</span>
-              <br />
-              <span className="animate-hero-text animate-hero-text-delay-1 inline-block">{slide.title?.[1] ?? ''}</span>
-            </h1>
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-white/95 sm:text-base">
-              <span className="animate-hero-text animate-hero-text-delay-2 inline-block">{slide.subtitle ?? ''}</span>
-            </p>
-            <span className="inline-block">
-              <Link
-                href={slide.ctaHref ?? '/products'}
-                className="mt-10 inline-block border border-white px-8 py-3.5 text-xs uppercase tracking-[0.2em] text-white transition-colors hover:bg-white hover:text-charcoal animate-hero-text animate-hero-text-delay-4"
-              >
-                {slide.cta ?? 'Discover the collection'}
-              </Link>
-            </span>
-          </div>
         </div>
       ))}
 

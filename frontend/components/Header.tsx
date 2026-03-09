@@ -159,9 +159,24 @@ export default function Header() {
           </div>
         </div>
 
-        {/* 3. Category slider – image cards (all screen sizes; text nav links are in hamburger only) */}
+        {/* 3. Bottom navigation – horizontal links (visible only 1024px+) */}
+        <nav className="border-t border-stone-100 py-2" aria-label="Main">
+          <div className="mx-auto hidden max-w-7xl flex-wrap items-center justify-center gap-6 px-4 sm:gap-8 sm:px-6 lg:flex lg:gap-10 lg:px-8">
+            {mainNavLinks.map(({ href, label }) => (
+              <Link
+                key={label}
+                href={href}
+                className="font-sans text-xs font-medium uppercase tracking-[0.15em] text-stone-800 transition-opacity hover:opacity-70"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        {/* 4. Category slider – visible only below 1024px (replaces text nav) */}
         {navCategories.length > 0 && (
-        <div ref={navSliderRef}>
+        <div className="lg:hidden" ref={navSliderRef}>
           <div className="scrollbar-hide flex gap-3 overflow-x-auto pl-6 pr-3 py-3 sm:pl-8" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
             {navCategories.map((cat) => {
               const imgSrc = cat.image.startsWith('http') ? cat.image : cat.image.startsWith('/uploads/') ? assetUrl(cat.image) : cat.image || '';

@@ -17,23 +17,10 @@ const mainNavLinks = [
   { href: '#contact', label: 'CONTACT' },
 ];
 
-const SCROLL_THRESHOLD = 0.1;
-
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-
-  useEffect(() => {
-    const checkScroll = () => {
-      const threshold = window.innerHeight * SCROLL_THRESHOLD;
-      setScrolled(window.scrollY > threshold);
-    };
-    checkScroll();
-    window.addEventListener('scroll', checkScroll, { passive: true });
-    return () => window.removeEventListener('scroll', checkScroll);
-  }, []);
 
   useEffect(() => {
     const refresh = () => {
@@ -50,15 +37,8 @@ export default function Header() {
     return () => window.removeEventListener('cart-updated', refresh);
   }, []);
 
-  const isSticky = scrolled;
-  const headerBg = isSticky ? 'bg-white shadow-sm' : 'bg-white';
-
   return (
-    <header
-      className={`left-0 right-0 z-50 w-full transition-all duration-300 ${
-        isSticky ? 'fixed top-0' : 'absolute top-0'
-      }`}
-    >
+    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       {/* 1. Top promotional banner – dark blue */}
       <div className="bg-[#1e3a5f] py-1.5 text-center">
         <p className="text-xs font-medium uppercase tracking-wide text-white sm:text-sm">
@@ -66,8 +46,8 @@ export default function Header() {
         </p>
       </div>
 
-      {/* 2. Main header – white: left CTA, center logo, right icons */}
-      <div className={`${headerBg} border-b border-stone-100`}>
+      {/* 2. Main header – white */}
+      <div className="border-b border-stone-100 bg-white">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-2 py-1.5 sm:px-6 lg:px-8">
           {/* Left: Book appointment (invisible spacer on mobile so logo stays centered) */}
           <div className="flex min-w-0 flex-1 justify-start">

@@ -79,7 +79,7 @@ export default function HeroSlider() {
 
           <div
             key={`slide-text-${index}-${current}`}
-            className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-32 text-center font-poppins font-extralight sm:pt-40 md:pt-44"
+            className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-16 text-center font-poppins font-extralight sm:pt-20"
           >
             <h1 className="text-4xl leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
               <span className="animate-hero-text inline-block">{slide.title?.[0] ?? ''}</span>

@@ -68,8 +68,8 @@ export default function CategoryCardsSection() {
   if (loading || cards.length === 0) return null;
 
   return (
-    <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8" aria-label="Featured collections">
-      <div className="mx-auto max-w-7xl">
+    <section className="mt-10 py-8 sm:mt-12 sm:py-10" aria-label="Featured collections">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
           {cards.map((card, index) => (
             <Card key={index} card={card} />

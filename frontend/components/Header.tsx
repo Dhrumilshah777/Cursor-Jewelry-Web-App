@@ -177,7 +177,7 @@ export default function Header() {
         {/* 4. Category slider – visible only below 1024px (replaces text nav) */}
         {navCategories.length > 0 && (
         <div className="border-t border-stone-100 lg:hidden" ref={navSliderRef}>
-          <div className="flex gap-3 overflow-x-auto px-3 py-3" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+          <div className="scrollbar-hide flex gap-3 overflow-x-auto pl-5 pr-3 py-3 sm:pl-6" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
             {navCategories.map((cat) => {
               const imgSrc = cat.image.startsWith('http') ? cat.image : cat.image.startsWith('/uploads/') ? assetUrl(cat.image) : cat.image || '';
               return (

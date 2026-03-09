@@ -3,11 +3,16 @@ const fs = require('fs');
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 
+// Ensure uploads directory exists (in case multer config path differs)
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
 const getPublicUrl = (filename) => `/uploads/${filename}`;
 
 exports.uploadSingle = (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+    return res.status(400).json({ error: 'No file uploaded. Please choose a file (image or video).' });
   }
   res.json({ url: getPublicUrl(req.file.filename), filename: req.file.filename });
 };

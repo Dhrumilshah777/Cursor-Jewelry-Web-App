@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import HeroSlider from '@/components/HeroSlider';
-import CategoryCardsSection from '@/components/CategoryCardsSection';
+// import CategoryCardsSection from '@/components/CategoryCardsSection';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import LatestBeautySection from '@/components/LatestBeautySection';
 import ViewByCategoriesSection from '@/components/ViewByCategoriesSection';
@@ -13,7 +13,7 @@ export default function Home() {
     <main className="overflow-x-hidden">
       <HeroSlider />
 
-      <CategoryCardsSection />
+      {/* <CategoryCardsSection /> */}
 
       <LatestBeautySection />
 

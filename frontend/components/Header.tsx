@@ -68,7 +68,7 @@ export default function Header() {
 
       {/* 2. Main header – white: left CTA, center logo, right icons */}
       <div className={`${headerBg} border-b border-stone-100`}>
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-2 py-2 sm:px-6 lg:px-8">
           {/* Left: Book appointment (invisible spacer on mobile so logo stays centered) */}
           <div className="flex min-w-0 flex-1 justify-start">
             <Link

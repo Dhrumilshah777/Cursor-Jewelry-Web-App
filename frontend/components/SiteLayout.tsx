@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
+import NavCategoryStrip from '@/components/NavCategoryStrip';
 import Footer from '@/components/Footer';
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -12,6 +13,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <Header />
+      <NavCategoryStrip />
       {children}
       <Footer />
     </>

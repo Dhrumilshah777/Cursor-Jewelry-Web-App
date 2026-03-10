@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import SearchOverlay from '@/components/SearchOverlay';
-import { getCartCount, getCartFromApi, isUserLoggedIn, apiGet, assetUrl } from '@/lib/api';
+import { getCartCount, getCartFromApi, isUserLoggedIn } from '@/lib/api';
 
 const mainNavLinks = [
   { href: '/', label: 'HOME' },
@@ -17,15 +17,10 @@ const mainNavLinks = [
   { href: '#contact', label: 'CONTACT' },
 ];
 
-type NavCategory = { id: string; name: string; image: string; slug: string };
-
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [navCategories, setNavCategories] = useState<NavCategory[]>([]);
-  const [hideNavStrip, setHideNavStrip] = useState(false);
-  const navSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const refresh = () => {
@@ -40,38 +35,6 @@ export default function Header() {
     refresh();
     window.addEventListener('cart-updated', refresh);
     return () => window.removeEventListener('cart-updated', refresh);
-  }, []);
-
-  useEffect(() => {
-    apiGet<{ _id?: string; name: string; image: string; slug: string }[]>('/api/site/view-by-categories')
-      .then((list) => {
-        const mapped: NavCategory[] = (Array.isArray(list) ? list : []).map((c, i) => ({
-          id: c._id ?? String(i),
-          name: c.name || 'Category',
-          image: c.image || '',
-          slug: c.slug || c.name?.toLowerCase().replace(/\s+/g, '-') || 'category',
-        }));
-        setNavCategories(mapped);
-      })
-      .catch(() => setNavCategories([]));
-  }, []);
-
-  useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        setHideNavStrip((prev) => {
-          const next = y > 0;
-          return next === prev ? prev : next;
-        });
-        ticking = false;
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
@@ -192,42 +155,6 @@ export default function Header() {
             ))}
           </div>
         </nav>
-
-        {/* 4. Category slider – below 1024px only; completely hidden when scroll > 0 (no transition) */}
-        {navCategories.length > 0 && !hideNavStrip && (
-        <div className="lg:hidden" ref={navSliderRef}>
-          <div
-            className="scrollbar-hide flex gap-3 overflow-x-auto pl-6 pr-3 py-3 sm:pl-8"
-            style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
-          >
-            {navCategories.map((cat) => {
-              const imgSrc = cat.image.startsWith('http') ? cat.image : cat.image.startsWith('/uploads/') ? assetUrl(cat.image) : cat.image || '';
-              return (
-                <Link
-                  key={cat.id}
-                  href={`/products?category=${cat.slug}`}
-                  className="group flex flex-shrink-0 flex-col items-center scroll-smooth"
-                  style={{ scrollSnapAlign: 'start' }}
-                >
-                  <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-stone-100 shadow-md transition-shadow group-hover:shadow-lg sm:h-24 sm:w-24">
-                    {imgSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={imgSrc} alt={cat.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
-                        <span className="text-xs font-medium uppercase">{cat.name.slice(0, 1)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <span className="mt-1.5 text-center font-sans text-xs font-medium uppercase tracking-wide text-stone-800">
-                    {cat.name}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-        )}
       </div>
 
       {/* Mobile menu */}

@@ -32,13 +32,13 @@ function BigCard({ category }: { category: Category }) {
         <img
           src={imgSrc}
           alt={category.name}
-          className="absolute inset-0 h-full w-full object-cover opacity-40 transition-opacity duration-300 group-hover:opacity-50"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => setImageError(true)}
         />
       ) : (
         <div className="absolute inset-0 bg-stone-700" />
       )}
-      <div className="relative">
+      <div className="relative bg-gradient-to-t from-black/70 via-black/20 to-transparent pt-16 pb-0">
         <p className="font-serif text-2xl font-medium text-white sm:text-3xl">
           {category.name}
         </p>
@@ -69,13 +69,13 @@ function SmallCard({ category }: { category: Category }) {
         <img
           src={imgSrc}
           alt={category.name}
-          className="absolute inset-0 h-full w-full object-cover opacity-40 transition-opacity duration-300 group-hover:opacity-50"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => setImageError(true)}
         />
       ) : (
         <div className="absolute inset-0 bg-stone-700" />
       )}
-      <div className="relative">
+      <div className="relative bg-gradient-to-t from-black/70 via-black/20 to-transparent pt-12 pb-0">
         <p className="font-sans text-lg font-medium text-white sm:text-xl">
           {category.name}
         </p>
@@ -112,7 +112,7 @@ export default function ShopByCategoriesSection() {
 
   return (
     <section className="w-full" aria-label="Shop by categories">
-      <div className="mx-auto max-w-[1600px] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="mb-8 text-center font-serif text-2xl font-light text-charcoal sm:text-3xl">
           Shop by categories
         </h2>

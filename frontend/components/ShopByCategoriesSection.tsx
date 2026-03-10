@@ -25,7 +25,7 @@ function BigCard({ category }: { category: Category }) {
   return (
     <Link
       href={`/products?category=${category.slug}`}
-      className="group relative flex min-h-[320px] flex-col justify-end overflow-hidden rounded-none bg-stone-800 p-6 sm:min-h-[400px] md:p-8"
+      className="group relative flex min-h-[420px] flex-col justify-end overflow-hidden rounded-lg bg-stone-800 p-6 sm:min-h-[520px] md:p-8"
     >
       {imgSrc && !imageError ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -62,7 +62,7 @@ function SmallCard({ category }: { category: Category }) {
   return (
     <Link
       href={`/products?category=${category.slug}`}
-      className="group relative flex min-h-[160px] flex-col justify-end overflow-hidden rounded-none bg-stone-800 p-4 sm:min-h-[180px]"
+      className="group relative flex min-h-[220px] flex-col justify-end overflow-hidden rounded-lg bg-stone-800 p-4 sm:min-h-[260px]"
     >
       {imgSrc && !imageError ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -112,16 +112,16 @@ export default function ShopByCategoriesSection() {
 
   return (
     <section className="w-full" aria-label="Shop by categories">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="mb-8 text-center font-serif text-2xl font-light text-charcoal sm:text-3xl">
           Shop by categories
         </h2>
-        <div className={`grid grid-cols-1 gap-0 ${hasGrid ? 'md:grid-cols-5' : ''}`}>
+        <div className={`grid grid-cols-1 gap-4 ${hasGrid ? 'md:grid-cols-5 md:gap-5' : ''}`}>
           <div className={hasGrid ? 'md:col-span-2' : ''}>
             {main && <BigCard category={main} />}
           </div>
           {hasGrid && (
-            <div className="grid grid-cols-2 md:col-span-3">
+            <div className="grid grid-cols-2 gap-4 md:col-span-3 md:gap-5">
               {gridItems.map((cat) => (
                 <SmallCard key={cat.id} category={cat} />
               ))}

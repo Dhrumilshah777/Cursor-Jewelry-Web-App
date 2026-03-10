@@ -72,7 +72,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-md items-center justify-around rounded-full bg-[#5F4431] px-4 py-3 shadow-lg md:hidden"
+      className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-md items-center justify-around rounded-full bg-[#1e3a5f] px-4 py-3 shadow-lg md:hidden"
       aria-label="Mobile navigation"
     >
       {items.map(({ href, label, icon }) => {

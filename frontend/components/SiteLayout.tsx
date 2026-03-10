@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
 import NavCategoryStrip from '@/components/NavCategoryStrip';
 import Footer from '@/components/Footer';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,8 +15,11 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
     <>
       <Header />
       <NavCategoryStrip />
-      {children}
-      <Footer />
+      <div className="pb-24 md:pb-0">
+        {children}
+        <Footer />
+      </div>
+      <MobileBottomNav />
     </>
   );
 }

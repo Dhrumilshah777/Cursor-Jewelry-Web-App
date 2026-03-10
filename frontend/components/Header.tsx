@@ -181,10 +181,10 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* 4. Category slider – visible only below 1024px; opacity 0 when scroll > 0 */}
+        {/* 4. Category slider – visible only below 1024px; opacity 0 + collapse space when scroll > 0 */}
         {navCategories.length > 0 && (
         <div
-          className={`lg:hidden transition-opacity duration-200 ${hideNavStrip ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+          className={`overflow-hidden transition-[opacity,max-height] duration-200 ease-out lg:hidden ${hideNavStrip ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-40 opacity-100'}`}
           ref={navSliderRef}
         >
           <div

@@ -181,9 +181,12 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* 4. Category slider – visible only below 1024px; hidden as soon as user scrolls */}
-        {navCategories.length > 0 && !hideNavStrip && (
-        <div className="lg:hidden" ref={navSliderRef}>
+        {/* 4. Category slider – visible only below 1024px; opacity 0 when scroll > 0 */}
+        {navCategories.length > 0 && (
+        <div
+          className={`lg:hidden transition-opacity duration-200 ${hideNavStrip ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+          ref={navSliderRef}
+        >
           <div
             className="scrollbar-hide flex gap-3 overflow-x-auto pl-6 pr-3 py-3 sm:pl-8"
             style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}

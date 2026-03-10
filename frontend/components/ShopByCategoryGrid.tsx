@@ -116,21 +116,26 @@ function CategoryImage({
     setError(false);
   }, [currentIndex]);
 
-  const src = images[currentIndex] || images[0];
-
   return (
     <Link href={`/products?category=${category.slug}`} className={className}>
       <div
         className={`relative h-full w-full overflow-hidden ${rounded ? 'rounded-2xl' : ''}`}
       >
-        {!error && src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt={category.name}
-            className="h-full w-full object-cover transition-opacity duration-500"
-            onError={() => setError(true)}
-          />
+        {!error && images[0] ? (
+          <>
+            {images.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={src}
+                alt={category.name}
+                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-in-out ${
+                  i === currentIndex ? 'opacity-100 z-[1]' : 'opacity-0 z-0'
+                }`}
+                onError={() => setError(true)}
+              />
+            ))}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center rounded-2xl bg-stone-200 text-stone-500">
             <span className="text-sm font-medium uppercase">{category.name}</span>

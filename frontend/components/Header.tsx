@@ -19,6 +19,9 @@ const mainNavLinks = [
 
 type NavCategory = { id: string; name: string; image: string; slug: string };
 
+const SCROLL_HIDE_PX = 70;
+const SCROLL_SHOW_PX = 28;
+
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -57,7 +60,14 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setHideNavStrip(window.scrollY > 0);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setHideNavStrip((prev) => {
+        if (y >= SCROLL_HIDE_PX) return true;
+        if (y <= SCROLL_SHOW_PX) return false;
+        return prev;
+      });
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);

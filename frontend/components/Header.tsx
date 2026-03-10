@@ -19,9 +19,6 @@ const mainNavLinks = [
 
 type NavCategory = { id: string; name: string; image: string; slug: string };
 
-const SCROLL_HIDE_PX = 70;
-const SCROLL_SHOW_PX = 28;
-
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -60,12 +57,17 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
-      const y = window.scrollY;
-      setHideNavStrip((prev) => {
-        if (y >= SCROLL_HIDE_PX) return true;
-        if (y <= SCROLL_SHOW_PX) return false;
-        return prev;
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setHideNavStrip((prev) => {
+          const next = y > 0;
+          return next === prev ? prev : next;
+        });
+        ticking = false;
       });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -191,12 +193,9 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* 4. Category slider – visible only below 1024px; opacity 0 + collapse space when scroll > 0 */}
-        {navCategories.length > 0 && (
-        <div
-          className={`overflow-hidden transition-[opacity,max-height] duration-200 ease-out lg:hidden ${hideNavStrip ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-40 opacity-100'}`}
-          ref={navSliderRef}
-        >
+        {/* 4. Category slider – below 1024px only; completely hidden when scroll > 0 (no transition) */}
+        {navCategories.length > 0 && !hideNavStrip && (
+        <div className="lg:hidden" ref={navSliderRef}>
           <div
             className="scrollbar-hide flex gap-3 overflow-x-auto pl-6 pr-3 py-3 sm:pl-8"
             style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}

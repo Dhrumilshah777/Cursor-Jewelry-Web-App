@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
 
-type Category = { id: string; name: string; image: string; slug: string };
-type ApiCategory = { _id?: string; name: string; image: string; slug: string };
+type Category = { id: string; name: string; image: string; image2?: string; slug: string };
+type ApiCategory = { _id?: string; name: string; image: string; image2?: string; slug: string };
 
 const MOBILE_PAGE_SIZE = 4;
 
@@ -79,6 +79,15 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
   );
 }
 
+const ROTATE_INTERVAL_MS = 2000;
+
+function resolveImageUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/uploads/')) return assetUrl(url);
+  return url;
+}
+
 function CategoryImage({
   category,
   className,
@@ -91,12 +100,23 @@ function CategoryImage({
   warmOverlay?: boolean;
 }) {
   const [error, setError] = useState(false);
-  const src =
-    category.image.startsWith('http')
-      ? category.image
-      : category.image.startsWith('/uploads/')
-        ? assetUrl(category.image)
-        : category.image;
+  const images = [resolveImageUrl(category.image)];
+  if (category.image2) images.push(resolveImageUrl(category.image2));
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const id = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, ROTATE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [images.length]);
+
+  useEffect(() => {
+    setError(false);
+  }, [currentIndex]);
+
+  const src = images[currentIndex] || images[0];
 
   return (
     <Link href={`/products?category=${category.slug}`} className={className}>
@@ -108,7 +128,7 @@ function CategoryImage({
           <img
             src={src}
             alt={category.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-opacity duration-500"
             onError={() => setError(true)}
           />
         ) : (
@@ -145,6 +165,7 @@ export default function ShopByCategoryGrid() {
           id: c._id ?? String(i),
           name: c.name || 'Category',
           image: c.image || '',
+          image2: c.image2 || undefined,
           slug: c.slug || c.name?.toLowerCase().replace(/\s+/g, '-') || 'category',
         }));
         setCategories(mapped.length > 0 ? mapped : isLocalhost ? MOCK_CATEGORIES : []);
@@ -165,7 +186,7 @@ export default function ShopByCategoryGrid() {
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="container mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <h2 className="mt-4 mb-6 text-center font-serif text-3xl font-semibold uppercase text-[#1e3a5f] sm:text-4xl">
+        <h2 className="mt-4 mb-6 text-center text-3xl font-thin uppercase text-[#1e3a5f]">
           Shop by category
         </h2>
 

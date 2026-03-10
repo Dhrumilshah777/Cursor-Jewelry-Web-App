@@ -92,6 +92,7 @@ exports.getViewByCategories = async (req, res) => {
       _id: c._id?.toString() || String(i),
       name: c.name,
       image: c.image,
+      image2: c.image2 || '',
       slug: c.slug || slugFromName(c.name),
       order: c.order ?? i,
     })));
@@ -107,6 +108,7 @@ exports.updateViewByCategories = async (req, res) => {
     config.viewByCategories = raw.map((c, i) => ({
       name: String(c.name || '').trim() || 'Category',
       image: String(c.image || '').trim() || '',
+      image2: String(c.image2 || '').trim() || '',
       slug: String(c.slug || slugFromName(c.name)).trim() || slugFromName(c.name),
       order: i,
     })).filter((c) => c.image);
@@ -116,6 +118,7 @@ exports.updateViewByCategories = async (req, res) => {
       _id: c._id?.toString() || String(i),
       name: c.name,
       image: c.image,
+      image2: c.image2 || '',
       slug: c.slug || slugFromName(c.name),
       order: c.order ?? i,
     })));

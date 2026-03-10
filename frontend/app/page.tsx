@@ -3,7 +3,6 @@ import HeroSlider from '@/components/HeroSlider';
 // import CategoryCardsSection from '@/components/CategoryCardsSection';
 import ShopByCategoryGrid from '@/components/ShopByCategoryGrid';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
-import LatestBeautySection from '@/components/LatestBeautySection';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import KindWordsSection from '@/components/KindWordsSection';
 import InstagramSection from '@/components/InstagramSection';
@@ -18,8 +17,6 @@ export default function Home() {
       <HeroServicesStrip />
 
       {/* <CategoryCardsSection /> */}
-
-      <LatestBeautySection />
 
       <KindWordsSection />
 

@@ -20,6 +20,7 @@ const siteConfigSchema = new mongoose.Schema(
     viewByCategories: [{
       name: { type: String, required: true },
       image: { type: String, required: true },
+      image2: { type: String, default: '' },
       slug: { type: String, default: '' },
       order: { type: Number, default: 0 },
     }],

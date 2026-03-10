@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiGet, apiPut, uploadFile, assetUrl } from '@/lib/api';
 
-type CategoryItem = { _id?: string; name: string; image: string; slug: string; order?: number };
+type CategoryItem = { _id?: string; name: string; image: string; image2?: string; slug: string; order?: number };
 
 function slugFromName(name: string): string {
   return name
@@ -53,7 +53,7 @@ export default function AdminViewByCategoriesPage() {
     setError('');
   };
 
-  const updateAt = (index: number, field: 'name' | 'image' | 'slug', value: string) => {
+  const updateAt = (index: number, field: 'name' | 'image' | 'image2' | 'slug', value: string) => {
     setCategories((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -86,7 +86,7 @@ export default function AdminViewByCategoriesPage() {
     try {
       await apiPut(
         '/api/admin/view-by-categories',
-        { categories: categories.map((c, i) => ({ name: c.name, image: c.image, slug: c.slug || slugFromName(c.name), order: i })) },
+        { categories: categories.map((c, i) => ({ name: c.name, image: c.image, image2: c.image2 || '', slug: c.slug || slugFromName(c.name), order: i })) },
         true
       );
       await load();
@@ -160,6 +160,13 @@ export default function AdminViewByCategoriesPage() {
                   value={cat.image}
                   onChange={(e) => updateAt(i, 'image', e.target.value)}
                   placeholder="Image URL"
+                  className="w-full rounded border border-stone-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="url"
+                  value={cat.image2 ?? ''}
+                  onChange={(e) => updateAt(i, 'image2', e.target.value)}
+                  placeholder="Second image URL (rotates every 2s on home)"
                   className="w-full rounded border border-stone-300 px-3 py-2 text-sm"
                 />
                 <p className="text-xs text-stone-500">Link: /products?category={cat.slug || slugFromName(cat.name)}</p>

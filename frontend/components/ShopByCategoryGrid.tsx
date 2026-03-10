@@ -14,7 +14,7 @@ const MOBILE_PAGE_SIZE = 4;
  * so all 4 images stay the same height and no white space appears.
  * Increase this value to make all tiles taller together.
  */
-const CATEGORY_GRID_MIN_HEIGHT_PX = 400;
+const CATEGORY_GRID_MIN_HEIGHT_PX = 200;
 
 /** Mock categories shown on localhost when API returns empty (for development) */
 const MOCK_CATEGORIES: Category[] = [

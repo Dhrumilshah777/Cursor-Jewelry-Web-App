@@ -9,6 +9,13 @@ type ApiCategory = { _id?: string; name: string; image: string; slug: string };
 
 const MOBILE_PAGE_SIZE = 4;
 
+/**
+ * Total min-height (px) of the 2×2 grid on phone. Both rows share this equally,
+ * so all 4 images stay the same height and no white space appears.
+ * Increase this value to make all tiles taller together.
+ */
+const CATEGORY_GRID_MIN_HEIGHT_PX = 400;
+
 /** Mock categories shown on localhost when API returns empty (for development) */
 const MOCK_CATEGORIES: Category[] = [
   { id: 'mock-1', name: 'Wedding', image: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=600', slug: 'wedding' },
@@ -47,10 +54,11 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
         {pages.map((pageCats, pageIndex) => (
           <div
             key={pageIndex}
-            className="grid w-full flex-shrink-0 grid-cols-2 gap-3 snap-start px-0.5"
+            className="grid w-full flex-shrink-0 grid-cols-2 grid-rows-2 gap-3 snap-start px-0.5"
+            style={{ minHeight: CATEGORY_GRID_MIN_HEIGHT_PX, gridTemplateRows: '1fr 1fr' }}
           >
             {pageCats.map((cat) => (
-              <div key={cat.id} className="aspect-square min-h-[120px] w-full">
+              <div key={cat.id} className="min-h-0 w-full">
                 <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
               </div>
             ))}
@@ -172,9 +180,12 @@ export default function ShopByCategoryGrid() {
         {/* Phone: 2x2 grid or slider when more than 4 */}
         <div className="md:hidden">
           {categories.length <= 4 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div
+              className="grid grid-cols-2 grid-rows-2 gap-3"
+              style={{ minHeight: CATEGORY_GRID_MIN_HEIGHT_PX, gridTemplateRows: '1fr 1fr' }}
+            >
               {categories.slice(0, 4).map((cat) => (
-                <div key={cat.id} className="aspect-square min-h-[120px] w-full">
+                <div key={cat.id} className="min-h-0 w-full">
                   <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
                 </div>
               ))}
@@ -187,21 +198,21 @@ export default function ShopByCategoryGrid() {
         {/* Desktop: center + left 2 + right 2 */}
         <div className="hidden grid-cols-3 gap-2 sm:gap-4 md:grid">
           <div className="grid grid-rows-2 gap-2 sm:gap-4">
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
               {leftTop && <CategoryImage category={leftTop} className="block h-full w-full" />}
             </div>
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
               {leftBottom && <CategoryImage category={leftBottom} className="block h-full w-full" />}
             </div>
           </div>
-          <div className="min-h-0 w-full sm:aspect-[3/4]">
+          <div className="min-h-0 w-full sm:aspect-[3/4] md:min-h-[320px]">
             {center && <CategoryImage category={center} className="block h-full w-full" />}
           </div>
           <div className="grid grid-rows-2 gap-2 sm:gap-4">
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
               {rightTop && <CategoryImage category={rightTop} className="block h-full w-full" />}
             </div>
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
               {rightBottom && <CategoryImage category={rightBottom} className="block h-full w-full" />}
             </div>
           </div>

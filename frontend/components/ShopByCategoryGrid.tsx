@@ -70,15 +70,15 @@ export default function ShopByCategoryGrid() {
 
   return (
     <section className="bg-cream py-10 sm:py-12">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <h2 className="mt-4 mb-6 text-center font-serif text-2xl font-light text-[#1e3a5f] sm:text-3xl">
           Shop by category
         </h2>
 
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {/* Left column: two stacked categories */}
-          <div className="grid grid-rows-2 gap-3 sm:gap-4">
-            <div className="aspect-[4/3] w-full">
+          <div className="grid grid-rows-2 gap-2 sm:gap-4">
+            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
               {leftTop && (
                 <CategoryImage
                   category={leftTop}
@@ -86,7 +86,7 @@ export default function ShopByCategoryGrid() {
                 />
               )}
             </div>
-            <div className="aspect-[4/3] w-full">
+            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
               {leftBottom && (
                 <CategoryImage
                   category={leftBottom}
@@ -97,7 +97,7 @@ export default function ShopByCategoryGrid() {
           </div>
 
           {/* Center column: one large category */}
-          <div className="mt-0 aspect-[3/4] w-full md:aspect-[3/4]">
+          <div className="min-h-[280px] w-full sm:min-h-0 sm:aspect-[3/4]">
             {center && (
               <CategoryImage
                 category={center}
@@ -107,8 +107,8 @@ export default function ShopByCategoryGrid() {
           </div>
 
           {/* Right column: two stacked categories */}
-          <div className="grid grid-rows-2 gap-3 sm:gap-4">
-            <div className="aspect-[4/3] w-full">
+          <div className="grid grid-rows-2 gap-2 sm:gap-4">
+            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
               {rightTop && (
                 <CategoryImage
                   category={rightTop}
@@ -116,7 +116,7 @@ export default function ShopByCategoryGrid() {
                 />
               )}
             </div>
-            <div className="aspect-[4/3] w-full">
+            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
               {rightBottom && (
                 <CategoryImage
                   category={rightBottom}

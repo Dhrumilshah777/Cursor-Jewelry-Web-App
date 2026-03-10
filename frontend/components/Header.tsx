@@ -24,6 +24,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [navCategories, setNavCategories] = useState<NavCategory[]>([]);
+  const [hideNavStrip, setHideNavStrip] = useState(false);
   const navSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +54,12 @@ export default function Header() {
         setNavCategories(mapped);
       })
       .catch(() => setNavCategories([]));
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setHideNavStrip(window.scrollY > 0);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
@@ -174,8 +181,8 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* 4. Category slider – visible only below 1024px (replaces text nav) */}
-        {navCategories.length > 0 && (
+        {/* 4. Category slider – visible only below 1024px; hidden as soon as user scrolls */}
+        {navCategories.length > 0 && !hideNavStrip && (
         <div className="lg:hidden" ref={navSliderRef}>
           <div
             className="scrollbar-hide flex gap-3 overflow-x-auto pl-6 pr-3 py-3 sm:pl-8"

@@ -9,6 +9,15 @@ type ApiCategory = { _id?: string; name: string; image: string; slug: string };
 
 const MOBILE_PAGE_SIZE = 4;
 
+/** Mock categories shown on localhost when API returns empty (for development) */
+const MOCK_CATEGORIES: Category[] = [
+  { id: 'mock-1', name: 'Wedding', image: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=600', slug: 'wedding' },
+  { id: 'mock-2', name: 'Diamond', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600', slug: 'diamond' },
+  { id: 'mock-3', name: 'Gold', image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343a?w=600', slug: 'gold' },
+  { id: 'mock-4', name: 'Dailywear', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600', slug: 'dailywear' },
+  { id: 'mock-5', name: 'Rings', image: 'https://images.unsplash.com/photo-1603561586110-d6a5dc2d2478?w=600', slug: 'rings' },
+];
+
 function ShopByCategorySlider({ categories }: { categories: Category[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -38,10 +47,10 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
         {pages.map((pageCats, pageIndex) => (
           <div
             key={pageIndex}
-            className="grid w-full flex-shrink-0 grid-cols-2 grid-rows-[1.3fr_1fr] gap-3 snap-start px-0.5"
+            className="grid w-full flex-shrink-0 grid-cols-2 gap-3 snap-start px-0.5"
           >
             {pageCats.map((cat) => (
-              <div key={cat.id} className="min-h-[120px] w-full">
+              <div key={cat.id} className="aspect-square min-h-[120px] w-full">
                 <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
               </div>
             ))}
@@ -128,6 +137,8 @@ export default function ShopByCategoryGrid() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
+    const isLocalhost =
+      typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     apiGet<ApiCategory[]>('/api/site/view-by-categories')
       .then((list) => {
         const mapped: Category[] = (Array.isArray(list) ? list : []).map((c, i) => ({
@@ -136,9 +147,11 @@ export default function ShopByCategoryGrid() {
           image: c.image || '',
           slug: c.slug || c.name?.toLowerCase().replace(/\s+/g, '-') || 'category',
         }));
-        setCategories(mapped);
+        setCategories(mapped.length > 0 ? mapped : isLocalhost ? MOCK_CATEGORIES : []);
       })
-      .catch(() => setCategories([]));
+      .catch(() => {
+        setCategories(isLocalhost ? MOCK_CATEGORIES : []);
+      });
   }, []);
 
   if (categories.length === 0) return null;
@@ -159,9 +172,9 @@ export default function ShopByCategoryGrid() {
         {/* Phone: 2x2 grid or slider when more than 4 */}
         <div className="md:hidden">
           {categories.length <= 4 ? (
-            <div className="grid grid-cols-2 grid-rows-[1.3fr_1fr] gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {categories.slice(0, 4).map((cat) => (
-                <div key={cat.id} className="min-h-[120px] w-full">
+                <div key={cat.id} className="aspect-square min-h-[120px] w-full">
                   <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
                 </div>
               ))}

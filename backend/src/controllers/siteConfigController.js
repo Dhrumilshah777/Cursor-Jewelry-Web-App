@@ -22,7 +22,17 @@ exports.getHero = async (req, res) => {
 exports.updateHero = async (req, res) => {
   try {
     const config = await getConfig();
-    config.heroSlides = req.body;
+    const slides = Array.isArray(req.body) ? req.body : [];
+    config.heroSlides = slides.map((s, i) => ({
+      image: s.image || '',
+      video: s.video || '',
+      title: s.title,
+      subtitle: s.subtitle,
+      cta: s.cta,
+      ctaHref: s.ctaHref || '/products',
+      order: i,
+    }));
+    config.markModified('heroSlides');
     await config.save();
     res.json(config.heroSlides);
   } catch (err) {

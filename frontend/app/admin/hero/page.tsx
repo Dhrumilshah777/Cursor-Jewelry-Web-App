@@ -54,9 +54,26 @@ export default function AdminHeroPage() {
     setSlides((s) => [...s, { ...defaultSlide, order: s.length }]);
   };
 
-  const removeSlide = (index: number) => {
+  const removeSlide = async (index: number) => {
     if (!confirm('Remove this slide?')) return;
-    setSlides((s) => s.filter((_, i) => i !== index));
+    const nextSlides = slides.filter((_, i) => i !== index);
+    setSlides(nextSlides);
+    setSaving(true);
+    setError('');
+    try {
+      const payload = nextSlides.map((s, i) => ({
+        image: s.image || '',
+        video: s.video || '',
+        order: i,
+      }));
+      await apiPut('/api/admin/hero', payload, true);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove slide');
+      setSlides(slides);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleImageUpload = async (slideIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {

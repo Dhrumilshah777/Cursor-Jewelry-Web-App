@@ -75,7 +75,7 @@ export default function ShopByCategoryGrid() {
           Shop by category
         </h2>
 
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {/* Left column: two stacked categories */}
           <div className="grid grid-rows-2 gap-3 sm:gap-4">
             <div className="aspect-[4/3] w-full">

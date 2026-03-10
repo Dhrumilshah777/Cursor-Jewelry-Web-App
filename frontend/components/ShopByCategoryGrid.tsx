@@ -79,7 +79,7 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
   );
 }
 
-const ROTATE_INTERVAL_MS = 2000;
+const ROTATE_INTERVAL_MS = 5000;
 
 function resolveImageUrl(url: string): string {
   if (!url) return '';
@@ -142,13 +142,13 @@ function CategoryImage({
           </div>
         )}
         <div
-          className={`pointer-events-none absolute inset-0 ${
+          className={`pointer-events-none absolute inset-0 z-10 ${
             warmOverlay
               ? 'bg-gradient-to-t from-amber-900/75 via-amber-900/25 to-transparent'
               : 'bg-gradient-to-t from-black/55 via-black/15 to-transparent'
           }`}
         />
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex items-end justify-center pb-4 pt-8">
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 flex items-end justify-center pb-4 pt-8">
           <p className="font-sans text-base font-semibold text-white sm:text-lg">
             {category.name}
           </p>

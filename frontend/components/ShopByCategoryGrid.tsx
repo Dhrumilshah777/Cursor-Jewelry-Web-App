@@ -62,51 +62,64 @@ export default function ShopByCategoryGrid() {
 
   if (categories.length === 0) return null;
 
-  const main = categories[0];
-  const b = categories[1];
-  const c = categories[2];
-  const d = categories[3];
+  const center = categories[0];
+  const leftTop = categories[1];
+  const leftBottom = categories[2];
+  const rightTop = categories[3];
+  const rightBottom = categories[4];
 
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-6 text-left font-serif text-2xl font-light text-charcoal sm:text-3xl">
+        <h2 className="mt-4 mb-6 text-center font-serif text-2xl font-light text-[#1e3a5f] sm:text-3xl">
           Shop by category
         </h2>
 
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-          {/* Left: large image (full height of grid) */}
-          <div className="aspect-[4/3] w-full md:aspect-auto md:h-full">
-            {main && (
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+          {/* Left column: two stacked categories */}
+          <div className="grid grid-rows-2 gap-3 sm:gap-4">
+            <div className="aspect-[4/3] w-full">
+              {leftTop && (
+                <CategoryImage
+                  category={leftTop}
+                  className="block h-full w-full"
+                />
+              )}
+            </div>
+            <div className="aspect-[4/3] w-full">
+              {leftBottom && (
+                <CategoryImage
+                  category={leftBottom}
+                  className="block h-full w-full"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Center column: one large category */}
+          <div className="mt-0 aspect-[3/4] w-full md:aspect-[3/4]">
+            {center && (
               <CategoryImage
-                category={main}
+                category={center}
                 className="block h-full w-full"
               />
             )}
           </div>
 
-          {/* Right: grid – top full-width, bottom two columns */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="col-span-2 aspect-[8/3] w-full">
-              {b && (
+          {/* Right column: two stacked categories */}
+          <div className="grid grid-rows-2 gap-3 sm:gap-4">
+            <div className="aspect-[4/3] w-full">
+              {rightTop && (
                 <CategoryImage
-                  category={b}
+                  category={rightTop}
                   className="block h-full w-full"
                 />
               )}
             </div>
             <div className="aspect-[4/3] w-full">
-              {c && (
+              {rightBottom && (
                 <CategoryImage
-                  category={c}
-                  className="block h-full w-full"
-                />
-              )}
-            </div>
-            <div className="aspect-[4/3] w-full">
-              {d && (
-                <CategoryImage
-                  category={d}
+                  category={rightBottom}
                   className="block h-full w-full"
                 />
               )}

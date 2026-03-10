@@ -9,13 +9,6 @@ type ApiCategory = { _id?: string; name: string; image: string; slug: string };
 
 const MOBILE_PAGE_SIZE = 4;
 
-/**
- * Total min-height (px) of the 2×2 grid on phone. Both rows share this equally,
- * so all 4 images stay the same height and no white space appears.
- * Increase this value to make all tiles taller together.
- */
-const CATEGORY_GRID_MIN_HEIGHT_PX = 200;
-
 /** Mock categories shown on localhost when API returns empty (for development) */
 const MOCK_CATEGORIES: Category[] = [
   { id: 'mock-1', name: 'Wedding', image: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=600', slug: 'wedding' },
@@ -54,11 +47,10 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
         {pages.map((pageCats, pageIndex) => (
           <div
             key={pageIndex}
-            className="grid w-full flex-shrink-0 grid-cols-2 grid-rows-2 gap-3 snap-start px-0.5"
-            style={{ minHeight: CATEGORY_GRID_MIN_HEIGHT_PX, gridTemplateRows: '1fr 1fr' }}
+            className="grid w-full flex-shrink-0 grid-cols-2 gap-3 snap-start px-0.5"
           >
             {pageCats.map((cat) => (
-              <div key={cat.id} className="min-h-0 w-full">
+              <div key={cat.id} className="aspect-square w-full">
                 <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
               </div>
             ))}
@@ -180,12 +172,9 @@ export default function ShopByCategoryGrid() {
         {/* Phone: 2x2 grid or slider when more than 4 */}
         <div className="md:hidden">
           {categories.length <= 4 ? (
-            <div
-              className="grid grid-cols-2 grid-rows-2 gap-3"
-              style={{ minHeight: CATEGORY_GRID_MIN_HEIGHT_PX, gridTemplateRows: '1fr 1fr' }}
-            >
+            <div className="grid grid-cols-2 gap-3">
               {categories.slice(0, 4).map((cat) => (
-                <div key={cat.id} className="min-h-0 w-full">
+                <div key={cat.id} className="aspect-square w-full">
                   <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
                 </div>
               ))}

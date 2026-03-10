@@ -1,11 +1,74 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
 
 type Category = { id: string; name: string; image: string; slug: string };
 type ApiCategory = { _id?: string; name: string; image: string; slug: string };
+
+const MOBILE_PAGE_SIZE = 4;
+
+function ShopByCategorySlider({ categories }: { categories: Category[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const pages = Array.from({ length: Math.ceil(categories.length / MOBILE_PAGE_SIZE) }, (_, i) =>
+    categories.slice(i * MOBILE_PAGE_SIZE, (i + 1) * MOBILE_PAGE_SIZE)
+  );
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || pages.length <= 1) return;
+    const onScroll = () => {
+      const width = el.offsetWidth;
+      const i = Math.round(el.scrollLeft / width);
+      setIndex(Math.min(i, pages.length - 1));
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [pages.length]);
+
+  return (
+    <div>
+      <div
+        ref={scrollRef}
+        className="scrollbar-hide flex overflow-x-auto snap-x snap-mandatory gap-0"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {pages.map((pageCats, pageIndex) => (
+          <div
+            key={pageIndex}
+            className="grid w-full flex-shrink-0 grid-cols-2 gap-3 snap-start px-0.5"
+          >
+            {pageCats.map((cat) => (
+              <div key={cat.id} className="aspect-[1/1] min-h-[140px] w-full">
+                <CategoryImage category={cat} className="block h-full w-full" />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      {pages.length > 1 && (
+        <div className="mt-3 flex justify-center gap-1.5">
+          {pages.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                scrollRef.current?.scrollTo({ left: i * (scrollRef.current?.offsetWidth ?? 0), behavior: 'smooth' });
+                setIndex(i);
+              }}
+              className={`h-2 rounded-full transition-all ${
+                i === index ? 'w-6 bg-[#1e3a5f]' : 'w-2 bg-stone-300'
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function CategoryImage({ category, className }: { category: Category; className: string }) {
   const [error, setError] = useState(false);
@@ -71,58 +134,44 @@ export default function ShopByCategoryGrid() {
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="container mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-        <h2 className="mt-4 mb-6 text-center font-serif text-2xl font-light text-[#1e3a5f] sm:text-3xl">
+        <h2 className="mt-4 mb-6 text-center font-serif text-3xl font-semibold text-[#1e3a5f] sm:text-4xl">
           Shop by category
         </h2>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          {/* Left column: two stacked categories */}
-          <div className="grid grid-rows-2 gap-2 sm:gap-4">
-            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
-              {leftTop && (
-                <CategoryImage
-                  category={leftTop}
-                  className="block h-full w-full"
-                />
-              )}
+        {/* Phone: 2x2 grid or slider when more than 4 */}
+        <div className="md:hidden">
+          {categories.length <= 4 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {categories.slice(0, 4).map((cat) => (
+                <div key={cat.id} className="aspect-[1/1] min-h-[140px] w-full">
+                  <CategoryImage category={cat} className="block h-full w-full" />
+                </div>
+              ))}
             </div>
-            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
-              {leftBottom && (
-                <CategoryImage
-                  category={leftBottom}
-                  className="block h-full w-full"
-                />
-              )}
+          ) : (
+            <ShopByCategorySlider categories={categories} />
+          )}
+        </div>
+
+        {/* Desktop: center + left 2 + right 2 */}
+        <div className="hidden grid-cols-3 gap-2 sm:gap-4 md:grid">
+          <div className="grid grid-rows-2 gap-2 sm:gap-4">
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+              {leftTop && <CategoryImage category={leftTop} className="block h-full w-full" />}
+            </div>
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+              {leftBottom && <CategoryImage category={leftBottom} className="block h-full w-full" />}
             </div>
           </div>
-
-          {/* Center column: one large category */}
-          <div className="min-h-[280px] w-full sm:min-h-0 sm:aspect-[3/4]">
-            {center && (
-              <CategoryImage
-                category={center}
-                className="block h-full w-full"
-              />
-            )}
+          <div className="min-h-0 w-full sm:aspect-[3/4]">
+            {center && <CategoryImage category={center} className="block h-full w-full" />}
           </div>
-
-          {/* Right column: two stacked categories */}
           <div className="grid grid-rows-2 gap-2 sm:gap-4">
-            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
-              {rightTop && (
-                <CategoryImage
-                  category={rightTop}
-                  className="block h-full w-full"
-                />
-              )}
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+              {rightTop && <CategoryImage category={rightTop} className="block h-full w-full" />}
             </div>
-            <div className="aspect-[1/1] min-h-[140px] w-full sm:min-h-0 md:aspect-[4/3]">
-              {rightBottom && (
-                <CategoryImage
-                  category={rightBottom}
-                  className="block h-full w-full"
-                />
-              )}
+            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[4/3]">
+              {rightBottom && <CategoryImage category={rightBottom} className="block h-full w-full" />}
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import HeroSlider from '@/components/HeroSlider';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import LatestBeautySection from '@/components/LatestBeautySection';
 import ViewByCategoriesSection from '@/components/ViewByCategoriesSection';
+import ShopByCategoriesSection from '@/components/ShopByCategoriesSection';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import KindWordsSection from '@/components/KindWordsSection';
 import InstagramSection from '@/components/InstagramSection';
@@ -14,6 +15,8 @@ export default function Home() {
       <HeroSlider />
 
       <ViewByCategoriesSection />
+
+      <ShopByCategoriesSection />
 
       {/* <CategoryCardsSection /> */}
 

@@ -49,7 +49,7 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
         ))}
       </div>
       {pages.length > 1 && (
-        <div className="mt-3 flex justify-center gap-1.5">
+        <div className="mt-5 mb-2 flex justify-center gap-1.5">
           {pages.map((_, i) => (
             <button
               key={i}
@@ -59,7 +59,7 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
                 setIndex(i);
               }}
               className={`h-2 rounded-full transition-all ${
-                i === index ? 'w-6 bg-[#1e3a5f]' : 'w-2 bg-stone-300'
+                i === index ? 'w-6 bg-[#1e3a5f]' : 'w-2 bg-[#bfd5f2]'
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />
@@ -133,7 +133,7 @@ export default function ShopByCategoryGrid() {
 
   return (
     <section className="bg-cream py-10 sm:py-12">
-      <div className="container mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         <h2 className="mt-4 mb-6 text-center font-serif text-3xl font-semibold text-[#1e3a5f] sm:text-4xl">
           Shop by category
         </h2>

@@ -19,15 +19,11 @@ const mainNavLinks = [
 
 type NavCategory = { id: string; name: string; image: string; slug: string };
 
-const SCROLL_THRESHOLD_HIDE = 80;
-const SCROLL_THRESHOLD_SHOW = 35;
-
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [navCategories, setNavCategories] = useState<NavCategory[]>([]);
-  const [hideNavStrip, setHideNavStrip] = useState(false);
   const navSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,19 +53,6 @@ export default function Header() {
         setNavCategories(mapped);
       })
       .catch(() => setNavCategories([]));
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setHideNavStrip((prev) => {
-        if (y > SCROLL_THRESHOLD_HIDE) return true;
-        if (y < SCROLL_THRESHOLD_SHOW) return false;
-        return prev;
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
@@ -191,8 +174,8 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* 4. Category slider – visible only below 1024px; hides on scroll (phone) */}
-        {navCategories.length > 0 && !hideNavStrip && (
+        {/* 4. Category slider – visible only below 1024px (replaces text nav) */}
+        {navCategories.length > 0 && (
         <div className="lg:hidden" ref={navSliderRef}>
           <div
             className="scrollbar-hide flex gap-3 overflow-x-auto pl-6 pr-3 py-3 sm:pl-8"

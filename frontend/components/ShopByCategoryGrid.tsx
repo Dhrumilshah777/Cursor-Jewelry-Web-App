@@ -42,7 +42,7 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
           >
             {pageCats.map((cat) => (
               <div key={cat.id} className="aspect-[1/1] min-h-[140px] w-full">
-                <CategoryImage category={cat} className="block h-full w-full" />
+                <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
               </div>
             ))}
           </div>
@@ -70,7 +70,17 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
   );
 }
 
-function CategoryImage({ category, className }: { category: Category; className: string }) {
+function CategoryImage({
+  category,
+  className,
+  rounded,
+  warmOverlay,
+}: {
+  category: Category;
+  className: string;
+  rounded?: boolean;
+  warmOverlay?: boolean;
+}) {
   const [error, setError] = useState(false);
   const src =
     category.image.startsWith('http')
@@ -81,7 +91,9 @@ function CategoryImage({ category, className }: { category: Category; className:
 
   return (
     <Link href={`/products?category=${category.slug}`} className={className}>
-      <div className="relative h-full w-full overflow-hidden">
+      <div
+        className={`relative h-full w-full overflow-hidden ${rounded ? 'rounded-2xl' : ''}`}
+      >
         {!error && src ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -91,13 +103,19 @@ function CategoryImage({ category, className }: { category: Category; className:
             onError={() => setError(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-500">
+          <div className="flex h-full w-full items-center justify-center rounded-2xl bg-stone-200 text-stone-500">
             <span className="text-sm font-medium uppercase">{category.name}</span>
           </div>
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-        <div className="pointer-events-none absolute bottom-3 left-4 right-4">
-          <p className="font-sans text-base font-medium text-white sm:text-lg">
+        <div
+          className={`pointer-events-none absolute inset-0 ${
+            warmOverlay
+              ? 'bg-gradient-to-t from-amber-900/75 via-amber-900/25 to-transparent'
+              : 'bg-gradient-to-t from-black/55 via-black/15 to-transparent'
+          }`}
+        />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex items-end justify-center pb-4 pt-8">
+          <p className="font-sans text-base font-semibold text-white sm:text-lg">
             {category.name}
           </p>
         </div>
@@ -144,7 +162,7 @@ export default function ShopByCategoryGrid() {
             <div className="grid grid-cols-2 gap-3">
               {categories.slice(0, 4).map((cat) => (
                 <div key={cat.id} className="aspect-[1/1] min-h-[140px] w-full">
-                  <CategoryImage category={cat} className="block h-full w-full" />
+                  <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
                 </div>
               ))}
             </div>

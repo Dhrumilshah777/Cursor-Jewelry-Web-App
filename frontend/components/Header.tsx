@@ -19,7 +19,8 @@ const mainNavLinks = [
 
 type NavCategory = { id: string; name: string; image: string; slug: string };
 
-const SCROLL_HIDE_THRESHOLD = 60;
+const SCROLL_THRESHOLD_HIDE = 80;
+const SCROLL_THRESHOLD_SHOW = 35;
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,7 +61,12 @@ export default function Header() {
 
   useEffect(() => {
     const onScroll = () => {
-      setHideNavStrip(window.scrollY > SCROLL_HIDE_THRESHOLD);
+      const y = window.scrollY;
+      setHideNavStrip((prev) => {
+        if (y > SCROLL_THRESHOLD_HIDE) return true;
+        if (y < SCROLL_THRESHOLD_SHOW) return false;
+        return prev;
+      });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);

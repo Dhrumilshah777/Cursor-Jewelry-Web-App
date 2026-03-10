@@ -38,10 +38,10 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
         {pages.map((pageCats, pageIndex) => (
           <div
             key={pageIndex}
-            className="grid w-full flex-shrink-0 grid-cols-2 gap-3 snap-start px-0.5"
+            className="grid w-full flex-shrink-0 grid-cols-2 grid-rows-[1.3fr_1fr] gap-3 snap-start px-0.5"
           >
             {pageCats.map((cat) => (
-              <div key={cat.id} className="aspect-[1/1] min-h-[140px] w-full">
+              <div key={cat.id} className="min-h-[120px] w-full">
                 <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
               </div>
             ))}
@@ -159,9 +159,9 @@ export default function ShopByCategoryGrid() {
         {/* Phone: 2x2 grid or slider when more than 4 */}
         <div className="md:hidden">
           {categories.length <= 4 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 grid-rows-[1.3fr_1fr] gap-3">
               {categories.slice(0, 4).map((cat) => (
-                <div key={cat.id} className="aspect-[1/1] min-h-[140px] w-full">
+                <div key={cat.id} className="min-h-[120px] w-full">
                   <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
                 </div>
               ))}

@@ -1,6 +1,6 @@
 'use client';
 
-const ICON_CLASS = 'mx-auto h-10 w-10 text-charcoal transition-colors duration-300 group-hover:text-gold sm:h-12 sm:w-12';
+const ICON_CLASS = 'mx-auto h-10 w-10 text-[#1e3a5f] transition-colors duration-300 group-hover:text-[#2d5a8a] sm:h-12 sm:w-12';
 
 function IconHeart() {
   return (
@@ -83,8 +83,11 @@ const SERVICES = [
 
 export default function HeroServicesStrip() {
   return (
-    <section className="border-b border-stone-100 bg-white py-10 sm:py-12">
+    <section className="border-b border-stone-100 bg-[#e8eef6] py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="mb-8 text-center font-serif text-3xl font-medium italic text-[#1e3a5f] sm:text-4xl">
+          Our Commitment to Excellence
+        </h2>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {SERVICES.map(({ icon: Icon, title, detail }, index) => (
             <div

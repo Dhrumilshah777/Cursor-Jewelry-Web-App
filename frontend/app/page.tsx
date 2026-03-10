@@ -15,11 +15,11 @@ export default function Home() {
 
       <ShopByCategoryGrid />
 
+      <HeroServicesStrip />
+
       {/* <CategoryCardsSection /> */}
 
       <LatestBeautySection />
-
-      <HeroServicesStrip />
 
       <KindWordsSection />
 

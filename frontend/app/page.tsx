@@ -2,6 +2,7 @@ import Link from 'next/link';
 import HeroSlider from '@/components/HeroSlider';
 // import CategoryCardsSection from '@/components/CategoryCardsSection';
 import ShopByCategoryGrid from '@/components/ShopByCategoryGrid';
+import BestSellingCarousel from '@/components/BestSellingCarousel';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import KindWordsSection from '@/components/KindWordsSection';
@@ -13,6 +14,8 @@ export default function Home() {
       <HeroSlider />
 
       <ShopByCategoryGrid />
+
+      <BestSellingCarousel />
 
       <HeroServicesStrip />
 

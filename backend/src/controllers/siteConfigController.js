@@ -1,4 +1,6 @@
 const SiteConfig = require('../models/SiteConfig');
+const Product = require('../models/Product');
+const { getProductPrice } = require('../services/priceCalculator');
 
 const DEFAULT_KEY = 'main';
 
@@ -176,6 +178,56 @@ exports.updateCategoryCards = async (req, res) => {
     }));
     await config.save();
     res.json(config.categoryCards);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+exports.getBestSelling = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const ids = (config.bestSellingProductIds || []).filter((id) => id && String(id).trim());
+    if (ids.length === 0) return res.json([]);
+    const products = await Product.find({ _id: { $in: ids }, active: { $ne: false } });
+    const byId = {};
+    products.forEach((p) => { byId[p._id.toString()] = p; });
+    const withPrices = [];
+    for (const id of ids) {
+      const p = byId[id];
+      if (!p) continue;
+      const { price } = await getProductPrice(p);
+      const po = p.toObject ? p.toObject() : p;
+      withPrices.push({
+        _id: po._id?.toString(),
+        name: po.name,
+        category: po.category || '',
+        price: String(po.price || price || '0'),
+        image: po.image || '',
+      });
+    }
+    res.json(withPrices);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getBestSellingIds = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const ids = (config.bestSellingProductIds || []).filter((id) => id && String(id).trim());
+    res.json({ productIds: ids });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateBestSelling = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const raw = Array.isArray(req.body.productIds) ? req.body.productIds : [];
+    config.bestSellingProductIds = raw.map((id) => String(id).trim()).filter(Boolean);
+    await config.save();
+    res.json({ productIds: config.bestSellingProductIds });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

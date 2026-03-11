@@ -30,6 +30,7 @@ const siteConfigSchema = new mongoose.Schema(
       description: { type: String, default: '' },
       link: { type: String, default: '/products' },
     }],
+    bestSellingProductIds: [{ type: String, default: '' }],
   },
   { timestamps: true }
 );

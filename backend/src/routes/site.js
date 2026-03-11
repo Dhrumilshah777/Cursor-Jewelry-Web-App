@@ -8,5 +8,6 @@ router.get('/beauty-in-motion', siteConfigController.getBeautyInMotionVideos);
 router.get('/view-by-categories', siteConfigController.getViewByCategories);
 router.get('/category-cards', siteConfigController.getCategoryCards);
 router.get('/instagram', siteConfigController.getInstagram);
+router.get('/best-selling', siteConfigController.getBestSelling);
 
 module.exports = router;

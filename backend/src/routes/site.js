@@ -9,5 +9,6 @@ router.get('/view-by-categories', siteConfigController.getViewByCategories);
 router.get('/category-cards', siteConfigController.getCategoryCards);
 router.get('/instagram', siteConfigController.getInstagram);
 router.get('/best-selling', siteConfigController.getBestSelling);
+router.get('/shop-by-style', siteConfigController.getShopByStyle);
 
 module.exports = router;

@@ -31,6 +31,12 @@ const siteConfigSchema = new mongoose.Schema(
       link: { type: String, default: '/products' },
     }],
     bestSellingProductIds: [{ type: String, default: '' }],
+    shopByStyle: [{
+      image: { type: String, required: true },
+      label: { type: String, default: '' },
+      link: { type: String, default: '/products' },
+      order: { type: Number, default: 0 },
+    }],
   },
   { timestamps: true }
 );

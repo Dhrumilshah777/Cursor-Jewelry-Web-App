@@ -232,3 +232,36 @@ exports.updateBestSelling = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.getShopByStyle = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const list = (config.shopByStyle || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    res.json(list.map((s, i) => ({
+      image: s.image,
+      label: s.label || '',
+      link: s.link || '/products',
+      order: s.order ?? i,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateShopByStyle = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const raw = Array.isArray(req.body.slides) ? req.body.slides : [];
+    config.shopByStyle = raw.map((s, i) => ({
+      image: String(s.image || '').trim(),
+      label: String(s.label || '').trim(),
+      link: String(s.link || '').trim() || '/products',
+      order: i,
+    })).filter((s) => s.image);
+    await config.save();
+    const list = (config.shopByStyle || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    res.json(list.map((s, i) => ({ image: s.image, label: s.label || '', link: s.link || '/products', order: s.order ?? i })));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

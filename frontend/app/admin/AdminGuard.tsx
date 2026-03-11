@@ -16,6 +16,7 @@ const NAV = [
   { href: '/admin/beauty-in-motion', label: 'Beauty in Motion' },
   { href: '/admin/view-by-categories', label: 'View by Categories' },
   { href: '/admin/best-selling', label: 'Best Selling Jewelery' },
+  { href: '/admin/shop-by-style', label: 'Shop by Style' },
   { href: '/admin/instagram', label: 'Instagram Section' },
 ];
 

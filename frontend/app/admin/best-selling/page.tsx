@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiGet, apiPut, assetUrl } from '@/lib/api';
 
 type Product = {
@@ -11,6 +12,7 @@ type Product = {
   image: string;
 };
 
+type ProductsResponse = { products: Product[] };
 type BestSellingResponse = { productIds: string[] };
 
 export default function AdminBestSellingPage() {
@@ -19,17 +21,17 @@ export default function AdminBestSellingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [addId, setAddId] = useState('');
 
   const load = async () => {
     try {
       setError('');
       const [idsRes, productsRes] = await Promise.all([
         apiGet<BestSellingResponse>('/api/admin/best-selling', true),
-        apiGet<Product[]>('/api/admin/products', true),
+        apiGet<ProductsResponse>('/api/products'),
       ]);
       setProductIds(Array.isArray(idsRes?.productIds) ? idsRes.productIds : []);
-      setAllProducts(Array.isArray(productsRes) ? productsRes : []);
+      const list = (productsRes as ProductsResponse)?.products;
+      setAllProducts(Array.isArray(list) ? list : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {
@@ -44,16 +46,14 @@ export default function AdminBestSellingPage() {
   const selectedProducts = productIds
     .map((id) => allProducts.find((p) => p._id === id))
     .filter(Boolean) as Product[];
-  const availableToAdd = allProducts.filter((p) => !productIds.includes(p._id));
+  const unselectedProducts = allProducts.filter((p) => !productIds.includes(p._id));
 
-  const addProduct = (id: string) => {
-    if (!id || productIds.includes(id)) return;
-    setProductIds((prev) => [...prev, id]);
-    setAddId('');
-  };
-  const handleAddSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const v = e.target.value;
-    if (v) addProduct(v);
+  const toggleProduct = (id: string, checked: boolean) => {
+    if (checked) {
+      setProductIds((prev) => [...prev, id]);
+    } else {
+      setProductIds((prev) => prev.filter((x) => x !== id));
+    }
   };
 
   const removeAt = (index: number) => {
@@ -98,49 +98,44 @@ export default function AdminBestSellingPage() {
     <div>
       <h1 className="text-2xl font-semibold text-charcoal">Best Selling Jewelery</h1>
       <p className="mt-1 text-stone-600">
-        Choose and order the products shown in the &quot;Our Best Selling Jewelery&quot; carousel on the home page. Desktop shows 4 per row; mobile shows 2 columns × 2 rows per slide.
+        The list below shows the same products that appear on the public <strong>/products</strong> page. Tick the products you want in the &quot;Our Best Selling Jewelery&quot; carousel, then click <strong>Save changes</strong>. Order of ticked items is the carousel order (use ↑ ↓ to reorder).
+      </p>
+      <p className="mt-2 text-sm text-stone-500">
+        To add new products to the site (so they appear here and on /products), go to{' '}
+        <Link href="/admin/products" className="font-medium text-charcoal underline hover:no-underline">
+          Latest Beauty Products
+        </Link>{' '}
+        in the sidebar — there you can create, edit, and manage all products.
       </p>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
       <form onSubmit={save} className="mt-8 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-[200px] flex-1">
-            <label className="block text-sm font-medium text-stone-700">Add product</label>
-            <select
-              value={addId}
-              onChange={handleAddSelect}
-              className="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm"
-            >
-              <option value="">Select a product…</option>
-              {availableToAdd.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name} — ₹{p.price}
-                </option>
-              ))}
-            </select>
-          </div>
-          {availableToAdd.length === 0 && productIds.length > 0 && (
-            <p className="text-sm text-stone-500">All products are already in the list.</p>
-          )}
-        </div>
-
-        <ul className="mt-8 space-y-4">
+        <ul className="space-y-3">
           {selectedProducts.map((product, i) => (
             <li
               key={product._id}
               className="flex flex-col gap-3 rounded border border-stone-200 p-4 sm:flex-row sm:items-center sm:gap-4"
             >
-              <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded bg-stone-100">
-                <img
-                  src={product.image?.startsWith('http') ? product.image : assetUrl(product.image)}
-                  alt=""
-                  className="h-full w-full object-cover"
+              <div className="flex flex-1 items-center gap-4">
+                <input
+                  type="checkbox"
+                  checked
+                  onChange={(e) => toggleProduct(product._id, e.target.checked)}
+                  className="h-4 w-4 rounded border-stone-300 text-charcoal"
+                  aria-label={`Remove ${product.name} from best selling`}
                 />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-charcoal">{product.name}</p>
-                <p className="text-sm text-stone-500">{product.category} — ₹{product.price}</p>
+                <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded bg-stone-100">
+                  <img
+                    src={product.image?.startsWith('http') ? product.image : assetUrl(product.image)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-charcoal">{product.name}</p>
+                  <p className="text-sm text-stone-500">{product.category} — ₹{product.price}</p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <button
@@ -148,6 +143,7 @@ export default function AdminBestSellingPage() {
                   onClick={() => moveUp(i)}
                   disabled={i === 0}
                   className="rounded border border-stone-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-stone-50"
+                  title="Move up"
                 >
                   ↑
                 </button>
@@ -156,6 +152,7 @@ export default function AdminBestSellingPage() {
                   onClick={() => moveDown(i)}
                   disabled={i === selectedProducts.length - 1}
                   className="rounded border border-stone-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-stone-50"
+                  title="Move down"
                 >
                   ↓
                 </button>
@@ -169,17 +166,44 @@ export default function AdminBestSellingPage() {
               </div>
             </li>
           ))}
+          {unselectedProducts.map((product) => (
+            <li
+              key={product._id}
+              className="flex items-center gap-4 rounded border border-stone-100 p-4"
+            >
+              <input
+                type="checkbox"
+                checked={false}
+                onChange={(e) => toggleProduct(product._id, e.target.checked)}
+                className="h-4 w-4 rounded border-stone-300 text-charcoal"
+                aria-label={`Add ${product.name} to best selling`}
+              />
+              <div className="h-16 w-20 flex-shrink-0 overflow-hidden rounded bg-stone-100">
+                <img
+                  src={product.image?.startsWith('http') ? product.image : assetUrl(product.image)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-charcoal">{product.name}</p>
+                <p className="text-sm text-stone-500">{product.category} — ₹{product.price}</p>
+              </div>
+            </li>
+          ))}
         </ul>
 
-        {productIds.length === 0 && (
+        {allProducts.length === 0 && (
           <p className="mt-6 text-sm text-stone-500">
-            No products selected. Add products above; they will appear in the Best Selling Jewelery carousel on the home page.
+            No products on the site yet. Add products in{' '}
+            <Link href="/admin/products" className="text-charcoal underline hover:no-underline">Latest Beauty Products</Link>{' '}
+            first; they will then appear here and on the public /products page.
           </p>
         )}
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || allProducts.length === 0}
           className="mt-8 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save changes'}

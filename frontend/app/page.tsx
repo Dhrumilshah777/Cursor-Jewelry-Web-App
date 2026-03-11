@@ -21,9 +21,9 @@ export default function Home() {
 
       <ShopByStyleCarousel />
 
-      <BestSellingCarousel />
-
       <HomePageImageSection />
+
+      <BestSellingCarousel />
 
       <HeroServicesStrip />
 

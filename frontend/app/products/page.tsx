@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { apiGet, assetUrl, addToCart } from '@/lib/api';
+import { apiGet, assetUrl } from '@/lib/api';
 import FilterSidebar, { type Facets } from '@/components/FilterSidebar';
 
 type Product = {
@@ -36,7 +36,6 @@ function ProductsContent() {
 
   const [data, setData] = useState<ProductsResponse>({ products: [], facets: defaultFacets });
   const [loading, setLoading] = useState(true);
-  const [addedToCartId, setAddedToCartId] = useState<string | null>(null);
 
   const queryString = searchParams.toString();
   const apiUrl = queryString ? `/api/products?${queryString}` : '/api/products';
@@ -120,9 +119,9 @@ function ProductsContent() {
                 {filteredProducts.map((product) => (
                   <li
                     key={product._id}
-                    className="group flex flex-col overflow-hidden border border-stone-200 bg-white"
+                    className="group overflow-hidden border border-stone-200 bg-white"
                   >
-                    <Link href={`/products/${product._id}`} className="block flex-1">
+                    <Link href={`/products/${product._id}`} className="block">
                       <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
                         <img
                           src={productImageSrc(product.image)}
@@ -130,40 +129,17 @@ function ProductsContent() {
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       </div>
-                      <div className="p-4">
-                        <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">
+                      <div className="min-h-[4.5rem] p-4">
+                        <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
                           {product.name}
                         </h2>
                         <p className="mt-1 text-xs text-stone-500">{product.category}</p>
                         <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
                       </div>
                     </Link>
-                    <div className="border-t border-stone-100 p-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          addToCart({ id: product._id, name: product.name, price: product.price, image: product.image });
-                          setAddedToCartId(product._id);
-                          setTimeout(() => setAddedToCartId(null), 2500);
-                        }}
-                        className="w-full border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
-                      >
-                        {addedToCartId === product._id ? 'Added to cart' : 'Add to cart'}
-                      </button>
-                    </div>
                   </li>
                 ))}
               </ul>
-            )}
-
-            {addedToCartId && (
-              <div
-                className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
-                role="status"
-                aria-live="polite"
-              >
-                Added to Cart
-              </div>
             )}
 
             {filteredProducts.length > 0 && (

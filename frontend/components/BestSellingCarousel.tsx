@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { apiGet, assetUrl, addToCart } from '@/lib/api';
+import { apiGet, assetUrl } from '@/lib/api';
 
 type Product = {
   _id: string;
@@ -32,10 +32,9 @@ const MOCK_PRODUCTS: Product[] = [
 ];
 
 function ProductCard({ product }: { product: Product }) {
-  const [added, setAdded] = useState(false);
   return (
-    <li className="group flex flex-col overflow-hidden border border-stone-200 bg-white">
-      <Link href={`/products/${product._id}`} className="block flex-1">
+    <li className="group overflow-hidden border border-stone-200 bg-white">
+      <Link href={`/products/${product._id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
           <img
             src={productImageSrc(product.image)}
@@ -43,7 +42,7 @@ function ProductCard({ product }: { product: Product }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
-        <div className="p-3 sm:p-4">
+        <div className="min-h-[4rem] p-3 sm:p-4">
           <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
             {product.name}
           </h2>
@@ -51,19 +50,6 @@ function ProductCard({ product }: { product: Product }) {
           <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
         </div>
       </Link>
-      <div className="border-t border-stone-100 p-3">
-        <button
-          type="button"
-          onClick={() => {
-            addToCart({ id: product._id, name: product.name, price: product.price, image: product.image });
-            setAdded(true);
-            setTimeout(() => setAdded(false), 2500);
-          }}
-          className="w-full border border-stone-300 py-2 text-sm font-medium text-charcoal transition-colors hover:bg-stone-50"
-        >
-          {added ? 'Added to cart' : 'Add to cart'}
-        </button>
-      </div>
     </li>
   );
 }

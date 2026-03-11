@@ -18,7 +18,6 @@ const cards = [
   { href: '/admin/orders', title: 'Orders', desc: 'View and update order status (paid, shipped, tracking).' },
   { href: '/admin/hero', title: 'Hero Sliders', desc: 'Manage hero slides (images and optional video only).' },
   { href: '/admin/category-cards', title: 'Category Cards', desc: 'Edit the two featured cards (images, titles, descriptions, links) below the hero.' },
-  { href: '/admin/gift-cards', title: 'Gift Cards (Commitment)', desc: 'Edit the two cards under Our Commitment: Gifts For Her and Gifts For Him.' },
   { href: '/admin/best-selling', title: 'Best Selling Jewelery', desc: 'Choose and order products for the Best Selling Jewelery carousel on the home page.' },
   { href: '/admin/shop-by-style', title: 'Shop by Style', desc: 'Manage the Shop by Style carousel (images and labels) on the home page.' },
   { href: '/admin/home-page-image', title: 'Home Page Image', desc: 'Set the full-width image for the image-only section on the home page.' },

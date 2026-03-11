@@ -7,7 +7,7 @@ const DEFAULT_KEY = 'main';
 async function getConfig() {
   let config = await SiteConfig.findOne({ key: DEFAULT_KEY });
   if (!config) {
-    config = await SiteConfig.create({ key: DEFAULT_KEY, heroSlides: [], instagramImages: [], categoryCards: [], giftCards: [] });
+    config = await SiteConfig.create({ key: DEFAULT_KEY, heroSlides: [], instagramImages: [], categoryCards: [] });
   }
   return config;
 }
@@ -281,40 +281,6 @@ exports.updateHomePageImage = async (req, res) => {
     config.homePageImage = String(req.body.image || '').trim();
     await config.save();
     res.json({ image: config.homePageImage });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
-const defaultGiftCards = [
-  { title: 'Gifts For Her', href: '/products?category=gifts-for-her', image: '', imageAlt: 'Elegant jewelry for her' },
-  { title: 'Gifts For Him', href: '/products?category=gifts-for-him', image: '', imageAlt: 'Refined accessories for him' },
-];
-
-exports.getGiftCards = async (req, res) => {
-  try {
-    const config = await getConfig();
-    const cards = config.giftCards && config.giftCards.length >= 2
-      ? config.giftCards.slice(0, 2)
-      : defaultGiftCards;
-    res.json(cards);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-exports.updateGiftCards = async (req, res) => {
-  try {
-    const config = await getConfig();
-    const raw = Array.isArray(req.body) ? req.body : [];
-    config.giftCards = raw.slice(0, 2).map((c, i) => ({
-      title: String(c.title || '').trim() || (defaultGiftCards[i] && defaultGiftCards[i].title) || '',
-      href: String(c.href || '').trim() || (defaultGiftCards[i] && defaultGiftCards[i].href) || '/products',
-      image: String(c.image || '').trim(),
-      imageAlt: String(c.imageAlt || '').trim() || (defaultGiftCards[i] && defaultGiftCards[i].imageAlt) || '',
-    }));
-    await config.save();
-    res.json(config.giftCards);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

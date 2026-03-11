@@ -1,17 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { apiGet, assetUrl } from '@/lib/api';
-
 const ICON_CLASS = 'mx-auto h-10 w-10 text-[#1e3a5f] transition-colors duration-300 group-hover:text-[#2d5a8a] sm:h-12 sm:w-12';
-
-type GiftCard = { title: string; href: string; image: string; imageAlt: string };
-
-const DEFAULT_GIFT_CARDS: GiftCard[] = [
-  { title: 'Gifts For Her', href: '/products?category=gifts-for-her', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600', imageAlt: 'Elegant jewelry for her' },
-  { title: 'Gifts For Him', href: '/products?category=gifts-for-him', image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343a?w=600', imageAlt: 'Refined accessories for him' },
-];
 
 function IconHeart() {
   return (
@@ -93,31 +82,6 @@ const SERVICES = [
 ] as const;
 
 export default function HeroServicesStrip() {
-  const [giftCards, setGiftCards] = useState<GiftCard[]>(DEFAULT_GIFT_CARDS);
-
-  useEffect(() => {
-    apiGet<GiftCard[]>('/api/site/gift-cards')
-      .then((list) => {
-        const arr = Array.isArray(list) ? list : [];
-        if (arr.length >= 2) {
-          setGiftCards(arr.slice(0, 2).map((c, i) => ({
-            title: (c.title || '').trim() || DEFAULT_GIFT_CARDS[i]?.title || '',
-            href: (c.href || '').trim() || DEFAULT_GIFT_CARDS[i]?.href || '/products',
-            image: (c.image || '').trim() || DEFAULT_GIFT_CARDS[i]?.image || '',
-            imageAlt: (c.imageAlt || '').trim() || DEFAULT_GIFT_CARDS[i]?.imageAlt || '',
-          })));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const cardsToShow = giftCards.map((c, i) => ({
-    title: c.title || DEFAULT_GIFT_CARDS[i]?.title || '',
-    href: c.href || DEFAULT_GIFT_CARDS[i]?.href || '/products',
-    image: c.image || DEFAULT_GIFT_CARDS[i]?.image || '',
-    imageAlt: c.imageAlt || DEFAULT_GIFT_CARDS[i]?.imageAlt || '',
-  }));
-
   return (
     <section className="border-b border-stone-100 bg-[#e8eef6] py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -140,31 +104,6 @@ export default function HeroServicesStrip() {
                 {detail}
               </p>
             </div>
-          ))}
-        </div>
-
-        {/* Gifts For Her / Gifts For Him cards (admin-editable) */}
-        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-          {cardsToShow.map((card, i) => (
-            <Link
-              key={`${card.title}-${i}`}
-              href={card.href}
-              className="group overflow-hidden rounded-xl border-2 border-[#6b1a1a] bg-stone-100 transition-shadow hover:shadow-lg"
-            >
-              <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-[3/4]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={card.image.startsWith('http') ? card.image : assetUrl(card.image)}
-                  alt={card.imageAlt}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div className="flex items-center justify-center bg-[#6b1a1a] py-4">
-                <span className="font-sans text-lg font-medium uppercase tracking-wide text-white">
-                  {card.title}
-                </span>
-              </div>
-            </Link>
           ))}
         </div>
       </div>

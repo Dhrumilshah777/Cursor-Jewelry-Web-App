@@ -16,6 +16,8 @@ export default function Home() {
 
       <ShopByCategoryGrid />
 
+      <HomePageVideoSection />
+
       <ShopByStyleCarousel />
 
       <BestSellingCarousel />

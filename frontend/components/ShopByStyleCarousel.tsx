@@ -48,6 +48,22 @@ export default function ShopByStyleCarousel() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Start in the middle set so we can scroll both ways; update active index after layout
+  useEffect(() => {
+    if (slides.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const setScrollToMiddle = () => {
+      const setWidth = el.scrollWidth / REPEAT_COUNT;
+      el.scrollLeft = setWidth;
+      requestAnimationFrame(() => updateActiveIndex());
+    };
+    setScrollToMiddle();
+    const ro = new ResizeObserver(setScrollToMiddle);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [slides.length, updateActiveIndex]);
+
   const updateActiveIndex = useCallback(() => {
     const container = scrollRef.current;
     const refs = slideRefsRef.current;
@@ -66,22 +82,6 @@ export default function ShopByStyleCarousel() {
     });
     setActiveIndex(closest);
   }, []);
-
-  // Start in the middle set so we can scroll both ways; update active index after layout
-  useEffect(() => {
-    if (slides.length === 0) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const setScrollToMiddle = () => {
-      const setWidth = el.scrollWidth / REPEAT_COUNT;
-      el.scrollLeft = setWidth;
-      requestAnimationFrame(() => updateActiveIndex());
-    };
-    setScrollToMiddle();
-    const ro = new ResizeObserver(setScrollToMiddle);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [slides.length, updateActiveIndex]);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;

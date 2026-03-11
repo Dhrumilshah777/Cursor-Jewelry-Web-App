@@ -11,5 +11,6 @@ router.get('/instagram', siteConfigController.getInstagram);
 router.get('/best-selling', siteConfigController.getBestSelling);
 router.get('/shop-by-style', siteConfigController.getShopByStyle);
 router.get('/home-page-image', siteConfigController.getHomePageImage);
+router.get('/gift-cards', siteConfigController.getGiftCards);
 
 module.exports = router;

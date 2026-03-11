@@ -78,6 +78,7 @@ app.use('/api/admin/products', require('./routes/admin/products'));
 app.use('/api/admin/orders', require('./routes/admin/orders'));
 app.use('/api/admin/hero', require('./routes/admin/hero'));
 app.use('/api/admin/category-cards', require('./routes/admin/categoryCards'));
+app.use('/api/admin/gift-cards', require('./routes/admin/giftCards'));
 app.use('/api/admin/video', require('./routes/admin/video'));
 app.use('/api/admin/beauty-in-motion', require('./routes/admin/beautyInMotion'));
 app.use('/api/admin/view-by-categories', require('./routes/admin/viewByCategories'));

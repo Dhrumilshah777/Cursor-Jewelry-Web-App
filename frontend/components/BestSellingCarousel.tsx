@@ -43,10 +43,10 @@ function ProductCard({ product }: { product: Product }) {
           />
         </div>
         <div className="min-h-[4rem] pt-3">
-          <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
+          <h2 className="font-sans text-sm font-thin uppercase tracking-wide text-charcoal line-clamp-2">
             {product.name}
           </h2>
-          <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
+          <p className="mt-2 font-sans text-sm font-thin text-charcoal">₹{product.price}</p>
         </div>
       </Link>
     </li>

@@ -46,7 +46,6 @@ function ProductCard({ product }: { product: Product }) {
           <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
             {product.name}
           </h2>
-          <p className="mt-1 text-xs text-stone-500">{product.category}</p>
           <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
         </div>
       </Link>

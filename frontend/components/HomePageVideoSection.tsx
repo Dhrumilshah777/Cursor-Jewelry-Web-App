@@ -19,8 +19,8 @@ export default function HomePageVideoSection() {
 
   return (
     <section className="relative w-full overflow-hidden bg-charcoal">
-      {/* Height: min 180px (mobile), 220px (sm), 280px (md); max 500px; aspect 2.4:1 */}
-      <div className="relative aspect-[2.4/1] w-full min-h-[180px] max-h-[520px] sm:min-h-[220px] md:min-h-[280px]">
+      {/* Height: min 220px (mobile), 260px (sm), 280px (md); max 520px; aspect 2.4:1 */}
+      <div className="relative aspect-[2.4/1] w-full min-h-[220px] max-h-[520px] sm:min-h-[260px] md:min-h-[280px]">
         <video
           className="absolute inset-0 h-full w-full object-cover"
           src={videoSrc}

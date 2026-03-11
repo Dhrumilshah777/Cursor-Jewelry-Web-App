@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { apiGet, assetUrl } from '@/lib/api';
 
@@ -22,10 +22,15 @@ const MOCK_SLIDES: Slide[] = [
   { image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600', label: 'DATE NIGHT', link: '/products' },
 ];
 
+const REPEAT_COUNT = 3; // triple the slides for infinite scroll
+
 export default function ShopByStyleCarousel() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const slideRefsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const isJumpingRef = useRef(false);
 
   useEffect(() => {
     const isLocalhost =
@@ -43,6 +48,57 @@ export default function ShopByStyleCarousel() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Start in the middle set so we can scroll both ways; update active index after layout
+  useEffect(() => {
+    if (slides.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const setScrollToMiddle = () => {
+      const setWidth = el.scrollWidth / REPEAT_COUNT;
+      el.scrollLeft = setWidth;
+      requestAnimationFrame(() => updateActiveIndex());
+    };
+    setScrollToMiddle();
+    const ro = new ResizeObserver(setScrollToMiddle);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [slides.length, updateActiveIndex]);
+
+  const updateActiveIndex = useCallback(() => {
+    const container = scrollRef.current;
+    const refs = slideRefsRef.current;
+    if (!container || !refs.length) return;
+    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+    let closest = 0;
+    let minDist = Infinity;
+    refs.forEach((slideEl, i) => {
+      if (!slideEl) return;
+      const slideCenter = slideEl.offsetLeft + slideEl.offsetWidth / 2;
+      const dist = Math.abs(slideCenter - containerCenter);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    });
+    setActiveIndex(closest);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || slides.length === 0 || isJumpingRef.current) return;
+    const setWidth = el.scrollWidth / REPEAT_COUNT;
+    if (el.scrollLeft >= setWidth * 2 - 1) {
+      isJumpingRef.current = true;
+      el.scrollLeft -= setWidth;
+      requestAnimationFrame(() => { isJumpingRef.current = false; });
+    } else if (el.scrollLeft <= 1) {
+      isJumpingRef.current = true;
+      el.scrollLeft += setWidth;
+      requestAnimationFrame(() => { isJumpingRef.current = false; });
+    }
+    updateActiveIndex();
+  }, [slides.length, updateActiveIndex]);
+
   const scroll = (dir: 'prev' | 'next') => {
     const el = scrollRef.current;
     if (!el) return;
@@ -53,6 +109,8 @@ export default function ShopByStyleCarousel() {
   if (loading) return null;
   if (slides.length === 0) return null;
 
+  const infiniteSlides = Array.from({ length: REPEAT_COUNT }, () => slides).flat();
+
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -61,7 +119,6 @@ export default function ShopByStyleCarousel() {
         </h2>
 
         <div className="relative">
-          {/* Navigation arrows */}
           <button
             type="button"
             onClick={() => scroll('prev')}
@@ -83,34 +140,47 @@ export default function ShopByStyleCarousel() {
             </svg>
           </button>
 
-          {/* Carousel */}
           <div
             ref={scrollRef}
+            onScroll={handleScroll}
             className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto py-2"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            {slides.map((slide, i) => (
-              <Link
-                key={i}
-                href={slide.link || '/products'}
-                className="relative flex w-[75vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[32%] lg:w-[30%]"
-              >
-                <div className="relative w-full overflow-hidden rounded-xl bg-stone-200">
-                  <div className="aspect-[3/4] w-full">
-                    <img
-                      src={resolveImageUrl(slide.image)}
-                      alt={slide.label}
-                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-4 py-3 text-center">
-                    <span className="font-sans text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
-                      {slide.label}
-                    </span>
-                  </div>
+            {infiniteSlides.map((slide, i) => {
+              const isActive = activeIndex === i;
+              return (
+                <div
+                  key={i}
+                  ref={(el) => {
+                    slideRefsRef.current[i] = el;
+                  }}
+                  className="relative flex w-[75vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[32%] lg:w-[30%]"
+                >
+                  <Link href={slide.link || '/products'} className="block w-full">
+                    <div
+                      className={`relative w-full overflow-hidden rounded-xl bg-stone-200 transition-all duration-300 ${
+                        isActive
+                          ? 'z-10 scale-105 shadow-lg ring-2 ring-charcoal/10'
+                          : 'scale-100 shadow-none'
+                      }`}
+                    >
+                      <div className="aspect-[3/4] w-full">
+                        <img
+                          src={resolveImageUrl(slide.image)}
+                          alt={slide.label}
+                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-4 py-3 text-center">
+                        <span className="font-sans text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
+                          {slide.label}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

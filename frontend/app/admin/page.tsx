@@ -22,6 +22,7 @@ const cards = [
   { href: '/admin/shop-by-style', title: 'Shop by Style', desc: 'Manage the Shop by Style carousel (images and labels) on the home page.' },
   { href: '/admin/home-page-image', title: 'Home Page Image', desc: 'Set the full-width image for the image-only section on the home page.' },
   { href: '/admin/video', title: 'Home Page Video', desc: 'Set the full-width video that appears on the home page.' },
+  { href: '/admin/beauty-in-motion', title: 'Beauty in Motion', desc: 'Add videos for the Beauty in Motion carousel (same style as Shop by Style).' },
   { href: '/admin/instagram', title: 'Instagram Section', desc: 'Manage the Instagram feed images.' },
 ];
 

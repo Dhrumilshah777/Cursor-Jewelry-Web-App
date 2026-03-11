@@ -7,6 +7,7 @@ import BestSellingCarousel from '@/components/BestSellingCarousel';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import HomePageImageSection from '@/components/HomePageImageSection';
+import BeautyInMotionSection from '@/components/BeautyInMotionSection';
 import KindWordsSection from '@/components/KindWordsSection';
 import InstagramSection from '@/components/InstagramSection';
 
@@ -26,6 +27,8 @@ export default function Home() {
       <BestSellingCarousel />
 
       <HeroServicesStrip />
+
+      <BeautyInMotionSection />
 
       {/* <CategoryCardsSection /> */}
 

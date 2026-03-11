@@ -23,6 +23,7 @@ const MOCK_SLIDES: Slide[] = [
 ];
 
 const REPEAT_COUNT = 3; // triple the slides for infinite scroll
+const AUTOPLAY_MS = 4500;
 
 export default function ShopByStyleCarousel() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -105,6 +106,13 @@ export default function ShopByStyleCarousel() {
     const step = el.offsetWidth * 0.85;
     el.scrollBy({ left: dir === 'next' ? step : -step, behavior: 'smooth' });
   };
+
+  // Autoplay: advance to next slide at interval
+  useEffect(() => {
+    if (slides.length === 0) return;
+    const id = setInterval(() => scroll('next'), AUTOPLAY_MS);
+    return () => clearInterval(id);
+  }, [slides.length]);
 
   if (loading) return null;
   if (slides.length === 0) return null;

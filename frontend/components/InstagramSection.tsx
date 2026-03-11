@@ -89,7 +89,7 @@ export default function InstagramSection() {
 
   return (
     <section className="w-full overflow-hidden bg-cream py-16 sm:py-10">
-      <h2 className="text-center font-poppins text-4xl font-medium tracking-wide text-charcoal sm:text-5xl md:text-6xl">
+      <h2 className="mt-6 text-center font-poppins text-4xl font-medium tracking-wide text-charcoal sm:text-5xl md:text-6xl">
         Instagram
       </h2>
 

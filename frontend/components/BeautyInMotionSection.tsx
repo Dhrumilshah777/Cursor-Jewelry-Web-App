@@ -65,7 +65,7 @@ export default function BeautyInMotionSection() {
 
   return (
     <section className="bg-stone-100 py-16 overflow-hidden">
-      <h2 className="text-center text-3xl font-thin uppercase tracking-wide text-charcoal mb-12">
+      <h2 className="mt-6 text-center text-3xl font-thin uppercase tracking-wide text-charcoal mb-12">
         Beauty in Motion
       </h2>
 

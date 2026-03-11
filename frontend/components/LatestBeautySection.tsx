@@ -208,7 +208,7 @@ export default function LatestBeautySection() {
 
   return (
     <section className="bg-cream py-16">
-      <h2 className="text-center text-3xl font-thin uppercase tracking-wide mb-12">
+      <h2 className="mt-6 text-center text-3xl font-thin uppercase tracking-wide mb-12">
         Latest Beauty
       </h2>
 

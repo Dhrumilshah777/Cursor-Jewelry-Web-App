@@ -52,7 +52,7 @@ export default function KindWordsSection() {
       <div className="absolute inset-0 bg-cream/60" aria-hidden />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center font-sans text-3xl font-medium uppercase tracking-wide text-charcoal sm:text-4xl">
+        <h2 className="mt-6 text-center font-sans text-3xl font-medium uppercase tracking-wide text-charcoal sm:text-4xl">
           Kind Words
         </h2>
 

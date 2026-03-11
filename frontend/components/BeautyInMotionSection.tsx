@@ -11,7 +11,6 @@ function resolveVideoUrl(url: string): string {
 }
 
 const REPEAT_COUNT = 3;
-const AUTOPLAY_MS = 4500;
 
 export default function BeautyInMotionSection() {
   const [videos, setVideos] = useState<string[]>([]);
@@ -99,11 +98,9 @@ export default function BeautyInMotionSection() {
     el.scrollBy({ left: dir === 'next' ? step : -step, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (videos.length === 0) return;
-    const id = setInterval(() => scroll('next'), AUTOPLAY_MS);
-    return () => clearInterval(id);
-  }, [videos.length]);
+  const handleVideoEnded = useCallback(() => {
+    scroll('next');
+  }, []);
 
   if (loading) return null;
   if (videos.length === 0) return null;
@@ -170,10 +167,9 @@ export default function BeautyInMotionSection() {
                         }}
                         src={src}
                         muted
-                        loop
                         playsInline
                         className="h-full w-full object-cover"
-                        {...(isActive ? { autoPlay: true } : {})}
+                        {...(isActive ? { autoPlay: true, onEnded: handleVideoEnded } : {})}
                       />
                     </div>
                   </div>

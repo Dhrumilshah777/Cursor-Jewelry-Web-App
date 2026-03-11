@@ -24,11 +24,11 @@ export default function Home() {
 
       <HomePageImageSection />
 
+      <BeautyInMotionSection />
+
       <BestSellingCarousel />
 
       <HeroServicesStrip />
-
-      <BeautyInMotionSection />
 
       {/* <CategoryCardsSection /> */}
 

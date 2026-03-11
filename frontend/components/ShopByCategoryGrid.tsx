@@ -49,15 +49,9 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
             key={pageIndex}
             className="grid w-full flex-shrink-0 grid-cols-2 gap-3 snap-start px-0.5"
           >
-            {pageCats.map((cat, i) => (
+            {pageCats.map((cat) => (
               <div key={cat.id} className="aspect-square w-full">
-                <CategoryImage
-                  category={cat}
-                  className="block h-full w-full"
-                  rounded
-                  warmOverlay
-                  rotationIntervalMs={(5 + i) * 1000}
-                />
+                <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
               </div>
             ))}
           </div>
@@ -99,28 +93,24 @@ function CategoryImage({
   className,
   rounded,
   warmOverlay,
-  rotationIntervalMs,
 }: {
   category: Category;
   className: string;
   rounded?: boolean;
   warmOverlay?: boolean;
-  /** Staggered interval per slot (e.g. 5000, 6000, 7000, 8000). Default 5000. */
-  rotationIntervalMs?: number;
 }) {
   const [error, setError] = useState(false);
   const images = [resolveImageUrl(category.image)];
   if (category.image2) images.push(resolveImageUrl(category.image2));
   const [currentIndex, setCurrentIndex] = useState(0);
-  const intervalMs = rotationIntervalMs ?? ROTATE_INTERVAL_MS;
 
   useEffect(() => {
     if (images.length <= 1) return;
     const id = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, intervalMs);
+    }, ROTATE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [images.length, intervalMs]);
+  }, [images.length]);
 
   useEffect(() => {
     setError(false);
@@ -209,15 +199,9 @@ export default function ShopByCategoryGrid() {
         <div className="md:hidden">
           {categories.length <= 4 ? (
             <div className="grid grid-cols-2 gap-3">
-              {categories.slice(0, 4).map((cat, i) => (
+              {categories.slice(0, 4).map((cat) => (
                 <div key={cat.id} className="aspect-square w-full">
-                  <CategoryImage
-                    category={cat}
-                    className="block h-full w-full"
-                    rounded
-                    warmOverlay
-                    rotationIntervalMs={(5 + i) * 1000}
-                  />
+                  <CategoryImage category={cat} className="block h-full w-full" rounded warmOverlay />
                 </div>
               ))}
             </div>
@@ -230,31 +214,21 @@ export default function ShopByCategoryGrid() {
         <div className="hidden grid-cols-3 gap-2 sm:gap-4 md:grid">
           <div className="grid grid-rows-2 gap-2 sm:gap-4">
             <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {leftTop && (
-                <CategoryImage category={leftTop} className="block h-full w-full" rotationIntervalMs={5000} />
-              )}
+              {leftTop && <CategoryImage category={leftTop} className="block h-full w-full" />}
             </div>
             <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {leftBottom && (
-                <CategoryImage category={leftBottom} className="block h-full w-full" rotationIntervalMs={6000} />
-              )}
+              {leftBottom && <CategoryImage category={leftBottom} className="block h-full w-full" />}
             </div>
           </div>
           <div className="min-h-0 w-full sm:aspect-[3/4] md:min-h-[320px]">
-            {center && (
-              <CategoryImage category={center} className="block h-full w-full" rotationIntervalMs={7000} />
-            )}
+            {center && <CategoryImage category={center} className="block h-full w-full" />}
           </div>
           <div className="grid grid-rows-2 gap-2 sm:gap-4">
             <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {rightTop && (
-                <CategoryImage category={rightTop} className="block h-full w-full" rotationIntervalMs={8000} />
-              )}
+              {rightTop && <CategoryImage category={rightTop} className="block h-full w-full" />}
             </div>
             <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {rightBottom && (
-                <CategoryImage category={rightBottom} className="block h-full w-full" rotationIntervalMs={8000} />
-              )}
+              {rightBottom && <CategoryImage category={rightBottom} className="block h-full w-full" />}
             </div>
           </div>
         </div>

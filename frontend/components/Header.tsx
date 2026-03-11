@@ -157,42 +157,73 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="border-t border-stone-200 bg-white px-4 py-6 shadow-lg md:hidden">
-          <button
-            type="button"
-            onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
-            className="mb-4 flex items-center gap-2 font-sans text-xs font-medium uppercase tracking-wider text-stone-700"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            Search
-          </button>
-          <nav className="flex flex-col gap-4">
-            {mainNavLinks.map(({ href, label }) => (
-              <Link
-                key={label}
-                href={href}
+      {/* Mobile sidebar: slides in from left with smooth transition */}
+      <div className="md:hidden">
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 ease-out ${
+            mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+        {/* Sidebar panel */}
+        <div
+          className={`fixed left-0 top-0 z-50 h-full w-[min(100vw-4rem,20rem)] max-w-sm border-r border-stone-200 bg-white shadow-xl transition-transform duration-300 ease-out md:hidden ${
+            mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          aria-modal="true"
+          aria-label="Main menu"
+        >
+          <div className="flex h-full flex-col px-4 pt-6 pb-6">
+            <div className="mb-6 flex items-center justify-between">
+              <span className="font-serif text-lg font-semibold text-[#1e3a5f]">Menu</span>
+              <button
+                type="button"
                 onClick={() => setMobileOpen(false)}
-                className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100"
+                aria-label="Close menu"
               >
-                {label}
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
+              className="mb-4 flex items-center gap-2 font-sans text-xs font-medium uppercase tracking-wider text-stone-700"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              Search
+            </button>
+            <nav className="flex flex-1 flex-col gap-1">
+              {mainNavLinks.map(({ href, label }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-stone-800 transition-colors hover:bg-stone-50"
+                >
+                  {label}
+                </Link>
+              ))}
+              <div className="my-2 border-t border-stone-100" />
+              <Link href="/cart" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-stone-800 transition-colors hover:bg-stone-50">
+                Cart{cartCount > 0 ? ` (${cartCount})` : ''}
               </Link>
-            ))}
-            <Link href="/cart" onClick={() => setMobileOpen(false)} className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800">
-              Cart{cartCount > 0 ? ` (${cartCount})` : ''}
-            </Link>
-            <Link href="/login" onClick={() => setMobileOpen(false)} className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800">
-              Login
-            </Link>
-            <Link href="/register" onClick={() => setMobileOpen(false)} className="font-sans text-xs font-medium uppercase tracking-wider text-stone-800">
-              Register
-            </Link>
-          </nav>
+              <Link href="/login" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-stone-800 transition-colors hover:bg-stone-50">
+                Login
+              </Link>
+              <Link href="/register" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-stone-800 transition-colors hover:bg-stone-50">
+                Register
+              </Link>
+            </nav>
+          </div>
         </div>
-      )}
+      </div>
 
       <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>

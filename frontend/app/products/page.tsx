@@ -117,19 +117,16 @@ function ProductsContent() {
             ) : (
               <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
-                  <li
-                    key={product._id}
-                    className="group overflow-hidden border border-stone-200 bg-white"
-                  >
+                  <li key={product._id} className="group">
                     <Link href={`/products/${product._id}`} className="block">
-                      <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
+                      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-stone-100">
                         <img
                           src={productImageSrc(product.image)}
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       </div>
-                      <div className="min-h-[4.5rem] p-4">
+                      <div className="min-h-[4.5rem] pt-3">
                         <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
                           {product.name}
                         </h2>

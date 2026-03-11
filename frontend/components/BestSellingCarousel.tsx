@@ -33,16 +33,16 @@ const MOCK_PRODUCTS: Product[] = [
 
 function ProductCard({ product }: { product: Product }) {
   return (
-    <li className="group overflow-hidden border border-stone-200 bg-white">
+    <li className="group">
       <Link href={`/products/${product._id}`} className="block">
-        <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-stone-100">
           <img
             src={productImageSrc(product.image)}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
-        <div className="min-h-[4rem] p-3 sm:p-4">
+        <div className="min-h-[4rem] pt-3">
           <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
             {product.name}
           </h2>

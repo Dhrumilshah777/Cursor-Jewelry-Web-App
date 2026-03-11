@@ -17,6 +17,7 @@ const NAV = [
   { href: '/admin/view-by-categories', label: 'View by Categories' },
   { href: '/admin/best-selling', label: 'Best Selling Jewelery' },
   { href: '/admin/shop-by-style', label: 'Shop by Style' },
+  { href: '/admin/home-page-image', label: 'Home Page Image' },
   { href: '/admin/instagram', label: 'Instagram Section' },
 ];
 

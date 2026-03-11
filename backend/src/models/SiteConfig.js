@@ -37,6 +37,7 @@ const siteConfigSchema = new mongoose.Schema(
       link: { type: String, default: '/products' },
       order: { type: Number, default: 0 },
     }],
+    homePageImage: { type: String, default: '' },
   },
   { timestamps: true }
 );

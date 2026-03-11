@@ -37,7 +37,7 @@ function Card({ card }: { card: CategoryCard }) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white sm:p-8">
-          <h2 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="font-serif text-2xl font-semibold tracking-wide sm:text-3xl">
             {card.title || 'Collection'}
           </h2>
           {card.description && (

@@ -20,11 +20,11 @@ type Product = {
 };
 
 const MOCK_PRODUCTS: Product[] = [
-  { id: 'mock-1', name: 'Circle Necklace', category: 'Accessories', price: '52.00', image: '/instagram-1.jpg' },
-  { id: 'mock-2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { id: 'mock-3', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { id: 'mock-4', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { id: 'mock-5', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  // { id: 'mock-1', name: 'Circle Necklace', category: 'Accessories', price: '52.00', image: '/instagram-1.jpg' },
+  // { id: 'mock-2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  // { id: 'mock-3', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  // { id: 'mock-4', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+  // { id: 'mock-5', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
 ];
 
 const AUTOPLAY_MS = 5000;
@@ -208,7 +208,7 @@ export default function LatestBeautySection() {
 
   return (
     <section className="bg-cream py-16">
-      <h2 className="text-center text-3xl font-thin uppercase mb-12">
+      <h2 className="text-center text-3xl font-thin uppercase tracking-wide mb-12">
         Latest Beauty
       </h2>
 

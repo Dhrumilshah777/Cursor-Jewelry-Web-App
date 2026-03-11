@@ -265,3 +265,23 @@ exports.updateShopByStyle = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.getHomePageImage = async (req, res) => {
+  try {
+    const config = await getConfig();
+    res.json({ image: config.homePageImage || '' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateHomePageImage = async (req, res) => {
+  try {
+    const config = await getConfig();
+    config.homePageImage = String(req.body.image || '').trim();
+    await config.save();
+    res.json({ image: config.homePageImage });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

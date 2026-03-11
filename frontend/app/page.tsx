@@ -6,6 +6,7 @@ import ShopByStyleCarousel from '@/components/ShopByStyleCarousel';
 import BestSellingCarousel from '@/components/BestSellingCarousel';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
+import HomePageImageSection from '@/components/HomePageImageSection';
 import KindWordsSection from '@/components/KindWordsSection';
 import InstagramSection from '@/components/InstagramSection';
 
@@ -21,6 +22,8 @@ export default function Home() {
       <ShopByStyleCarousel />
 
       <BestSellingCarousel />
+
+      <HomePageImageSection />
 
       <HeroServicesStrip />
 
@@ -44,7 +47,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
                 </div>
-                <h2 className="mt-4 font-serif text-lg font-medium text-charcoal">
+                <h2 className="mt-4 font-serif text-lg font-medium tracking-wide text-charcoal">
                   Crafted with care
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone">
@@ -57,7 +60,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
-                <h2 className="mt-4 font-serif text-lg font-medium text-charcoal">
+                <h2 className="mt-4 font-serif text-lg font-medium tracking-wide text-charcoal">
                   Quality assured
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone">
@@ -70,7 +73,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </div>
-                <h2 className="mt-4 font-serif text-lg font-medium text-charcoal">
+                <h2 className="mt-4 font-serif text-lg font-medium tracking-wide text-charcoal">
                   Easy returns
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone">
@@ -84,7 +87,7 @@ export default function Home() {
         {/* CTA */}
         <section id="contacts" className="border-t border-stone-200 bg-charcoal py-16 text-center text-cream sm:py-20">
           <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-            <h2 className="font-serif text-3xl font-light sm:text-4xl">
+            <h2 className="font-serif text-3xl font-light tracking-wide sm:text-4xl">
               Join our world
             </h2>
             <p className="mt-4 font-sans text-cream/80">

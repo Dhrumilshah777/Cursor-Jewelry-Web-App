@@ -10,6 +10,7 @@ import HomePageImageSection from '@/components/HomePageImageSection';
 import BeautyInMotionSection from '@/components/BeautyInMotionSection';
 import KindWordsSection from '@/components/KindWordsSection';
 import InstagramSection from '@/components/InstagramSection';
+import NewArrivalSection from '@/components/NewArrivalSection';
 
 export default function Home() {
   return (
@@ -19,8 +20,6 @@ export default function Home() {
       <ShopByCategoryGrid />
 
       <HomePageVideoSection />
-
-      <ShopByStyleCarousel />
 
       <HomePageImageSection />
 
@@ -37,6 +36,10 @@ export default function Home() {
       <div className="full-bleed">
         <InstagramSection />
       </div>
+
+      <NewArrivalSection />
+
+      <ShopByStyleCarousel />
 
       {/* Rest of page — cream background for contrast */}
       <div className="bg-cream">

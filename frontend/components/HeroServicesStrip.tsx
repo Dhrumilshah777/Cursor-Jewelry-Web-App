@@ -88,7 +88,7 @@ export default function HeroServicesStrip() {
         <h2 className="mt-6 mb-8 text-center font-serif text-3xl font-medium italic tracking-wide text-[#1e3a5f] sm:text-4xl">
           Our Commitment to Excellence
         </h2>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 gap-y-8 sm:gap-8 lg:grid-cols-4">
           {SERVICES.map(({ icon: Icon, title, detail }, index) => (
             <div
               key={index}

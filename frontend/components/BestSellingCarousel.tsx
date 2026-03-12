@@ -43,10 +43,10 @@ function ProductCard({ product }: { product: Product }) {
           />
         </div>
         <div className="min-h-[4rem] pt-3">
-          <h2 className="font-sans text-sm font-thin uppercase tracking-wide text-charcoal line-clamp-2">
+          <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-charcoal line-clamp-2">
             {product.name}
           </h2>
-          <p className="mt-2 font-sans text-sm font-thin text-charcoal">₹{product.price}</p>
+          <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
         </div>
       </Link>
     </li>
@@ -122,22 +122,6 @@ export default function BestSellingCarousel() {
             </div>
           ))}
         </div>
-
-        {slideCount > 1 && (
-          <div className="mt-6 flex justify-center gap-1.5">
-            {Array.from({ length: slideCount }, (_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => goToSlide(i)}
-                className={`h-2 rounded-full transition-all ${
-                  i === slideIndex ? 'w-6 bg-[#1e3a5f]' : 'w-2 bg-[#bfd5f2]'
-                }`}
-                aria-label={`Go to slide ${i + 1}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );

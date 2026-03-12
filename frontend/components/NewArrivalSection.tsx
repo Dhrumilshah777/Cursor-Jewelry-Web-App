@@ -134,20 +134,8 @@ export default function NewArrivalSection() {
   return (
     <section className="relative overflow-hidden bg-[#f5f0eb] py-14 sm:py-16 md:py-20">
       <div className="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Large title: NEW / ARRIVAL — behind carousel */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center">
-          <div className="rounded-lg bg-[#ebe4dc]/90 px-8 py-2 md:px-12">
-            <h2 className="font-serif text-5xl font-medium tracking-wide text-[#6b5344] sm:text-6xl md:text-7xl lg:text-8xl">
-              NEW
-            </h2>
-          </div>
-          <h2 className="mt-2 font-serif text-5xl font-medium tracking-wide text-[#6b5344] sm:text-6xl md:text-7xl lg:text-8xl">
-            ARRIVAL
-          </h2>
-        </div>
-
-        {/* Carousel — overlaps title */}
-        <div className="relative z-10">
+        {/* Carousel (behind the title) */}
+        <div className="relative z-0">
           <button
             type="button"
             onClick={() => scroll('prev')}
@@ -206,6 +194,18 @@ export default function NewArrivalSection() {
               );
             })}
           </div>
+        </div>
+
+        {/* Large title: NEW / ARRIVAL — in front of carousel (clicks pass through) */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center">
+          <div className="rounded-lg bg-[#ebe4dc]/90 px-8 py-2 md:px-12">
+            <h2 className="font-serif text-5xl font-medium tracking-wide text-[#6b5344] sm:text-6xl md:text-7xl lg:text-8xl">
+              NEW
+            </h2>
+          </div>
+          <h2 className="mt-2 font-serif text-5xl font-medium tracking-wide text-[#6b5344] sm:text-6xl md:text-7xl lg:text-8xl">
+            ARRIVAL
+          </h2>
         </div>
       </div>
     </section>

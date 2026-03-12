@@ -139,7 +139,7 @@ export default function BeautyInMotionSection() {
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto py-2"
+            className="scrollbar-hide flex snap-x snap-mandatory gap-4 md:gap-8 overflow-x-auto py-2"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {infiniteVideos.map((videoUrl, i) => {

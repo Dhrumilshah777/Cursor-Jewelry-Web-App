@@ -182,11 +182,12 @@ export default function ShopByCategoryGrid() {
 
   if (categories.length === 0) return null;
 
-  const center = categories[0];
-  const leftTop = categories[1];
-  const leftBottom = categories[2];
-  const rightTop = categories[3];
-  const rightBottom = categories[4];
+  // PC layout: tall left | top + bottom-left | empty + bottom-right | tall right (5 slots)
+  const tallLeft = categories[0];
+  const middleTop = categories[1];
+  const middleBottomLeft = categories[2];
+  const middleBottomRight = categories[3];
+  const tallRight = categories[4];
 
   return (
     <section className="bg-cream py-10 sm:py-12">
@@ -210,27 +211,40 @@ export default function ShopByCategoryGrid() {
           )}
         </div>
 
-        {/* Desktop: center + left 2 + right 2 */}
-        <div className="hidden grid-cols-3 gap-2 sm:gap-4 md:grid">
-          <div className="grid grid-rows-2 gap-2 sm:gap-4">
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {leftTop && <CategoryImage category={leftTop} className="block h-full w-full" />}
+        {/* Desktop: 4 cols, 2 rows — tall left | top + bottom-left | empty + bottom-right | tall right */}
+        <div
+          className="hidden md:grid gap-2 sm:gap-4 min-h-[420px]"
+          style={{
+            gridTemplateColumns: '1fr 1fr 1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
+          }}
+        >
+          {tallLeft && (
+            <div className="min-h-0 col-start-1 row-start-1 row-span-2">
+              <CategoryImage category={tallLeft} className="block h-full w-full min-h-[400px]" />
             </div>
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {leftBottom && <CategoryImage category={leftBottom} className="block h-full w-full" />}
+          )}
+          {middleTop && (
+            <div className="min-h-0 col-start-2 row-start-1">
+              <CategoryImage category={middleTop} className="block h-full w-full" />
             </div>
-          </div>
-          <div className="min-h-0 w-full sm:aspect-[3/4] md:min-h-[320px]">
-            {center && <CategoryImage category={center} className="block h-full w-full" />}
-          </div>
-          <div className="grid grid-rows-2 gap-2 sm:gap-4">
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {rightTop && <CategoryImage category={rightTop} className="block h-full w-full" />}
+          )}
+          {middleBottomLeft && (
+            <div className="min-h-0 col-start-2 row-start-2">
+              <CategoryImage category={middleBottomLeft} className="block h-full w-full" />
             </div>
-            <div className="aspect-[1/1] min-h-0 w-full md:aspect-[5/4]">
-              {rightBottom && <CategoryImage category={rightBottom} className="block h-full w-full" />}
+          )}
+          <div className="min-h-0 col-start-3 row-start-1" aria-hidden />
+          {middleBottomRight && (
+            <div className="min-h-0 col-start-3 row-start-2">
+              <CategoryImage category={middleBottomRight} className="block h-full w-full" />
             </div>
-          </div>
+          )}
+          {tallRight && (
+            <div className="min-h-0 col-start-4 row-start-1 row-span-2">
+              <CategoryImage category={tallRight} className="block h-full w-full min-h-[400px]" />
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -98,10 +98,6 @@ export default function BeautyInMotionSection() {
     el.scrollBy({ left: dir === 'next' ? step : -step, behavior: 'smooth' });
   };
 
-  const handleVideoEnded = useCallback(() => {
-    scroll('next');
-  }, []);
-
   if (loading) return null;
   if (videos.length === 0) return null;
 
@@ -168,8 +164,9 @@ export default function BeautyInMotionSection() {
                         src={src}
                         muted
                         playsInline
+                        loop
                         className="h-full w-full object-cover"
-                        {...(isActive ? { autoPlay: true, onEnded: handleVideoEnded } : {})}
+                        {...(isActive ? { autoPlay: true } : {})}
                       />
                     </div>
                   </div>

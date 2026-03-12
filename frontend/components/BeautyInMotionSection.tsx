@@ -143,7 +143,7 @@ export default function BeautyInMotionSection() {
                         : 'scale-100 shadow-none'
                     }`}
                   >
-                    <div className="aspect-[3/4] w-full">
+                    <div className="aspect-[2/3] w-full">
                       <video
                         ref={(el) => {
                           videoRefsRef.current[i] = el;

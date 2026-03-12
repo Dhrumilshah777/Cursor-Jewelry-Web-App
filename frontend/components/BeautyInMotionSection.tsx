@@ -147,7 +147,7 @@ export default function BeautyInMotionSection() {
                   ref={(el) => {
                     slideRefsRef.current[i] = el;
                   }}
-                  className="relative flex w-[62vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[32%] lg:w-[30%]"
+                  className="relative flex w-[62vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[calc((100%-2rem*3)/4)]"
                 >
                   <div
                     className={`relative w-full overflow-hidden rounded-xl bg-stone-200 transition-all duration-300 ${

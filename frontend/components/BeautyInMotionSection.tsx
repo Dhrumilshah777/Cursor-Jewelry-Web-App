@@ -47,19 +47,6 @@ export default function BeautyInMotionSection() {
     setActiveIndex(closest);
   }, []);
 
-  // Play only the active video; pause others
-  useEffect(() => {
-    const refs = videoRefsRef.current;
-    refs.forEach((video, i) => {
-      if (!video) return;
-      if (i === activeIndex) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-    });
-  }, [activeIndex]);
-
   useEffect(() => {
     if (videos.length === 0) return;
     const el = scrollRef.current;
@@ -165,8 +152,8 @@ export default function BeautyInMotionSection() {
                         muted
                         playsInline
                         loop
+                        autoPlay
                         className="h-full w-full object-cover"
-                        {...(isActive ? { autoPlay: true } : {})}
                       />
                     </div>
                   </div>

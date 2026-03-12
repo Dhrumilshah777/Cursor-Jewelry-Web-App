@@ -62,7 +62,7 @@ export default function PromoCardsSection() {
   return (
     <section className="bg-cream py-8 sm:py-10">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 md:gap-6">
           {displayCards.map((card, index) => (
             <Link
               key={index}

@@ -213,7 +213,7 @@ export default function ShopByCategoryGrid() {
 
         {/* Desktop: 4 cols, 2 rows — tall left | top + bottom-left | empty + bottom-right | tall right */}
         <div
-          className="hidden md:grid gap-2 sm:gap-4 min-h-[420px]"
+          className="hidden md:grid gap-2 sm:gap-4 min-h-[520px]"
           style={{
             gridTemplateColumns: '1fr 1fr 1fr 1fr',
             gridTemplateRows: '1fr 1fr',
@@ -221,7 +221,7 @@ export default function ShopByCategoryGrid() {
         >
           {tallLeft && (
             <div className="min-h-0 col-start-1 row-start-1 row-span-2">
-              <CategoryImage category={tallLeft} className="block h-full w-full min-h-[400px]" />
+              <CategoryImage category={tallLeft} className="block h-full w-full min-h-[500px]" />
             </div>
           )}
           {middleTop && (
@@ -242,7 +242,7 @@ export default function ShopByCategoryGrid() {
           )}
           {tallRight && (
             <div className="min-h-0 col-start-4 row-start-1 row-span-2">
-              <CategoryImage category={tallRight} className="block h-full w-full min-h-[400px]" />
+              <CategoryImage category={tallRight} className="block h-full w-full min-h-[500px]" />
             </div>
           )}
         </div>

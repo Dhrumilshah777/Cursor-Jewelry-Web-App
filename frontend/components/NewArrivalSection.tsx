@@ -134,8 +134,16 @@ export default function NewArrivalSection() {
   return (
     <section className="relative overflow-hidden bg-[#f5f0eb] py-14 sm:py-16 md:py-20">
       <div className="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Carousel (behind the title) */}
-        <div className="relative z-0">
+        {/* NEW — overlaps top of carousel */}
+        <h2
+          className="pointer-events-none relative z-10 text-center font-serif text-6xl font-medium tracking-wide text-[#6b5344] sm:text-7xl md:text-8xl lg:text-[5.5rem] xl:text-[6.5rem] 2xl:text-[7.5rem]"
+          style={{ marginBottom: '-2.75rem' }}
+        >
+          NEW
+        </h2>
+
+        {/* Carousel — sits slightly under NEW and above ARRIVAL */}
+        <div className="relative z-0 w-full py-0">
           <button
             type="button"
             onClick={() => scroll('prev')}
@@ -160,7 +168,7 @@ export default function NewArrivalSection() {
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto py-6 md:gap-6"
+            className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto md:gap-6"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {infiniteProducts.map((product, i) => {
@@ -196,17 +204,12 @@ export default function NewArrivalSection() {
           </div>
         </div>
 
-        {/* Large title: NEW / ARRIVAL — in front of carousel (clicks pass through) */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center">
-          <div className="rounded-lg bg-[#ebe4dc]/90 px-8 py-2 md:px-12">
-            <h2 className="font-serif text-5xl font-medium tracking-wide text-[#6b5344] sm:text-6xl md:text-7xl lg:text-8xl">
-              NEW
-            </h2>
-          </div>
-          <h2 className="mt-2 font-serif text-5xl font-medium tracking-wide text-[#6b5344] sm:text-6xl md:text-7xl lg:text-8xl">
-            ARRIVAL
-          </h2>
-        </div>
+        {/* ARRIVAL — overlaps bottom of carousel */}
+        <h2
+          className="pointer-events-none relative z-10 -mt-14 text-center font-serif text-6xl font-medium tracking-wide text-[#6b5344] sm:text-7xl md:text-8xl lg:text-[5.5rem] xl:text-[6.5rem] 2xl:text-[7.5rem]"
+        >
+          ARRIVAL
+        </h2>
       </div>
     </section>
   );

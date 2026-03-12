@@ -285,3 +285,38 @@ exports.updateHomePageImage = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+const defaultPromoCards = [
+  { title: 'Elsa Paretty Jewelry', subtitle: 'Lorem ipsum estibulum blandi', ctaText: 'Shop now', link: '/products', image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343a?w=800', backgroundColor: '#b87333', centered: false },
+  { title: 'Euphoria', subtitle: '', ctaText: 'Shop more', link: '/products', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800', backgroundColor: '#f5f0e8', centered: true },
+];
+
+exports.getPromoCards = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const cards = config.promoCards && config.promoCards.length >= 2 ? config.promoCards.slice(0, 2) : defaultPromoCards;
+    res.json(cards);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updatePromoCards = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const raw = Array.isArray(req.body) ? req.body : [];
+    config.promoCards = raw.slice(0, 2).map((c, i) => ({
+      title: String(c.title || '').trim() || (defaultPromoCards[i] && defaultPromoCards[i].title) || '',
+      subtitle: String(c.subtitle || '').trim(),
+      ctaText: String(c.ctaText || '').trim() || (defaultPromoCards[i] && defaultPromoCards[i].ctaText) || 'Shop now',
+      link: String(c.link || '').trim() || (defaultPromoCards[i] && defaultPromoCards[i].link) || '/products',
+      image: String(c.image || '').trim(),
+      backgroundColor: String(c.backgroundColor || '').trim() || (defaultPromoCards[i] && defaultPromoCards[i].backgroundColor) || '',
+      centered: Boolean(c.centered),
+    }));
+    await config.save();
+    res.json(config.promoCards);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

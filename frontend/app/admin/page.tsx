@@ -19,6 +19,7 @@ const cards = [
   { href: '/admin/hero', title: 'Hero Sliders', desc: 'Manage hero slides (images and optional video only).' },
   { href: '/admin/category-cards', title: 'Category Cards', desc: 'Edit the two featured cards (images, titles, descriptions, links) below the hero.' },
   { href: '/admin/best-selling', title: 'Best Selling Jewelery', desc: 'Choose and order products for the Best Selling Jewelery carousel on the home page.' },
+  { href: '/admin/promo-cards', title: 'Promo Cards', desc: 'Edit the two cards below Best Sellers (titles, images, links, colors). Always side-by-side on all devices.' },
   { href: '/admin/shop-by-style', title: 'Shop by Style', desc: 'Manage the Shop by Style carousel (images and labels) on the home page.' },
   { href: '/admin/home-page-image', title: 'Home Page Image', desc: 'Set the full-width image for the image-only section on the home page.' },
   { href: '/admin/video', title: 'Home Page Video', desc: 'Set the full-width video that appears on the home page.' },

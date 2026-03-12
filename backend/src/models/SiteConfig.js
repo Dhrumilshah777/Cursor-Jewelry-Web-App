@@ -38,6 +38,15 @@ const siteConfigSchema = new mongoose.Schema(
       order: { type: Number, default: 0 },
     }],
     homePageImage: { type: String, default: '' },
+    promoCards: [{
+      title: { type: String, default: '' },
+      subtitle: { type: String, default: '' },
+      ctaText: { type: String, default: 'Shop now' },
+      link: { type: String, default: '/products' },
+      image: { type: String, default: '' },
+      backgroundColor: { type: String, default: '' },
+      centered: { type: Boolean, default: false },
+    }],
   },
   { timestamps: true }
 );

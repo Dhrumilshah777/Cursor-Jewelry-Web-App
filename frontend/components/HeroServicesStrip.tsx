@@ -59,26 +59,10 @@ function IconCheckCircle() {
 }
 
 const SERVICES = [
-  {
-    icon: IconHeart,
-    title: 'Carefully delivered within 1-3 days',
-    detail: 'and packaged with love.',
-  },
-  {
-    icon: IconPaperPlane,
-    title: 'Shipped FREE and with love',
-    detail: 'on all orders within USA*',
-  },
-  {
-    icon: IconCard,
-    title: 'Buy now, pay later',
-    detail: 'with PayPal',
-  },
-  {
-    icon: IconCheckCircle,
-    title: 'We would love to help you',
-    detail: 'info@blure.template',
-  },
+  { icon: IconHeart, title: 'Carefully delivered within 1-3 days' },
+  { icon: IconPaperPlane, title: 'Shipped FREE and with love' },
+  { icon: IconCard, title: 'Buy now, pay later' },
+  { icon: IconCheckCircle, title: 'We would love to help you' },
 ] as const;
 
 export default function HeroServicesStrip() {
@@ -89,7 +73,7 @@ export default function HeroServicesStrip() {
           Our Commitment to Excellence
         </h2>
         <div className="grid grid-cols-2 gap-6 gap-y-8 sm:gap-8 lg:grid-cols-4">
-          {SERVICES.map(({ icon: Icon, title, detail }, index) => (
+          {SERVICES.map(({ icon: Icon, title }, index) => (
             <div
               key={index}
               className="group flex flex-col items-center text-center"
@@ -99,9 +83,6 @@ export default function HeroServicesStrip() {
               </div>
               <p className="font-sans text-sm font-semibold text-stone-800 sm:text-base">
                 {title}
-              </p>
-              <p className="mt-1 font-sans text-sm text-stone-500">
-                {detail}
               </p>
             </div>
           ))}

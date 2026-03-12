@@ -33,7 +33,7 @@ const MOCK_PRODUCTS: Product[] = [
 
 function ProductCard({ product }: { product: Product }) {
   return (
-    <li className="group">
+    <div className="group">
       <Link href={`/products/${product._id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-stone-100">
           <img
@@ -49,7 +49,7 @@ function ProductCard({ product }: { product: Product }) {
           <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
         </div>
       </Link>
-    </li>
+    </div>
   );
 }
 

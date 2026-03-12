@@ -70,6 +70,12 @@ export default function PromoCardsSection() {
               className="group relative flex min-h-[200px] flex-col overflow-hidden rounded-lg p-4 sm:min-h-[320px] sm:rounded-xl sm:p-6 md:min-h-[380px] md:p-8"
               style={{ backgroundColor: card.backgroundColor }}
             >
+              {card.image && (
+                <div
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url(${card.image})` }}
+                />
+              )}
               {card.centered ? (
                 <>
                   <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">

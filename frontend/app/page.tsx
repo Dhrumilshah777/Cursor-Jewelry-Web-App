@@ -4,6 +4,7 @@ import HeroSlider from '@/components/HeroSlider';
 import ShopByCategoryGrid from '@/components/ShopByCategoryGrid';
 import ShopByStyleCarousel from '@/components/ShopByStyleCarousel';
 import BestSellingCarousel from '@/components/BestSellingCarousel';
+import PromoCardsSection from '@/components/PromoCardsSection';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import HomePageImageSection from '@/components/HomePageImageSection';
@@ -27,6 +28,8 @@ export default function Home() {
       <BeautyInMotionSection />
 
       <BestSellingCarousel />
+
+      <PromoCardsSection />
 
       <HeroServicesStrip />
 

@@ -21,6 +21,8 @@ const productSchema = new mongoose.Schema(
     description: { type: String, default: '' },
     ringSize: { type: String, default: '' },
     sku: { type: String, default: '' },
+    // Optional homepage placement tags (e.g. latestBeauty, bestSelling)
+    homeSections: { type: [String], default: [] },
   },
   { timestamps: true }
 );

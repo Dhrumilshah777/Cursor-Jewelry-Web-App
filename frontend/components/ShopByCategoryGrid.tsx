@@ -81,6 +81,17 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
 
 const ROTATE_INTERVAL_MS = 5000;
 
+/** Placeholder when a category has no image or image fails */
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800';
+
+/** Placeholder category to fill empty slots in the 5-cell grid */
+const PLACEHOLDER_CATEGORY: Category = {
+  id: 'placeholder',
+  name: 'More coming soon',
+  image: PLACEHOLDER_IMAGE,
+  slug: 'products',
+};
+
 function resolveImageUrl(url: string): string {
   if (!url) return '';
   if (url.startsWith('http')) return url;
@@ -100,7 +111,8 @@ function CategoryImage({
   warmOverlay?: boolean;
 }) {
   const [error, setError] = useState(false);
-  const images = [resolveImageUrl(category.image)];
+  const primary = resolveImageUrl(category.image) || PLACEHOLDER_IMAGE;
+  const images = [primary];
   if (category.image2) images.push(resolveImageUrl(category.image2));
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -116,12 +128,13 @@ function CategoryImage({
     setError(false);
   }, [currentIndex]);
 
+  const href = category.id.startsWith('placeholder') ? '/products' : `/products?category=${category.slug}`;
   return (
-    <Link href={`/products?category=${category.slug}`} className={className}>
+    <Link href={href} className={className}>
       <div
         className={`relative h-full w-full overflow-hidden ${rounded ? 'rounded-2xl' : ''}`}
       >
-        {!error && images[0] ? (
+        {!error ? (
           <>
             {images.map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element
@@ -137,9 +150,11 @@ function CategoryImage({
             ))}
           </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center rounded-2xl bg-stone-200 text-stone-500">
-            <span className="text-sm font-medium uppercase">{category.name}</span>
-          </div>
+          <img
+            src={PLACEHOLDER_IMAGE}
+            alt={category.name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
         )}
         <div
           className={`pointer-events-none absolute inset-0 z-10 ${
@@ -182,12 +197,18 @@ export default function ShopByCategoryGrid() {
 
   if (categories.length === 0) return null;
 
+  // Pad to 5 so the desktop grid never has an empty slot
+  const padded = [...categories];
+  while (padded.length < 5) {
+    padded.push({ ...PLACEHOLDER_CATEGORY, id: `placeholder-${padded.length}` });
+  }
+
   // PC layout: tall left | top + bottom-left | empty + bottom-right | tall right (5 slots)
-  const tallLeft = categories[0];
-  const middleTop = categories[1];
-  const middleBottomLeft = categories[2];
-  const middleBottomRight = categories[3];
-  const tallRight = categories[4];
+  const tallLeft = padded[0];
+  const middleTop = padded[1];
+  const middleBottomLeft = padded[2];
+  const middleBottomRight = padded[3];
+  const tallRight = padded[4];
 
   return (
     <section className="bg-cream py-10 sm:py-12">

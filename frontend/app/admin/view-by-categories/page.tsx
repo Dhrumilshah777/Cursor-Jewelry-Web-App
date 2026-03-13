@@ -40,13 +40,9 @@ export default function AdminViewByCategoriesPage() {
   const addCategory = () => {
     const name = newName.trim() || 'Category';
     const image = newImage.trim();
-    if (!image) {
-      setError('Image URL or upload is required.');
-      return;
-    }
     setCategories((prev) => [
       ...prev,
-      { name, image, slug: slugFromName(name) },
+      { name, image: image || '', slug: slugFromName(name) },
     ]);
     setNewName('');
     setNewImage('');
@@ -142,9 +138,10 @@ export default function AdminViewByCategoriesPage() {
             <li key={cat._id || i} className="flex flex-col gap-3 rounded border border-stone-200 p-4 sm:flex-row sm:items-center sm:gap-4">
               <div className="h-20 w-28 flex-shrink-0 overflow-hidden rounded bg-stone-100">
                 <img
-                  src={cat.image.startsWith('http') ? cat.image : assetUrl(cat.image)}
+                  src={cat.image?.trim() ? (cat.image.startsWith('http') ? cat.image : assetUrl(cat.image)) : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400'}
                   alt={cat.name}
                   className="h-full w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400'; }}
                 />
               </div>
               <div className="min-w-0 flex-1 space-y-2">

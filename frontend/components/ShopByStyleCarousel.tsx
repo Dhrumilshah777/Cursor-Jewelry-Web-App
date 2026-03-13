@@ -151,7 +151,7 @@ export default function ShopByStyleCarousel() {
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto py-2"
+            className="scrollbar-hide flex snap-x snap-mandatory gap-4 md:gap-8 overflow-x-auto py-2"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {infiniteSlides.map((slide, i) => {
@@ -162,7 +162,7 @@ export default function ShopByStyleCarousel() {
                   ref={(el) => {
                     slideRefsRef.current[i] = el;
                   }}
-                  className="relative flex w-[62vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[32%] lg:w-[30%]"
+                  className="relative flex w-[62vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[calc((100%-2rem*3)/4)]"
                 >
                   <Link href={slide.link || '/products'} className="block w-full">
                     <div
@@ -172,7 +172,7 @@ export default function ShopByStyleCarousel() {
                           : 'scale-100 shadow-none'
                       }`}
                     >
-                      <div className="aspect-[3/4] w-full">
+                      <div className="aspect-[2/3] w-full">
                         <img
                           src={resolveImageUrl(slide.image)}
                           alt={slide.label}

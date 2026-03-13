@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart } from '@/lib/api';
+import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart, getCart } from '@/lib/api';
 
 type PriceBreakup = {
   goldValue: number;
@@ -89,6 +89,7 @@ export default function ProductDetailPage() {
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
   const [accordion, setAccordion] = useState({ ringDetails: true, delivery: false, care: false });
+  const [alreadyInCart, setAlreadyInCart] = useState(false);
 
   useEffect(() => {
     if (!product?.category) return;
@@ -114,6 +115,19 @@ export default function ProductDetailPage() {
     const priceStr = typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : (product.price || '');
     addToRecentlyViewed({ id: product._id, name: product.name, image: product.image, price: priceStr });
     setRecentlyViewed(getRecentlyViewed().filter((item) => item.id !== product._id));
+  }, [product?._id]);
+
+  useEffect(() => {
+    if (!product?._id) return;
+    const checkCart = () => {
+      const list = getCart();
+      setAlreadyInCart(list.some((item) => item.id === product._id));
+    };
+    checkCart();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('cart-updated', checkCart);
+      return () => window.removeEventListener('cart-updated', checkCart);
+    }
   }, [product?._id]);
 
   useEffect(() => {
@@ -467,15 +481,22 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() => {
+                  if (alreadyInCart) return;
                   for (let i = 0; i < quantity; i++) {
                     addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
                   }
                   setAddedToCart(true);
+                  setAlreadyInCart(true);
                   setTimeout(() => setAddedToCart(false), 2500);
                 }}
-                className="w-full bg-[#1e3a5f] py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#152a45]"
+                disabled={alreadyInCart}
+                className={`w-full py-3 font-sans text-sm font-semibold uppercase tracking-wide transition-colors ${
+                  alreadyInCart
+                    ? 'cursor-not-allowed bg-stone-300 text-stone-600'
+                    : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
+                }`}
               >
-                Add to cart
+                {alreadyInCart ? 'Already in cart' : 'Add to cart'}
               </button>
               <Link
                 href="/products"
@@ -488,7 +509,7 @@ export default function ProductDetailPage() {
             {/* Pincode check — below Add to cart */}
             <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
               <p className="text-xs font-medium text-stone-600">Check delivery</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-3">
                 <input
                   type="text"
                   inputMode="numeric"
@@ -496,14 +517,14 @@ export default function ProductDetailPage() {
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Pincode"
-                  className="w-28 border border-stone-300 px-2 py-1.5 text-sm"
+                  className="w-40 border border-stone-300 px-3 py-2 text-sm"
                   onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
                 />
                 <button
                   type="button"
                   onClick={checkDelivery}
                   disabled={deliveryChecking}
-                  className="rounded bg-charcoal px-3 py-1.5 text-xs text-white disabled:opacity-60"
+                  className="rounded bg-charcoal px-5 py-2 text-sm text-white disabled:opacity-60"
                 >
                   {deliveryChecking ? 'Checking…' : 'Check'}
                 </button>
@@ -722,18 +743,25 @@ export default function ProductDetailPage() {
             <button
               type="button"
               onClick={() => {
+                if (alreadyInCart) return;
                 for (let i = 0; i < quantity; i++) {
                   addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
                 }
                 setAddedToCart(true);
+                setAlreadyInCart(true);
                 setTimeout(() => setAddedToCart(false), 2500);
               }}
-              className="flex w-full items-center justify-center gap-2 bg-[#1e3a5f] px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#152a45]"
+              disabled={alreadyInCart}
+              className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                alreadyInCart
+                  ? 'cursor-not-allowed bg-stone-300 text-stone-600'
+                  : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
+              }`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
               </svg>
-              {addedToCart ? 'Added to cart' : 'Add to cart'}
+              {alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
             </button>
           </div>
         </div>

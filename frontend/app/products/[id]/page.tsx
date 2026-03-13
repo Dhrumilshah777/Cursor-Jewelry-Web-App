@@ -738,32 +738,30 @@ export default function ProductDetailPage() {
           </div>
         )}
         {/* Sticky Add to cart bar — 768px and below only */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white p-3 md:hidden">
-          <div className="mx-auto max-w-5xl px-4">
-            <button
-              type="button"
-              onClick={() => {
-                if (alreadyInCart) return;
-                for (let i = 0; i < quantity; i++) {
-                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
-                }
-                setAddedToCart(true);
-                setAlreadyInCart(true);
-                setTimeout(() => setAddedToCart(false), 2500);
-              }}
-              disabled={alreadyInCart}
-              className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                alreadyInCart
-                  ? 'cursor-not-allowed bg-stone-300 text-stone-600'
-                  : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
-              }`}
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-              </svg>
-              {alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
-            </button>
-          </div>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white md:hidden">
+          <button
+            type="button"
+            onClick={() => {
+              if (alreadyInCart) return;
+              for (let i = 0; i < quantity; i++) {
+                addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
+              }
+              setAddedToCart(true);
+              setAlreadyInCart(true);
+              setTimeout(() => setAddedToCart(false), 2500);
+            }}
+            disabled={alreadyInCart}
+            className={`flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+              alreadyInCart
+                ? 'cursor-not-allowed bg-stone-300 text-stone-600'
+                : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+            </svg>
+            {alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
+          </button>
         </div>
 
         {addedToCart && (

@@ -312,46 +312,67 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
-          {/* Left: image grid (2x3 style) */}
+          {/* Left: main image + thumbnail strip */}
           <div className="min-w-0">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-              {(allImages.length >= 6 ? allImages.slice(0, 6) : [...allImages, ...Array(6 - allImages.length).fill(allImages[0] || '')]).slice(0, 6).map((raw, i) => {
-                const src = raw ? resolveSrc(raw) : '';
-                const isSelected = selectedImageIndex === i;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => { setSelectedImageIndex(i); setImageError(false); }}
-                    className={`relative aspect-square w-full overflow-hidden rounded-lg bg-stone-100 ring-2 transition-all ${
-                      isSelected ? 'ring-charcoal ring-offset-2' : 'ring-transparent hover:ring-stone-300'
-                    }`}
-                  >
-                    {src && !imageError ? (
-                      <img src={src} alt={`${product.name} view ${i + 1}`} className="h-full w-full object-cover" onError={() => setImageError(true)} />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
-                        <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Single main image on mobile when tapping from grid could stay; for desktop show selected large */}
-            <div className="mt-4 aspect-square w-full overflow-hidden rounded-xl bg-stone-100 sm:hidden">
-              {selectedSrc && !imageError ? (
-                <img src={selectedSrc} alt={product.name} className="h-full w-full object-cover" />
+            <div className="aspect-[4/5] w-full overflow-hidden rounded-xl bg-stone-100">
+              {!imageError && selectedSrc ? (
+                <img
+                  key={selectedImageIndex}
+                  src={selectedSrc}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                  onError={() => setImageError(true)}
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
                   <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
               )}
             </div>
+
+            {allImages.length > 1 && (
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((raw, i) => {
+                  const src = raw ? resolveSrc(raw) : '';
+                  const isSelected = selectedImageIndex === i;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setSelectedImageIndex(i);
+                        setImageError(false);
+                      }}
+                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-colors sm:h-24 sm:w-24 ${
+                        isSelected ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
+                      }`}
+                    >
+                      {src ? (
+                        <img src={src} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
+                          <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Right: product details (match reference layout) */}

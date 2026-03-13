@@ -479,7 +479,7 @@ export default function ProductDetailPage() {
               </button>
               <Link
                 href="/products"
-                className="flex w-full items-center justify-center border border-stone-400 bg-stone-600 py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-stone-700"
+                className="flex w-full items-center justify-center border border-black bg-black py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-stone-900"
               >
                 Shop now
               </Link>
@@ -593,7 +593,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Full-width: Product Details (dynamic), then Price breakup (table), then recommendations */}
-        <div className="mt-12 border-t border-stone-200 pt-8">
+        <div className="mt-6 border-t border-stone-200 pt-6">
           <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product Details</h3>
           <p className="mt-4 text-sm text-stone-700">
             <span className="font-bold italic text-charcoal">{product.name}</span>

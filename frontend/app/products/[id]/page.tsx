@@ -85,6 +85,10 @@ export default function ProductDetailPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
+  const [ringSizeInput, setRingSizeInput] = useState('');
+  const [accordion, setAccordion] = useState({ ringDetails: true, delivery: false, care: false });
 
   useEffect(() => {
     if (!product?.category) return;
@@ -116,6 +120,11 @@ export default function ProductDetailPage() {
     setImageError(false);
     setSelectedImageIndex(0);
   }, [id]);
+
+  useEffect(() => {
+    if (product?.ringSize) setRingSizeInput(product.ringSize);
+    else setRingSizeInput('');
+  }, [product?.ringSize]);
 
   useEffect(() => {
     if (!id) {
@@ -286,28 +295,55 @@ export default function ProductDetailPage() {
     }
   };
 
+  const displayPrice = typeof product.calculatedPrice === 'number' ? product.calculatedPrice : parseFloat(product.price) || 0;
+  const compareAtPrice = (product as { compareAtPrice?: number }).compareAtPrice;
+  const colorsList = product.colors && product.colors.length > 0 ? product.colors : ['Yellow Gold', 'Rose Gold', 'Silver'];
+  const toggleAccordion = (key: 'ringDetails' | 'delivery' | 'care') => {
+    setAccordion((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   return (
-    <main className="min-h-[50vh] px-4 pr-6 py-8 pb-24 sm:py-12 md:px-4 md:pb-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-[50vh] px-4 py-6 pb-24 sm:py-8 md:px-6 lg:px-8 md:pb-12">
+      <div className="mx-auto max-w-6xl">
         <nav className="mb-6 text-sm text-stone-500">
-          <Link href="/" className="hover:text-charcoal">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/products" className="hover:text-charcoal">Products</Link>
-          <span className="mx-2">/</span>
-          <span className="text-charcoal">{product.name}</span>
+          <Link href="/" className="hover:text-charcoal">HOME</Link>
+          <span className="mx-2">&gt;</span>
+          <span className="font-medium uppercase tracking-wide text-charcoal">{product.name}</span>
         </nav>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="min-w-0 md:overflow-hidden">
-            <div className="aspect-square w-full overflow-hidden bg-stone-100">
-              {!imageError && selectedSrc ? (
-                <img
-                  key={selectedImageIndex}
-                  src={selectedSrc}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                  onError={() => setImageError(true)}
-                />
+        <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
+          {/* Left: image grid (2x3 style) */}
+          <div className="min-w-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              {(allImages.length >= 6 ? allImages.slice(0, 6) : [...allImages, ...Array(6 - allImages.length).fill(allImages[0] || '')]).slice(0, 6).map((raw, i) => {
+                const src = raw ? resolveSrc(raw) : '';
+                const isSelected = selectedImageIndex === i;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { setSelectedImageIndex(i); setImageError(false); }}
+                    className={`relative aspect-square w-full overflow-hidden rounded-lg bg-stone-100 ring-2 transition-all ${
+                      isSelected ? 'ring-charcoal ring-offset-2' : 'ring-transparent hover:ring-stone-300'
+                    }`}
+                  >
+                    {src && !imageError ? (
+                      <img src={src} alt={`${product.name} view ${i + 1}`} className="h-full w-full object-cover" onError={() => setImageError(true)} />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
+                        <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Single main image on mobile when tapping from grid could stay; for desktop show selected large */}
+            <div className="mt-4 aspect-square w-full overflow-hidden rounded-xl bg-stone-100 sm:hidden">
+              {selectedSrc && !imageError ? (
+                <img src={selectedSrc} alt={product.name} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
                   <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,325 +351,264 @@ export default function ProductDetailPage() {
                   </svg>
                 </div>
               )}
-            </div>
-            {allImages.length > 1 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {allImages.map((raw, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => { setSelectedImageIndex(i); setImageError(false); }}
-                    className={`h-14 w-14 shrink-0 overflow-hidden border-2 transition-colors ${
-                      selectedImageIndex === i ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
-                    }`}
-                  >
-                    <img src={resolveSrc(raw)} alt="" className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+          </div>
 
-            {/* Desktop only: share + heart below image (left column, always clickable) */}
-            <div className="mt-4 hidden items-center gap-2 md:flex">
-              <button
-                type="button"
-                onClick={handleShare}
-                className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
-                aria-label="Share product"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
+          {/* Right: product details (match reference layout) */}
+          <div className="relative z-30 flex flex-col lg:pl-2">
+            <div className="flex items-center gap-2">
+              <div className="flex text-gold" aria-label="4.5 out of 5 stars">
+                {[1, 2, 3, 4].map((i) => (
+                  <svg key={i} className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ))}
+                <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gold" fill="url(#half-star-product)" viewBox="0 0 20 20">
+                  <defs><linearGradient id="half-star-product"><stop offset="50%" stopColor="currentColor" /><stop offset="50%" stopColor="#e5e7eb" /></linearGradient></defs>
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
+              </div>
+              <span className="text-sm text-stone-600">95 REVIEWS</span>
+              <button type="button" onClick={handleShare} className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-500 hover:bg-stone-50" aria-label="Share">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25" /></svg>
               </button>
               <button
                 type="button"
                 onClick={toggleWishlist}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center border transition-colors ${
-                  wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
-                }`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border ${wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 text-stone-500 hover:bg-stone-50'}`}
                 aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
+                <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
               </button>
             </div>
 
-            {/* Mobile: details below image (before You may also like) */}
-            <div className="mt-4 block md:hidden">
-              <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
-                SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
-              </p>
-              <div className="mt-4 flex items-center gap-2">
-                <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
-                  {product.name}
-                </h1>
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center border border-stone-300 bg-white text-charcoal transition-colors hover:bg-stone-50"
-                  aria-label="Share product"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25m0 0l-2.25 2.25" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleWishlist}
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center border transition-colors ${
-                    wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 bg-white text-charcoal hover:bg-stone-50'
-                  }`}
-                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                >
-                  <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
-                </button>
-              </div>
-              <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
-                ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
-              </p>
-              {product.colors && product.colors.length > 0 && (
-                <p className="mt-3 text-sm text-stone-600">
-                  <span className="font-medium">Color: </span>
-                  {product.colors.join(', ')}
-                </p>
+            <h1 className="mt-4 font-sans text-2xl font-bold text-charcoal sm:text-3xl">
+              {product.name}
+            </h1>
+            <p className="mt-1 text-stone-600">
+              {product.description?.split('\n')[0] || `This ${product.name} shines with elegant craftsmanship.`}
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-baseline gap-2">
+              <span className="font-sans text-2xl font-bold text-charcoal">₹ {displayPrice.toFixed(2)}</span>
+              {compareAtPrice != null && compareAtPrice > displayPrice && (
+                <span className="text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</span>
               )}
-              <p className="mt-1 text-sm text-stone-600">
-                <span className="font-medium">Metal Purity: </span>
-                {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
-              </p>
-              {product.ringSize && (
-                <p className="mt-1 text-sm text-stone-600">
-                  <span className="font-medium">Ring Size: </span>
-                  {product.ringSize}
-                </p>
-              )}
-              <div className="mt-6 hidden flex-wrap items-center gap-3 md:flex">
-                <button
-                  type="button"
-                  onClick={() => {
-                    addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
-                    setAddedToCart(true);
-                    setTimeout(() => setAddedToCart(false), 2500);
-                  }}
-                  className="flex items-center gap-2 border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                  </svg>
-                  {addedToCart ? 'Added to cart' : 'Add to cart'}
-                </button>
-              </div>
-              <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
-                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
-                <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="Pincode"
-                    className="w-32 border border-stone-300 px-3 py-2 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
-                  />
-                  <button
-                    type="button"
-                    onClick={checkDelivery}
-                    disabled={deliveryChecking}
-                    className="border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
-                  >
-                    {deliveryChecking ? 'Checking…' : 'Check Delivery'}
-                  </button>
-                </div>
-                {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
-                {deliveryCheck && !deliveryError && (
-                  <p className={`mt-2 text-sm font-medium ${deliveryCheck.fallback ? 'text-stone-700' : deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'}`}>
-                    {deliveryCheck.message}
-                  </p>
-                )}
+            </div>
+            <p className="mt-1 text-xs text-stone-500">(MRP inclusive of all taxes)</p>
+
+            <div className="mt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Color: {colorsList[selectedColorIndex] ?? colorsList[0]}</p>
+              <div className="mt-2 flex gap-2">
+                {colorsList.map((c, i) => {
+                  const isSelected = selectedColorIndex === i;
+                  const colorMap: Record<string, string> = { 'yellow gold': '#D4AF37', 'rose gold': '#B76E79', 'silver': '#C0C0C0', 'gold': '#D4AF37', 'platinum': '#E5E4E2' };
+                  const bg = colorMap[c.toLowerCase()] || '#D4AF37';
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSelectedColorIndex(i)}
+                      className={`h-10 w-10 flex-shrink-0 rounded border-2 transition-all ${isSelected ? 'border-charcoal ring-2 ring-charcoal/20' : 'border-stone-200 hover:border-stone-400'}`}
+                      style={{ backgroundColor: bg }}
+                      aria-label={`Color ${c}`}
+                    />
+                  );
+                })}
               </div>
             </div>
 
-            {youMayAlsoLike.length > 0 && (
-              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
-                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">You may also like</h3>
-                <div className="mt-3 flex gap-4 overflow-x-auto pb-1">
-                  {youMayAlsoLike.map((p) => {
-                    const imgSrc = p.image.startsWith('http') ? p.image : p.image.startsWith('/') ? (p.image.startsWith('/uploads/') ? assetUrl(p.image) : p.image) : assetUrl(p.image.startsWith('/') ? p.image : `/${p.image}`);
-                    const priceStr = typeof p.calculatedPrice === 'number' ? p.calculatedPrice.toFixed(2) : p.price;
-                    return (
-                      <Link
-                        key={p._id}
-                        href={`/products/${p._id}`}
-                        className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52"
-                      >
-                        <div className="aspect-square w-full overflow-hidden bg-stone-100">
-                          <img src={imgSrc} alt={p.name} className="h-full w-full object-cover" />
-                        </div>
-                        <div className="p-3">
-                          <p className="font-sans text-sm font-semibold text-charcoal">₹{priceStr}</p>
-                          <p className="mt-0.5 line-clamp-2 text-xs text-stone-600">{p.name}</p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
+            <div className="mt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Ring Size</p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={ringSizeInput}
+                  onChange={(e) => setRingSizeInput(e.target.value)}
+                  placeholder="e.g. 3.35"
+                  className="w-24 border border-stone-300 px-3 py-2 text-sm"
+                />
+                <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">Ring size guide</Link>
               </div>
-            )}
-
-            {recentlyViewed.length > 0 && (
-              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
-                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Recently viewed</h3>
-                <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
-                  {recentlyViewed.map((item) => {
-                    const imgSrc = item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? (item.image.startsWith('/uploads/') ? assetUrl(item.image) : item.image) : assetUrl(`/${item.image}`);
-                    return (
-                      <Link
-                        key={item.id}
-                        href={`/products/${item.id}`}
-                        className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white"
-                      >
-                        <div className="aspect-square w-full overflow-hidden bg-stone-100">
-                          <img src={imgSrc} alt={item.name} className="h-full w-full object-cover" />
-                        </div>
-                        <div className="p-2">
-                          <p className="truncate text-xs font-medium text-charcoal">{item.name}</p>
-                          <p className="text-xs text-stone-600">₹{item.price}</p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {product.priceBreakup && (
-              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
-                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
-                <ul className="mt-3 space-y-2 text-sm text-stone-700">
-                  {product.priceBreakup.netWeight != null && (
-                    <li className="flex justify-between">
-                      <span>Net weight</span>
-                      <span className="font-medium">{Number(product.priceBreakup.netWeight)} g</span>
-                    </li>
-                  )}
-                  <li className="flex justify-between">
-                    <span>Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}</span>
-                    <span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Making charge</span>
-                    <span className="font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>GST charge (3%)</span>
-                    <span className="font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</span>
-                  </li>
-                  <li className="flex justify-between border-t border-stone-200 pt-2 mt-2 font-semibold text-charcoal">
-                    <span>Total</span>
-                    <span>₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</span>
-                  </li>
-                </ul>
-              </div>
-            )}
-            {product.description && (
-              <div className="mt-4 border border-stone-200 bg-stone-50 p-4">
-                <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Product details</h3>
-                <p className="mt-2 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="relative z-30 isolate hidden md:block">
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
-              SKU: <span className="font-mono normal-case text-charcoal">{product.sku || product._id || '—'}</span>
-            </p>
-
-            <div className="mt-4 flex items-center gap-2">
-              <h1 className="min-w-0 flex-1 font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal sm:text-3xl">
-                {product.name}
-              </h1>
             </div>
 
-            <p className="mt-4 font-sans text-xl font-semibold text-charcoal">
-              ₹{typeof product.calculatedPrice === 'number' ? product.calculatedPrice.toFixed(2) : product.price}
-            </p>
+            <div className="mt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Select Quantity</p>
+              <div className="mt-2 flex items-center gap-2">
+                <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center border border-stone-300 bg-white text-charcoal hover:bg-stone-50">−</button>
+                <span className="min-w-[2rem] text-center font-medium">{quantity}</span>
+                <button type="button" onClick={() => setQuantity((q) => q + 1)} className="flex h-10 w-10 items-center justify-center border border-stone-300 bg-white text-charcoal hover:bg-stone-50">+</button>
+              </div>
+            </div>
 
-            {product.colors && product.colors.length > 0 && (
-              <p className="mt-3 text-sm text-stone-600">
-                <span className="font-medium">Color: </span>
-                {product.colors.join(', ')}
-              </p>
-            )}
-
-            <p className="mt-1 text-sm text-stone-600">
-              <span className="font-medium">Metal Purity: </span>
-              {product.priceBreakup?.goldPurity || product.goldPurity || product.carat || '—'}
-            </p>
-
-            {product.ringSize && (
-              <p className="mt-1 text-sm text-stone-600">
-                <span className="font-medium">Ring Size: </span>
-                {product.ringSize}
-              </p>
-            )}
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => {
-                  addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
+                  for (let i = 0; i < quantity; i++) {
+                    addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
+                  }
                   setAddedToCart(true);
                   setTimeout(() => setAddedToCart(false), 2500);
                 }}
-                className="flex items-center gap-2 border border-stone-800 bg-charcoal px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+                className="w-full bg-[#1e3a5f] py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#152a45]"
               >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                </svg>
-                {addedToCart ? 'Added to cart' : 'Add to cart'}
+                Add to cart
               </button>
+              <Link
+                href="/products"
+                className="flex w-full items-center justify-center border border-stone-400 bg-stone-600 py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-stone-700"
+              >
+                Shop now
+              </Link>
             </div>
 
-            <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
-              <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Check delivery</h3>
-              <p className="mt-1 text-xs text-stone-500">Enter your pincode to see estimated delivery date.</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Pincode"
-                  className="w-32 border border-stone-300 px-3 py-2 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
-                />
-                <button
-                  type="button"
-                  onClick={checkDelivery}
-                  disabled={deliveryChecking}
-                  className="border border-stone-800 bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
-                >
-                  {deliveryChecking ? 'Checking…' : 'Check Delivery'}
-                </button>
-              </div>
-              {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
-              {deliveryCheck && !deliveryError && (
-                <p className={`mt-2 text-sm font-medium ${
-                  deliveryCheck.fallback ? 'text-stone-700' : deliveryCheck.serviceable ? 'text-green-700' : 'text-amber-700'
-                }`}>
-                  {deliveryCheck.message}
-                </p>
+            {/* Collapsible: Ring Details, Delivery & Returns, Care */}
+            <div className="mt-8 border-t border-stone-200 pt-6">
+              <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('ringDetails')}>
+                <span className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Ring Details</span>
+                <svg className={`h-5 w-5 text-stone-500 transition-transform ${accordion.ringDetails ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {accordion.ringDetails && (
+                <div className="mt-2 space-y-1 border-b border-stone-100 pb-4 text-sm text-stone-700">
+                  <p><span className="font-medium text-stone-600">SKU:</span> {product.sku || product._id || '—'}</p>
+                  <p><span className="font-medium text-stone-600">Width:</span> {product.weight || '—'}</p>
+                  <p><span className="font-medium text-stone-600">Diamond shape:</span> {product.carat || '—'}</p>
+                  <p><span className="font-medium text-stone-600">Material:</span> {product.priceBreakup?.goldPurity || product.goldPurity || product.category || '—'}</p>
+                  <p><span className="font-medium text-stone-600">Style:</span> {product.category || '—'}</p>
+                  <p><span className="font-medium text-stone-600">Profile:</span> Medium</p>
+                </div>
+              )}
+
+              <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('delivery')}>
+                <span className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Delivery & Returns</span>
+                <svg className={`h-5 w-5 text-stone-500 transition-transform ${accordion.delivery ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {accordion.delivery && (
+                <div className="mt-2 space-y-2 border-b border-stone-100 pb-4 text-sm text-stone-600">
+                  <p>Free delivery on orders above ₹ 83,000. Standard delivery in 4–7 business days. Easy returns within 30 days.</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <input type="text" inputMode="numeric" maxLength={6} value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Pincode" className="w-28 border border-stone-300 px-2 py-1.5 text-sm" onKeyDown={(e) => e.key === 'Enter' && checkDelivery()} />
+                    <button type="button" onClick={checkDelivery} disabled={deliveryChecking} className="rounded bg-charcoal px-3 py-1.5 text-xs text-white disabled:opacity-60">{deliveryChecking ? 'Checking…' : 'Check'}</button>
+                  </div>
+                  {deliveryCheck && <p className="text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
+                </div>
+              )}
+
+              <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('care')}>
+                <span className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Care Information</span>
+                <svg className={`h-5 w-5 text-stone-500 transition-transform ${accordion.care ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {accordion.care && (
+                <div className="mt-2 border-b border-stone-100 pb-4 text-sm text-stone-600">
+                  Store in a dry place. Avoid contact with perfumes and chemicals. Clean with a soft cloth. Professional cleaning recommended annually.
+                </div>
               )}
             </div>
 
+            {/* Value propositions */}
+            <div className="mt-8 grid grid-cols-2 gap-4 border-t border-stone-200 pt-6">
+              <div className="flex gap-3">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-charcoal">Flexible payment</p>
+                  <p className="text-xs text-stone-600">Pay with multiple payment options</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-charcoal">Free shipping</p>
+                  <p className="text-xs text-stone-600">On orders above Rs. 83,000.00</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-charcoal">Online support</p>
+                  <p className="text-xs text-stone-600">24 hours a day, 7 days a week</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-charcoal">Lifetime warranty</p>
+                  <p className="text-xs text-stone-600">A lifetime warranty for core</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Full-width: You may also like, Recently viewed, Price breakup, Description */}
+        {youMayAlsoLike.length > 0 && (
+          <div className="mt-12 border-t border-stone-200 pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">You may also like</h3>
+            <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
+              {youMayAlsoLike.map((p) => {
+                const imgSrc = p.image.startsWith('http') ? p.image : p.image.startsWith('/') ? (p.image.startsWith('/uploads/') ? assetUrl(p.image) : p.image) : assetUrl(p.image.startsWith('/') ? p.image : `/${p.image}`);
+                const priceStr = typeof p.calculatedPrice === 'number' ? p.calculatedPrice.toFixed(2) : p.price;
+                return (
+                  <Link key={p._id} href={`/products/${p._id}`} className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52">
+                    <div className="aspect-square w-full overflow-hidden bg-stone-100">
+                      <img src={imgSrc} alt={p.name} className="h-full w-full object-cover" />
+                    </div>
+                    <div className="p-3">
+                      <p className="font-sans text-sm font-semibold text-charcoal">₹{priceStr}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-stone-600">{p.name}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {recentlyViewed.length > 0 && (
+          <div className="mt-8 border-t border-stone-200 pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Recently viewed</h3>
+            <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+              {recentlyViewed.map((item) => {
+                const imgSrc = item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? (item.image.startsWith('/uploads/') ? assetUrl(item.image) : item.image) : assetUrl(`/${item.image}`);
+                return (
+                  <Link key={item.id} href={`/products/${item.id}`} className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white">
+                    <div className="aspect-square w-full overflow-hidden bg-stone-100">
+                      <img src={imgSrc} alt={item.name} className="h-full w-full object-cover" />
+                    </div>
+                    <div className="p-2">
+                      <p className="truncate text-xs font-medium text-charcoal">{item.name}</p>
+                      <p className="text-xs text-stone-600">₹{item.price}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {product.priceBreakup && (
+          <div className="mt-8 border-t border-stone-200 pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
+            <ul className="mt-4 space-y-2 text-sm text-stone-700">
+              {product.priceBreakup.netWeight != null && (
+                <li className="flex justify-between"><span>Net weight</span><span className="font-medium">{Number(product.priceBreakup.netWeight)} g</span></li>
+              )}
+              <li className="flex justify-between"><span>Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}</span><span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span></li>
+              <li className="flex justify-between"><span>Making charge</span><span className="font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</span></li>
+              <li className="flex justify-between"><span>GST charge (3%)</span><span className="font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</span></li>
+              <li className="flex justify-between border-t border-stone-200 pt-2 mt-2 font-semibold text-charcoal"><span>Total</span><span>₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</span></li>
+            </ul>
+          </div>
+        )}
+        {product.description && product.description.split('\n').length > 1 && (
+          <div className="mt-8 border-t border-stone-200 pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product details</h3>
+            <p className="mt-4 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
+          </div>
+        )}
 
         {/* Sticky Add to cart bar — 768px and below only */}
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white p-3 md:hidden">
@@ -641,11 +616,13 @@ export default function ProductDetailPage() {
             <button
               type="button"
               onClick={() => {
-                addToCart({ id: product._id, name: product.name, price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price, image: product.image });
+                for (let i = 0; i < quantity; i++) {
+                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
+                }
                 setAddedToCart(true);
                 setTimeout(() => setAddedToCart(false), 2500);
               }}
-              className="flex w-full items-center justify-center gap-2 border border-stone-800 bg-charcoal px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+              className="flex w-full items-center justify-center gap-2 bg-[#1e3a5f] px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#152a45]"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />

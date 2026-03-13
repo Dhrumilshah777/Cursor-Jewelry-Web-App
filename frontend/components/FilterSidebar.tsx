@@ -60,6 +60,13 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
   const { categories, priceRange, colors } = facets;
   const hasFilters = category || minPriceParam || maxPriceParam || selectedColors.length > 0;
 
+   const [openSections, setOpenSections] = useState({
+     style: true,
+     priceRadio: true,
+     priceSlider: true,
+     colors: true,
+   });
+
   const toggleColor = useCallback(
     (name: string) => {
       const next = selectedColors.includes(name)
@@ -77,6 +84,13 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
     });
     return q;
   };
+
+  const priceBuckets = [
+    { id: 'under-20k', label: 'Under 20,000', min: undefined as number | undefined, max: 20000 },
+    { id: '20-50k', label: '20,000 - 50,000', min: 20000, max: 50000 },
+    { id: '50-100k', label: '50,000 - 1,00,000', min: 50000, max: 100000 },
+    { id: 'above-100k', label: 'Above 1,00,000', min: 100000, max: undefined as number | undefined },
+  ];
 
   return (
     <aside
@@ -100,106 +114,247 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
 
       {categories.length > 0 && (
         <div className="border-b border-stone-100 py-4">
-          <h3 className="mb-2 font-sans text-xs font-semibold uppercase tracking-wider text-stone-600">
-            Category
-          </h3>
-          <ul className="space-y-1">
-            <li>
-              <Link
-                href="/products"
-                className={`block py-1 text-sm ${!category ? 'font-medium text-charcoal' : 'text-stone-600 hover:text-charcoal'}`}
-              >
-                All ({facets.totalProducts ?? totalCount})
-              </Link>
-            </li>
-            {categories.map((cat) => (
-              <li key={cat.slug}>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between text-left"
+            onClick={() =>
+              setOpenSections((s) => ({ ...s, style: !s.style }))
+            }
+          >
+            <h3 className="font-sans text-sm font-semibold text-charcoal">
+              Shop By Style
+            </h3>
+            <span className="text-lg leading-none text-stone-500">
+              {openSections.style ? '−' : '+'}
+            </span>
+          </button>
+
+          {openSections.style && (
+            <ul className="mt-3 space-y-1">
+              <li>
                 <Link
-                  href={`/products${buildQuery(searchParams.toString(), { category: cat.slug })}`}
-                  className={`block py-1 text-sm ${category === cat.slug ? 'font-medium text-charcoal' : 'text-stone-600 hover:text-charcoal'}`}
+                  href="/products"
+                  className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
+                    !category
+                      ? 'bg-cream font-medium text-charcoal'
+                      : 'text-stone-600 hover:bg-stone-50 hover:text-charcoal'
+                  }`}
                 >
-                  {cat.name} ({cat.count})
+                  <span
+                    className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                      !category
+                        ? 'border-[#00324e] bg-[#00324e]'
+                        : 'border-stone-300 bg-white'
+                    }`}
+                  >
+                    {!category && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </span>
+                  <span>All ({facets.totalProducts ?? totalCount})</span>
                 </Link>
               </li>
-            ))}
-          </ul>
+              {categories.map((cat) => {
+                const isActive = category === cat.slug;
+                return (
+                  <li key={cat.slug}>
+                    <Link
+                      href={`/products${buildQuery(searchParams.toString(), { category: cat.slug })}`}
+                      className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
+                        isActive
+                          ? 'bg-cream font-medium text-charcoal'
+                          : 'text-stone-600 hover:bg-stone-50 hover:text-charcoal'
+                      }`}
+                    >
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                          isActive
+                            ? 'border-[#00324e] bg-[#00324e]'
+                            : 'border-stone-300 bg-white'
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        )}
+                      </span>
+                      <span>{cat.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
 
       {priceRange.max > priceRange.min && (
         <div className="border-b border-stone-100 py-4">
-          <h3 className="mb-2 font-sans text-xs font-semibold uppercase tracking-wider text-stone-600">
-            Price range
-          </h3>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={priceRange.min}
-              max={priceRange.max}
-              step="100"
-              placeholder={`Min ${priceRange.min}`}
-              value={minPriceInput}
-              onChange={(e) => setMinPriceInput(e.target.value)}
-              className="w-24 rounded border border-stone-300 px-2 py-1.5 text-sm"
-            />
-            <span className="text-stone-400">–</span>
-            <input
-              type="number"
-              min={priceRange.min}
-              max={priceRange.max}
-              step="100"
-              placeholder={`Max ${priceRange.max}`}
-              value={maxPriceInput}
-              onChange={(e) => setMaxPriceInput(e.target.value)}
-              className="w-24 rounded border border-stone-300 px-2 py-1.5 text-sm"
-            />
-          </div>
-          <Link
-            href={applyPriceRange()}
-            className="mt-2 inline-block text-xs font-medium text-charcoal underline hover:no-underline"
+          {/* Shop By price – preset ranges */}
+          <button
+            type="button"
+            className="flex w-full items-center justify-between text-left"
+            onClick={() =>
+              setOpenSections((s) => ({ ...s, priceRadio: !s.priceRadio }))
+            }
           >
-            Apply
-          </Link>
+            <h3 className="font-sans text-sm font-semibold text-charcoal">
+              Shop By price
+            </h3>
+            <span className="text-lg leading-none text-stone-500">
+              {openSections.priceRadio ? '−' : '+'}
+            </span>
+          </button>
+
+          {openSections.priceRadio && (
+            <ul className="mt-3 space-y-1">
+              {priceBuckets.map((bucket) => {
+                const min = bucket.min ?? '';
+                const max = bucket.max ?? '';
+                const isSelected =
+                  (minPriceParam || '') === (min ? String(min) : '') &&
+                  (maxPriceParam || '') === (max ? String(max) : '');
+                const href = `/products${buildQuery(searchParams.toString(), {
+                  minPrice: min ? String(min) : '',
+                  maxPrice: max ? String(max) : '',
+                })}`;
+                return (
+                  <li key={bucket.id}>
+                    <Link
+                      href={href}
+                      className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
+                        isSelected
+                          ? 'bg-cream font-medium text-charcoal'
+                          : 'text-stone-600 hover:bg-stone-50 hover:text-charcoal'
+                      }`}
+                    >
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                          isSelected
+                            ? 'border-[#00324e] bg-[#00324e]'
+                            : 'border-stone-300 bg-white'
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        )}
+                      </span>
+                      <span>{bucket.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {/* Filter By Price – slider */}
+          <div className="mt-5 border-t border-stone-100 pt-4">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between text-left"
+              onClick={() =>
+                setOpenSections((s) => ({
+                  ...s,
+                  priceSlider: !s.priceSlider,
+                }))
+              }
+            >
+              <h3 className="font-sans text-sm font-semibold text-charcoal">
+                Filter By Price
+              </h3>
+              <span className="text-lg leading-none text-stone-500">
+                {openSections.priceSlider ? '−' : '+'}
+              </span>
+            </button>
+
+            {openSections.priceSlider && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={priceRange.min}
+                    max={priceRange.max}
+                    value={minPriceInput || priceRange.min}
+                    onChange={(e) => setMinPriceInput(e.target.value)}
+                    className="h-1 w-full cursor-pointer appearance-none rounded-full bg-stone-200"
+                  />
+                  <input
+                    type="range"
+                    min={priceRange.min}
+                    max={priceRange.max}
+                    value={maxPriceInput || priceRange.max}
+                    onChange={(e) => setMaxPriceInput(e.target.value)}
+                    className="h-1 w-full cursor-pointer appearance-none rounded-full bg-stone-200"
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-charcoal">
+                  <span>₹ {minPriceInput || priceRange.min}</span>
+                  <span>₹ {maxPriceInput || priceRange.max}</span>
+                </div>
+                <Link
+                  href={applyPriceRange() || '/products'}
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#00324e] px-4 py-2 text-sm font-medium text-white hover:bg-[#00263b]"
+                >
+                  Filter
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {colors.length > 0 && (
         <div className="py-4">
-          <h3 className="mb-2 font-sans text-xs font-semibold uppercase tracking-wider text-stone-600">
-            Color
-          </h3>
-          <ul className="space-y-1">
-            {colors.map((c) => {
-              const isSelected = selectedColors.includes(c.name);
-              const href = `/products${toggleColor(c.name)}`;
-              return (
-                <li key={c.name}>
-                  <Link
-                    href={href}
-                    className={`flex items-center gap-2 py-1 text-sm ${isSelected ? 'font-medium text-charcoal' : 'text-stone-600 hover:text-charcoal'}`}
-                  >
-                    <span
-                      className="h-4 w-4 flex-shrink-0 rounded-full border border-stone-300"
-                      style={{
-                        backgroundColor:
-                          c.name.toLowerCase() === 'gold'
-                            ? '#d4af37'
-                            : c.name.toLowerCase() === 'silver'
-                              ? '#c0c0c0'
-                              : c.name.toLowerCase() === 'rose gold'
-                                ? '#b76e79'
-                                : c.name.toLowerCase() === 'white'
-                                  ? '#f5f5f5'
-                                  : undefined,
-                      }}
-                      aria-hidden
-                    />
-                    {c.name} ({c.count})
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between text-left"
+            onClick={() =>
+              setOpenSections((s) => ({ ...s, colors: !s.colors }))
+            }
+          >
+            <h3 className="font-sans text-sm font-semibold text-charcoal">
+              Color
+            </h3>
+            <span className="text-lg leading-none text-stone-500">
+              {openSections.colors ? '−' : '+'}
+            </span>
+          </button>
+
+          {openSections.colors && (
+            <ul className="mt-3 space-y-1">
+              {colors.map((c) => {
+                const isSelected = selectedColors.includes(c.name);
+                const href = `/products${toggleColor(c.name)}`;
+                return (
+                  <li key={c.name}>
+                    <Link
+                      href={href}
+                      className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
+                        isSelected
+                          ? 'bg-cream font-medium text-charcoal'
+                          : 'text-stone-600 hover:bg-stone-50 hover:text-charcoal'
+                      }`}
+                    >
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                          isSelected
+                            ? 'border-[#00324e] bg-[#00324e]'
+                            : 'border-stone-300 bg-white'
+                        }`}
+                        aria-hidden
+                      >
+                        {isSelected && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        )}
+                      </span>
+                      <span>
+                        {c.name} ({c.count})
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
     </aside>

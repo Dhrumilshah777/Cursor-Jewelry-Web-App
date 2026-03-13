@@ -1,6 +1,6 @@
 const GoldRate = require('../models/GoldRate');
 
-const PURITIES = ['18K', '22K', '24K'];
+const PURITIES = ['14K', '18K', '22K', '24K'];
 
 exports.list = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ exports.update = async (req, res) => {
     const { purity, pricePerGram } = req.body;
     const p = (purity || '').toString().toUpperCase().trim();
     if (!PURITIES.includes(p)) {
-      return res.status(400).json({ error: 'purity must be 18K, 22K, or 24K' });
+      return res.status(400).json({ error: 'purity must be 14K, 18K, 22K, or 24K' });
     }
     const value = parseFloat(pricePerGram);
     if (!Number.isFinite(value) || value < 0) {

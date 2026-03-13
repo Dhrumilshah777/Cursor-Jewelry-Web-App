@@ -97,7 +97,7 @@ exports.getOne = async (req, res) => {
 function hasValidGoldPricing(body) {
   const p = (body.goldPurity || '').toString().toUpperCase().replace(/\s/g, '');
   const w = parseFloat(body.netWeight);
-  return ['18K', '22K', '24K'].includes(p) && Number.isFinite(w) && w > 0;
+  return ['14K', '18K', '22K', '24K'].includes(p) && Number.isFinite(w) && w > 0;
 }
 
 exports.create = async (req, res) => {
@@ -105,7 +105,7 @@ exports.create = async (req, res) => {
     const body = { ...req.body };
     const hasGold = hasValidGoldPricing(body);
     if (!hasGold) {
-      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (18K, 22K, or 24K) and net weight (grams).' });
+      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).' });
     }
     const product = await Product.create(body);
     res.status(201).json(product);
@@ -122,7 +122,7 @@ exports.update = async (req, res) => {
     const merged = { ...existing.toObject(), ...body };
     const hasGold = hasValidGoldPricing(merged);
     if (!hasGold) {
-      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (18K, 22K, or 24K) and net weight (grams).' });
+      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).' });
     }
     const product = await Product.findByIdAndUpdate(req.params.id, body, { new: true });
     res.json(product);

@@ -14,7 +14,7 @@ const productSchema = new mongoose.Schema(
     active: { type: Boolean, default: true },
     stock: { type: Number, default: 1 },
     // Gold-based pricing (when set, final price is calculated from GoldRate)
-    goldPurity: { type: String, default: '' }, // '18K', '22K', '24K'
+    goldPurity: { type: String, default: '' }, // '14K', '18K', '22K', '24K'
     netWeight: { type: Number, default: null }, // grams
     makingChargeType: { type: String, default: 'percentage' }, // 'percentage' | 'fixed' (incl. CZ/American diamond cost)
     makingChargeValue: { type: Number, default: 0 },

@@ -65,8 +65,8 @@ export default function AdminProductsPage() {
   const load = async () => {
     try {
       setError('');
-      const list = await apiGet<Product[]>('/api/admin/products', true);
-      setProducts(Array.isArray(list) ? list : []);
+      const list = await apiGet<{ products?: Product[] } | Product[]>('/api/admin/products', true);
+      setProducts(Array.isArray(list) ? list : (list && 'products' in list ? list.products ?? [] : []));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load products');
     } finally {
@@ -119,13 +119,13 @@ export default function AdminProductsPage() {
 
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    const hasGold = ['18K', '22K', '24K'].includes((form.goldPurity || '').trim().toUpperCase()) && Number(form.netWeight) > 0;
+    const hasGold = ['14K', '18K', '22K', '24K'].includes((form.goldPurity || '').trim().toUpperCase()) && Number(form.netWeight) > 0;
     if (!form.name?.trim() || !form.image?.trim()) {
       setError('Name and image are required.');
       return;
     }
     if (!hasGold) {
-      setError('Gold-based pricing is required. Select gold purity (18K, 22K, or 24K) and enter net weight in grams.');
+      setError('Gold-based pricing is required. Select gold purity (14K, 18K, 22K, or 24K) and enter net weight in grams.');
       return;
     }
     setError('');
@@ -363,7 +363,7 @@ export default function AdminProductsPage() {
         </div>
         <div className="mt-6 border-t border-stone-200 pt-6">
           <h3 className="font-medium text-charcoal">Gold-based pricing</h3>
-          <p className="mt-1 text-sm text-stone-500">Price is calculated from gold rates (18K, 22K, 24K). Gold value + making charge (incl. American diamond/CZ) → 3% GST.</p>
+          <p className="mt-1 text-sm text-stone-500">Price is calculated from gold rates (14K, 18K, 22K, 24K). Gold value + making charge (incl. American diamond/CZ) → 3% GST.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-stone-700">Gold purity <span className="text-red-600">*</span></label>
@@ -374,6 +374,7 @@ export default function AdminProductsPage() {
                 required
               >
                 <option value="">Select purity</option>
+                <option value="14K">14K (14 KT)</option>
                 <option value="18K">18K</option>
                 <option value="22K">22K</option>
                 <option value="24K">24K</option>

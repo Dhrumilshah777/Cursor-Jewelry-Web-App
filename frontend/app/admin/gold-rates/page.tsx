@@ -10,14 +10,14 @@ export default function AdminGoldRatesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [inputs, setInputs] = useState<Record<string, string>>({ '18K': '', '22K': '', '24K': '' });
+  const [inputs, setInputs] = useState<Record<string, string>>({ '14K': '', '18K': '', '22K': '', '24K': '' });
 
   const load = async () => {
     try {
       setError('');
       const list = await apiGet<GoldRateRow[]>('/api/admin/gold-rates', true);
       setRates(Array.isArray(list) ? list : []);
-      const next: Record<string, string> = { '18K': '', '22K': '', '24K': '' };
+      const next: Record<string, string> = { '14K': '', '18K': '', '22K': '', '24K': '' };
       for (const r of list || []) {
         next[r.purity] = r.pricePerGram > 0 ? String(r.pricePerGram) : '';
       }
@@ -41,6 +41,7 @@ export default function AdminGoldRatesPage() {
         '/api/admin/gold-rates',
         {
           rates: [
+            { purity: '14K', pricePerGram: parseFloat(inputs['14K']) || 0 },
             { purity: '18K', pricePerGram: parseFloat(inputs['18K']) || 0 },
             { purity: '22K', pricePerGram: parseFloat(inputs['22K']) || 0 },
             { purity: '24K', pricePerGram: parseFloat(inputs['24K']) || 0 },
@@ -59,12 +60,13 @@ export default function AdminGoldRatesPage() {
   if (loading) return <p className="text-stone-500">Loading gold rates…</p>;
 
   const purityLabels: Record<string, string> = {
+    '14K': '14 Karat (14 KT)',
     '18K': '18 Karat',
     '22K': '22 Karat',
     '24K': '24 Karat (24 KT)',
   };
 
-  const handleNumberInput = (purity: '18K' | '22K' | '24K', value: string) => {
+  const handleNumberInput = (purity: '14K' | '18K' | '22K' | '24K', value: string) => {
     const filtered = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
     setInputs((prev) => ({ ...prev, [purity]: filtered }));
   };
@@ -72,11 +74,11 @@ export default function AdminGoldRatesPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-charcoal">Gold Rates</h1>
-      <p className="mt-1 text-stone-600">Set price per gram for 24 KT, 22K, and 18K. Used to calculate product prices when Gold-based pricing is enabled. Update when market rates change.</p>
+      <p className="mt-1 text-stone-600">Set price per gram for 14 KT, 18K, 22K, and 24K. Used to calculate product prices when Gold-based pricing is enabled. Update when market rates change.</p>
 
       <div className="mt-8 max-w-md rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium text-stone-500">Price per gram (₹/gm) — 24 KT, 22K, 18K</h2>
-        {(['18K', '22K', '24K'] as const).map((purity) => (
+        <h2 className="mb-4 text-sm font-medium text-stone-500">Price per gram (₹/gm) — 14 KT, 18K, 22K, 24K</h2>
+        {(['14K', '18K', '22K', '24K'] as const).map((purity) => (
           <div key={purity} className="flex flex-col gap-1 py-3 border-b border-stone-100 last:border-0 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-2">
               <span className="w-12 font-medium text-charcoal">{purity}</span>
@@ -88,7 +90,7 @@ export default function AdminGoldRatesPage() {
                 inputMode="decimal"
                 value={inputs[purity] ?? ''}
                 onChange={(e) => handleNumberInput(purity, e.target.value)}
-                placeholder={purity === '24K' ? 'Add 24 KT price…' : `₹ per gram`}
+                placeholder={purity === '14K' ? 'Add 14 KT price…' : purity === '24K' ? 'Add 24 KT price…' : '₹ per gram'}
                 className="flex-1 rounded border border-stone-300 px-3 py-2"
                 aria-label={`${purity} gold price per gram`}
               />

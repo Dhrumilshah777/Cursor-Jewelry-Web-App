@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { apiGet, assetUrl } from '@/lib/api';
+import { apiGet, assetUrl, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
 
 type Product = {
   _id: string;
@@ -32,6 +32,20 @@ const MOCK_PRODUCTS: Product[] = [
 ];
 
 function ProductCard({ product }: { product: Product }) {
+  const [wishlisted, setWishlisted] = useState(false);
+
+  useEffect(() => {
+    setWishlisted(isInWishlist(product._id));
+  }, [product._id]);
+
+  const toggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (wishlisted) removeFromWishlist(product._id);
+    else addToWishlist({ id: product._id, name: product.name, category: product.category, price: product.price, image: product.image });
+    setWishlisted(!wishlisted);
+  };
+
   return (
     <div className="group">
       <Link href={`/products/${product._id}`} className="block">
@@ -43,9 +57,21 @@ function ProductCard({ product }: { product: Product }) {
           />
         </div>
         <div className="min-h-[4rem] pt-3">
-          <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-charcoal line-clamp-2">
-            {product.name}
-          </h2>
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="min-w-0 flex-1 font-sans text-sm font-medium uppercase tracking-wide text-charcoal line-clamp-2">
+              {product.name}
+            </h2>
+            <button
+              type="button"
+              onClick={toggleWishlist}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-400 hover:text-charcoal"
+              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <svg className="h-4 w-4" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+            </button>
+          </div>
           <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
         </div>
       </Link>

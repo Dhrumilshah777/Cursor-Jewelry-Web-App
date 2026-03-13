@@ -551,7 +551,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Value propositions — one per line */}
-            <div className="mt-8 flex flex-col gap-4 border-t border-stone-200 pt-6">
+            <div className="mt-4 flex flex-col gap-4 border-t border-stone-200 pt-4">
               <div className="flex gap-3">
                 <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
@@ -593,7 +593,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Full-width: Product Details (dynamic), then Price breakup (table), then recommendations */}
-        <div className="mt-6 border-t border-stone-200 pt-6">
+        <div className="mt-2 border-t border-stone-200 pt-4">
           <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product Details</h3>
           <p className="mt-4 text-sm text-stone-700">
             <span className="font-bold italic text-charcoal">{product.name}</span>

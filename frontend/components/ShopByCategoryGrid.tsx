@@ -197,16 +197,17 @@ export default function ShopByCategoryGrid() {
 
   if (categories.length === 0) return null;
 
-  // Pad to 5 so the desktop grid never has an empty slot
+  // Pad to 5 minimum so the desktop grid never has an empty slot; keep 6th/7th etc. when present
   const padded = [...categories];
   while (padded.length < 5) {
     padded.push({ ...PLACEHOLDER_CATEGORY, id: `placeholder-${padded.length}` });
   }
 
-  // PC layout: tall left | top + bottom-left | empty + bottom-right | tall right (5 slots)
+  // PC layout: tall left | top + bottom-left | 6th (was empty) + bottom-right | tall right (6 slots when 6+ categories)
   const tallLeft = padded[0];
   const middleTop = padded[1];
   const middleBottomLeft = padded[2];
+  const sixthCategory = padded[5]; // 6th category fills the remaining white space
   const middleBottomRight = padded[3];
   const tallRight = padded[4];
 
@@ -255,7 +256,9 @@ export default function ShopByCategoryGrid() {
               <CategoryImage category={middleBottomLeft} className="block h-full w-full" />
             </div>
           )}
-          <div className="min-h-0 col-start-3 row-start-1" aria-hidden />
+          <div className="min-h-0 col-start-3 row-start-1">
+            <CategoryImage category={sixthCategory || { ...PLACEHOLDER_CATEGORY, id: 'placeholder-5' }} className="block h-full w-full" />
+          </div>
           {middleBottomRight && (
             <div className="min-h-0 col-start-3 row-start-2">
               <CategoryImage category={middleBottomRight} className="block h-full w-full" />

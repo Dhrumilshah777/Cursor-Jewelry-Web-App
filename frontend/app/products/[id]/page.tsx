@@ -298,6 +298,7 @@ export default function ProductDetailPage() {
   const displayPrice = typeof product.calculatedPrice === 'number' ? product.calculatedPrice : parseFloat(product.price) || 0;
   const compareAtPrice = (product as { compareAtPrice?: number }).compareAtPrice;
   const colorsList = product.colors && product.colors.length > 0 ? product.colors : ['Yellow Gold', 'Rose Gold', 'Silver'];
+  const isRing = /ring/i.test(product.category || '') || /ring/i.test(product.name || '');
   const toggleAccordion = (key: 'ringDetails' | 'delivery' | 'care') => {
     setAccordion((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -437,19 +438,21 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Ring Size</p>
-              <div className="mt-2 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={ringSizeInput}
-                  onChange={(e) => setRingSizeInput(e.target.value)}
-                  placeholder="e.g. 3.35"
-                  className="w-24 border border-stone-300 px-3 py-2 text-sm"
-                />
-                <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">Ring size guide</Link>
+            {isRing && (
+              <div className="mt-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Ring Size</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={ringSizeInput}
+                    onChange={(e) => setRingSizeInput(e.target.value)}
+                    placeholder="e.g. 3.35"
+                    className="w-24 border border-stone-300 px-3 py-2 text-sm"
+                  />
+                  <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">Ring size guide</Link>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Select Quantity</p>
@@ -482,6 +485,33 @@ export default function ProductDetailPage() {
               </Link>
             </div>
 
+            {/* Pincode check — below Add to cart */}
+            <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
+              <p className="text-xs font-medium text-stone-600">Check delivery</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Pincode"
+                  className="w-28 border border-stone-300 px-2 py-1.5 text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
+                />
+                <button
+                  type="button"
+                  onClick={checkDelivery}
+                  disabled={deliveryChecking}
+                  className="rounded bg-charcoal px-3 py-1.5 text-xs text-white disabled:opacity-60"
+                >
+                  {deliveryChecking ? 'Checking…' : 'Check'}
+                </button>
+              </div>
+              {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
+              {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
+            </div>
+
             {/* Collapsible: Ring Details, Delivery & Returns, Care */}
             <div className="mt-8 border-t border-stone-200 pt-6">
               <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('ringDetails')}>
@@ -506,11 +536,6 @@ export default function ProductDetailPage() {
               {accordion.delivery && (
                 <div className="mt-2 space-y-2 border-b border-stone-100 pb-4 text-sm text-stone-600">
                   <p>Free delivery on orders above ₹ 83,000. Standard delivery in 4–7 business days. Easy returns within 30 days.</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <input type="text" inputMode="numeric" maxLength={6} value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Pincode" className="w-28 border border-stone-300 px-2 py-1.5 text-sm" onKeyDown={(e) => e.key === 'Enter' && checkDelivery()} />
-                    <button type="button" onClick={checkDelivery} disabled={deliveryChecking} className="rounded bg-charcoal px-3 py-1.5 text-xs text-white disabled:opacity-60">{deliveryChecking ? 'Checking…' : 'Check'}</button>
-                  </div>
-                  {deliveryCheck && <p className="text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
                 </div>
               )}
 
@@ -525,8 +550,8 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Value propositions */}
-            <div className="mt-8 grid grid-cols-2 gap-4 border-t border-stone-200 pt-6">
+            {/* Value propositions — one per line */}
+            <div className="mt-8 flex flex-col gap-4 border-t border-stone-200 pt-6">
               <div className="flex gap-3">
                 <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
@@ -567,37 +592,73 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Full-width: Price breakup, Then recommendations and description */}
+        {/* Full-width: Product Details (dynamic), then Price breakup (table), then recommendations */}
+        <div className="mt-12 border-t border-stone-200 pt-8">
+          <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product Details</h3>
+          <p className="mt-4 text-sm text-stone-700">
+            <span className="font-bold italic text-charcoal">{product.name}</span>
+            {product.description?.trim()
+              ? ` ${product.description.split('\n')[0].trim()}`
+              : ' showcases elegant craftsmanship and refined design.'}
+          </p>
+          <hr className="my-6 border-stone-200" />
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+            <div>
+              <p className="text-sm font-semibold text-charcoal">Weight</p>
+              <ul className="mt-2 space-y-1 text-sm text-stone-700">
+                {product.weight && <li>Gross (Product) – {product.weight}</li>}
+                {product.priceBreakup?.netWeight != null && (
+                  <li>Net (Gold) – {Number(product.priceBreakup.netWeight)} gm</li>
+                )}
+                {!product.weight && product.priceBreakup?.netWeight == null && <li>—</li>}
+              </ul>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-charcoal">Purity</p>
+              <p className="mt-2 text-sm text-stone-700">
+                {product.priceBreakup?.goldPurity || product.goldPurity || '—'}
+                {product.colors?.[0] ? ` (${product.colors[0]})` : ''}
+              </p>
+            </div>
+          </div>
+          {product.description && product.description.split('\n').length > 1 && (
+            <p className="mt-6 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
+          )}
+        </div>
+
         {product.priceBreakup && (
-          <div className="mt-12 border-t border-stone-200 pt-8">
+          <div className="mt-8 border-t border-stone-200 pt-8">
             <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
-            <ul className="mt-4 space-y-2 text-sm text-stone-700">
-              {product.priceBreakup.netWeight != null && (
-                <li className="flex justify-between">
-                  <span>Net weight</span>
-                  <span className="font-medium">{Number(product.priceBreakup.netWeight)} g</span>
-                </li>
-              )}
-              <li className="flex justify-between">
-                <span>
-                  Gold price
-                  {product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}
-                </span>
-                <span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Making charge</span>
-                <span className="font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</span>
-              </li>
-              <li className="flex justify-between">
-                <span>GST charge (3%)</span>
-                <span className="font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</span>
-              </li>
-              <li className="mt-2 flex justify-between border-t border-stone-200 pt-2 font-semibold text-charcoal">
-                <span>Total</span>
-                <span>₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</span>
-              </li>
-            </ul>
+            <div className="mt-4 overflow-hidden rounded border border-stone-200">
+              <table className="w-full text-left text-sm text-stone-700">
+                <tbody>
+                  {product.priceBreakup.netWeight != null && (
+                    <tr className="border-b border-stone-200">
+                      <td className="px-4 py-3">Net weight</td>
+                      <td className="px-4 py-3 font-medium">{Number(product.priceBreakup.netWeight)} g</td>
+                    </tr>
+                  )}
+                  <tr className="border-b border-stone-200">
+                    <td className="px-4 py-3">
+                      Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}
+                    </td>
+                    <td className="px-4 py-3 font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</td>
+                  </tr>
+                  <tr className="border-b border-stone-200">
+                    <td className="px-4 py-3">Making charge</td>
+                    <td className="px-4 py-3 font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</td>
+                  </tr>
+                  <tr className="border-b border-stone-200">
+                    <td className="px-4 py-3">GST charge (3%)</td>
+                    <td className="px-4 py-3 font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</td>
+                  </tr>
+                  <tr className="bg-stone-50 font-semibold text-charcoal">
+                    <td className="px-4 py-3">Total</td>
+                    <td className="px-4 py-3">₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -655,13 +716,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
         )}
-        {product.description && product.description.split('\n').length > 1 && (
-          <div className="mt-8 border-t border-stone-200 pt-8">
-            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product details</h3>
-            <p className="mt-4 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
-          </div>
-        )}
-
         {/* Sticky Add to cart bar — 768px and below only */}
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white p-3 md:hidden">
           <div className="mx-auto max-w-5xl px-4">

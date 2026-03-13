@@ -351,6 +351,7 @@ export default function ProductDetailPage() {
                   </svg>
                 </div>
               )}
+            </div>
           </div>
 
           {/* Right: product details (match reference layout) */}

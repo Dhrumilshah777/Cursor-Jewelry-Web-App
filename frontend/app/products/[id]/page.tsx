@@ -567,16 +567,59 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Full-width: You may also like, Recently viewed, Price breakup, Description */}
-        {youMayAlsoLike.length > 0 && (
+        {/* Full-width: Price breakup, Then recommendations and description */}
+        {product.priceBreakup && (
           <div className="mt-12 border-t border-stone-200 pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
+            <ul className="mt-4 space-y-2 text-sm text-stone-700">
+              {product.priceBreakup.netWeight != null && (
+                <li className="flex justify-between">
+                  <span>Net weight</span>
+                  <span className="font-medium">{Number(product.priceBreakup.netWeight)} g</span>
+                </li>
+              )}
+              <li className="flex justify-between">
+                <span>
+                  Gold price
+                  {product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}
+                </span>
+                <span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Making charge</span>
+                <span className="font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</span>
+              </li>
+              <li className="flex justify-between">
+                <span>GST charge (3%)</span>
+                <span className="font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</span>
+              </li>
+              <li className="mt-2 flex justify-between border-t border-stone-200 pt-2 font-semibold text-charcoal">
+                <span>Total</span>
+                <span>₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</span>
+              </li>
+            </ul>
+          </div>
+        )}
+
+        {youMayAlsoLike.length > 0 && (
+          <div className="mt-8 border-t border-stone-200 pt-8">
             <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">You may also like</h3>
             <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
               {youMayAlsoLike.map((p) => {
-                const imgSrc = p.image.startsWith('http') ? p.image : p.image.startsWith('/') ? (p.image.startsWith('/uploads/') ? assetUrl(p.image) : p.image) : assetUrl(p.image.startsWith('/') ? p.image : `/${p.image}`);
+                const imgSrc = p.image.startsWith('http')
+                  ? p.image
+                  : p.image.startsWith('/')
+                    ? p.image.startsWith('/uploads/')
+                      ? assetUrl(p.image)
+                      : p.image
+                    : assetUrl(p.image.startsWith('/') ? p.image : `/${p.image}`);
                 const priceStr = typeof p.calculatedPrice === 'number' ? p.calculatedPrice.toFixed(2) : p.price;
                 return (
-                  <Link key={p._id} href={`/products/${p._id}`} className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52">
+                  <Link
+                    key={p._id}
+                    href={`/products/${p._id}`}
+                    className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52"
+                  >
                     <div className="aspect-square w-full overflow-hidden bg-stone-100">
                       <img src={imgSrc} alt={p.name} className="h-full w-full object-cover" />
                     </div>
@@ -590,6 +633,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
         )}
+
         {recentlyViewed.length > 0 && (
           <div className="mt-8 border-t border-stone-200 pt-8">
             <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Recently viewed</h3>
@@ -609,20 +653,6 @@ export default function ProductDetailPage() {
                 );
               })}
             </div>
-          </div>
-        )}
-        {product.priceBreakup && (
-          <div className="mt-8 border-t border-stone-200 pt-8">
-            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
-            <ul className="mt-4 space-y-2 text-sm text-stone-700">
-              {product.priceBreakup.netWeight != null && (
-                <li className="flex justify-between"><span>Net weight</span><span className="font-medium">{Number(product.priceBreakup.netWeight)} g</span></li>
-              )}
-              <li className="flex justify-between"><span>Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}</span><span className="font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</span></li>
-              <li className="flex justify-between"><span>Making charge</span><span className="font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</span></li>
-              <li className="flex justify-between"><span>GST charge (3%)</span><span className="font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</span></li>
-              <li className="flex justify-between border-t border-stone-200 pt-2 mt-2 font-semibold text-charcoal"><span>Total</span><span>₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</span></li>
-            </ul>
           </div>
         )}
         {product.description && product.description.split('\n').length > 1 && (

@@ -29,10 +29,24 @@ type SearchOverlayProps = {
 export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+
+  const startClose = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+  };
+
+  const handleTransitionEnd = (e: React.TransitionEvent) => {
+    if (e.propertyName === 'transform' && isClosing) {
+      setIsClosing(false);
+      onClose();
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
+      setIsClosing(false);
       setIsVisible(false);
       const raf = requestAnimationFrame(() => {
         requestAnimationFrame(() => setIsVisible(true));
@@ -51,7 +65,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') startClose();
     };
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
@@ -61,7 +75,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   // Fetch first 5 newest products for "Suggested for you" when overlay opens (API returns newest first)
   useEffect(() => {
@@ -85,12 +99,15 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
+
+  const isSlidUp = isClosing || !isVisible;
 
   return (
     <div
       className="fixed inset-0 z-[100] bg-white transition-transform duration-300 ease-out"
-      style={{ transform: isVisible ? 'translateY(0)' : 'translateY(-100%)' }}
+      style={{ transform: isSlidUp ? 'translateY(-100%)' : 'translateY(0)' }}
+      onTransitionEnd={handleTransitionEnd}
     >
       <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-4 pt-8 pb-12 sm:px-6">
         <div className="flex items-center justify-between gap-4">
@@ -110,7 +127,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={startClose}
             className="flex h-10 w-10 shrink-0 items-center justify-center text-stone-500 transition-colors hover:text-charcoal"
             aria-label="Close search"
           >

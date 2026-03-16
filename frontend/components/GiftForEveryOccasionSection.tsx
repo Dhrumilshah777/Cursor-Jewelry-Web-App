@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiGet, assetUrl } from '@/lib/api';
 
 const REPEAT_COUNT = 3;
+const AUTOPLAY_MS = 2000;
 
 type GiftItem = { image: string; title: string; description: string; link: string };
 
@@ -149,6 +150,13 @@ export default function GiftForEveryOccasionSection() {
     const step = el.offsetWidth * 0.85;
     el.scrollBy({ left: dir === 'next' ? step : -step, behavior: 'smooth' });
   };
+
+  // Auto-advance carousel every 2s (phone/tablet view)
+  useEffect(() => {
+    if (gifts.length === 0) return;
+    const id = setInterval(() => scroll('next'), AUTOPLAY_MS);
+    return () => clearInterval(id);
+  }, [gifts.length]);
 
   if (loading) return null;
   if (gifts.length === 0) return null;

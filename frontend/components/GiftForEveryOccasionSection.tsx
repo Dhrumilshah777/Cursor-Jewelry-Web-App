@@ -160,8 +160,8 @@ export default function GiftForEveryOccasionSection() {
           Everyday Gifts
         </h2>
 
-        {/* Desktop: grid layout */}
-        <div className="hidden gap-4 md:grid md:grid-cols-2 md:grid-rows-2">
+        {/* Desktop: grid layout — min-height so rows don't collapse (card content is absolute) */}
+        <div className="hidden min-h-[420px] gap-4 md:grid md:grid-cols-2 md:grid-rows-[1fr_1fr]">
           {gifts.map((item, i) => (
             <GiftCard key={i} item={item} isCarousel={false} large={i === 0} />
           ))}

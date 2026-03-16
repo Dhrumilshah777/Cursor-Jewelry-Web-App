@@ -37,6 +37,13 @@ const siteConfigSchema = new mongoose.Schema(
       link: { type: String, default: '/products' },
       order: { type: Number, default: 0 },
     }],
+    everydayGifts: [{
+      image: { type: String, default: '' },
+      title: { type: String, default: '' },
+      description: { type: String, default: '' },
+      link: { type: String, default: '/products' },
+      order: { type: Number, default: 0 },
+    }],
     homePageImage: { type: String, default: '' },
     promoCards: [{
       title: { type: String, default: '' },

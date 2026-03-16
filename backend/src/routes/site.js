@@ -10,6 +10,7 @@ router.get('/category-cards', siteConfigController.getCategoryCards);
 router.get('/instagram', siteConfigController.getInstagram);
 router.get('/best-selling', siteConfigController.getBestSelling);
 router.get('/shop-by-style', siteConfigController.getShopByStyle);
+router.get('/everyday-gifts', siteConfigController.getEverydayGifts);
 router.get('/home-page-image', siteConfigController.getHomePageImage);
 router.get('/promo-cards', siteConfigController.getPromoCards);
 

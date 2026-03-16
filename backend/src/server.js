@@ -83,6 +83,7 @@ app.use('/api/admin/beauty-in-motion', require('./routes/admin/beautyInMotion'))
 app.use('/api/admin/view-by-categories', require('./routes/admin/viewByCategories'));
 app.use('/api/admin/best-selling', require('./routes/admin/bestSelling'));
 app.use('/api/admin/shop-by-style', require('./routes/admin/shopByStyle'));
+app.use('/api/admin/everyday-gifts', require('./routes/admin/everydayGifts'));
 app.use('/api/admin/home-page-image', require('./routes/admin/homePageImage'));
 app.use('/api/admin/promo-cards', require('./routes/admin/promoCards'));
 app.use('/api/admin/instagram', require('./routes/admin/instagram'));

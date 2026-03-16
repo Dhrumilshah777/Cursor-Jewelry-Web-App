@@ -6,6 +6,7 @@ import ShopByStyleCarousel from '@/components/ShopByStyleCarousel';
 import BestSellingCarousel from '@/components/BestSellingCarousel';
 import PromoCardsSection from '@/components/PromoCardsSection';
 import HeroServicesStrip from '@/components/HeroServicesStrip';
+import GiftForEveryOccasionSection from '@/components/GiftForEveryOccasionSection';
 import HomePageVideoSection from '@/components/HomePageVideoSection';
 import HomePageImageSection from '@/components/HomePageImageSection';
 import BeautyInMotionSection from '@/components/BeautyInMotionSection';
@@ -32,6 +33,8 @@ export default function Home() {
       <PromoCardsSection />
 
       <HeroServicesStrip />
+
+      <GiftForEveryOccasionSection />
 
       {/* <CategoryCardsSection /> */}
 

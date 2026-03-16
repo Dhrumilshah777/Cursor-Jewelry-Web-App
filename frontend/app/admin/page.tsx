@@ -21,6 +21,7 @@ const cards = [
   { href: '/admin/best-selling', title: 'Best Selling Jewelery', desc: 'Choose and order products for the Best Selling Jewelery carousel on the home page.' },
   { href: '/admin/promo-cards', title: 'Promo Cards', desc: 'Edit the two cards below Best Sellers (titles, images, links, colors). Always side-by-side on all devices.' },
   { href: '/admin/shop-by-style', title: 'Shop by Style', desc: 'Manage the Shop by Style carousel (images and labels) on the home page.' },
+  { href: '/admin/everyday-gifts', title: 'Everyday Gifts', desc: 'Edit the Everyday Gifts section: image URL, title, and description for each card.' },
   { href: '/admin/home-page-image', title: 'Home Page Image', desc: 'Set the full-width image for the image-only section on the home page.' },
   { href: '/admin/video', title: 'Home Page Video', desc: 'Set the full-width video that appears on the home page.' },
   { href: '/admin/beauty-in-motion', title: 'Beauty in Motion', desc: 'Add videos for the Beauty in Motion carousel (same style as Shop by Style).' },

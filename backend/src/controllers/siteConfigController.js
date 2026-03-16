@@ -266,6 +266,47 @@ exports.updateShopByStyle = async (req, res) => {
   }
 };
 
+exports.getEverydayGifts = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const list = (config.everydayGifts || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    res.json(list.map((s, i) => ({
+      image: s.image || '',
+      title: s.title || '',
+      description: s.description || '',
+      link: s.link || '/products',
+      order: s.order ?? i,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateEverydayGifts = async (req, res) => {
+  try {
+    const config = await getConfig();
+    const raw = Array.isArray(req.body.cards) ? req.body.cards : [];
+    config.everydayGifts = raw.map((s, i) => ({
+      image: String(s.image || '').trim(),
+      title: String(s.title || '').trim(),
+      description: String(s.description || '').trim(),
+      link: String(s.link || '').trim() || '/products',
+      order: i,
+    })).filter((s) => s.image);
+    await config.save();
+    const list = (config.everydayGifts || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    res.json(list.map((s, i) => ({
+      image: s.image || '',
+      title: s.title || '',
+      description: s.description || '',
+      link: s.link || '/products',
+      order: s.order ?? i,
+    })));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 exports.getHomePageImage = async (req, res) => {
   try {
     const config = await getConfig();

@@ -35,8 +35,10 @@ function GiftCard({
         style={{ backgroundImage: `url(${resolveImageUrl(item.image)})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-        <h3 className="font-serif text-xl font-semibold tracking-wide sm:text-2xl md:text-3xl">{item.title}</h3>
+      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-4 py-3 text-center">
+        <span className="font-sans text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
+          {item.title}
+        </span>
         {item.description && (
           <p className="mt-1 font-sans text-sm text-white/95 sm:text-base">{item.description}</p>
         )}

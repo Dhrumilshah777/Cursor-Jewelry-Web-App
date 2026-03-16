@@ -90,23 +90,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA */}
-        <section id="contacts" className="border-t border-stone-200 bg-charcoal py-16 text-center text-cream sm:py-20">
-          <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-            <h2 className="font-serif text-3xl font-light tracking-wide sm:text-4xl">
-              Join our world
-            </h2>
-            <p className="mt-4 font-sans text-cream/80">
-              Create an account to save your favourites and get early access to new collections.
-            </p>
-            <Link
-              href="/register"
-              className="mt-8 inline-block rounded-sm border border-gold-light px-8 py-3.5 font-sans text-sm font-medium text-gold-light transition-colors hover:bg-gold-light hover:text-charcoal"
-            >
-              Create account
-            </Link>
-          </div>
-        </section>
+        {/* CTA removed as requested */}
       </div>
     </main>
   );

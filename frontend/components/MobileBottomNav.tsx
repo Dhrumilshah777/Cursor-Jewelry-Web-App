@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { getCartCount } from '@/lib/api';
+import { getCartCount, getCartFromApi, isUserLoggedIn, getWishlist } from '@/lib/api';
 
 const items = [
   { href: '/', label: 'Home', icon: 'home' },
@@ -57,11 +57,28 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
 
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
   useEffect(() => {
-    setCartCount(getCartCount());
-    const onUpdate = () => setCartCount(getCartCount());
-    window.addEventListener('cart-updated', onUpdate);
-    return () => window.removeEventListener('cart-updated', onUpdate);
+    const refreshCart = () => {
+      if (isUserLoggedIn()) {
+        getCartFromApi()
+          .then((items) => setCartCount(items.reduce((s, i) => s + i.quantity, 0)))
+          .catch(() => setCartCount(0));
+      } else {
+        setCartCount(getCartCount());
+      }
+    };
+    const refreshWishlist = () => setWishlistCount(getWishlist().length);
+
+    refreshCart();
+    refreshWishlist();
+
+    window.addEventListener('cart-updated', refreshCart);
+    window.addEventListener('wishlist-updated', refreshWishlist);
+    return () => {
+      window.removeEventListener('cart-updated', refreshCart);
+      window.removeEventListener('wishlist-updated', refreshWishlist);
+    };
   }, []);
 
   const isActive = (href: string) => {
@@ -90,8 +107,15 @@ export default function MobileBottomNav() {
             {icon === 'bag' && cartCount > 0 ? (
               <span className="relative inline-block">
                 <NavIcon type={icon} active={active} />
-                <span className="absolute -right-2 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/25 text-[10px] font-medium text-white">
+                <span className="absolute -right-2 -top-1 flex min-w-[14px] items-center justify-center rounded-full bg-white/25 px-1 text-[10px] font-medium leading-4 text-white">
                   {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              </span>
+            ) : icon === 'heart' && wishlistCount > 0 ? (
+              <span className="relative inline-block">
+                <NavIcon type={icon} active={active} />
+                <span className="absolute -right-2 -top-1 flex min-w-[14px] items-center justify-center rounded-full bg-white/25 px-1 text-[10px] font-medium leading-4 text-white">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
                 </span>
               </span>
             ) : (

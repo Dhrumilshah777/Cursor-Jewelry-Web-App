@@ -141,6 +141,7 @@ export function getWishlist(): WishlistProduct[] {
 export function setWishlist(items: WishlistProduct[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(WISHLIST_KEY, JSON.stringify(items));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('wishlist-updated'));
 }
 
 export function addToWishlist(product: WishlistProduct) {

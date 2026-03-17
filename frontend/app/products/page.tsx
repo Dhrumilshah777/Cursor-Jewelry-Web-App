@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { apiGet, assetUrl } from '@/lib/api';
+import { apiGet, assetUrl, addToWishlist, removeFromWishlist, getWishlist } from '@/lib/api';
 import FilterSidebar, { type Facets } from '@/components/FilterSidebar';
 
 type Product = {
@@ -37,6 +37,7 @@ function ProductsContent() {
   const [data, setData] = useState<ProductsResponse>({ products: [], facets: defaultFacets });
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
 
   const queryString = searchParams.toString();
   const apiUrl = queryString ? `/api/products?${queryString}` : '/api/products';
@@ -65,6 +66,12 @@ function ProductsContent() {
   }, [apiUrl]);
 
   const { products: filteredProducts, facets } = data;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const ids = new Set(getWishlist().map((p) => p.id));
+    setWishlistedIds(ids);
+  }, [filteredProducts.length]);
   const categoryLabel = categoryParam
     ? categoryParam.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
@@ -151,6 +158,51 @@ function ProductsContent() {
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const id = String(product._id);
+                            setWishlistedIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(id)) {
+                                removeFromWishlist(id);
+                                next.delete(id);
+                              } else {
+                                addToWishlist({
+                                  id,
+                                  name: product.name,
+                                  category: product.category,
+                                  price: product.price,
+                                  image: product.image,
+                                });
+                                next.add(id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border bg-white/90 shadow-sm backdrop-blur transition-colors hover:bg-white ${
+                            wishlistedIds.has(String(product._id))
+                              ? 'border-red-200 text-red-600'
+                              : 'border-stone-200 text-stone-600'
+                          }`}
+                          aria-label={wishlistedIds.has(String(product._id)) ? 'Remove from wishlist' : 'Add to wishlist'}
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill={wishlistedIds.has(String(product._id)) ? 'currentColor' : 'none'}
+                            stroke="currentColor"
+                            strokeWidth={1.5}
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                            />
+                          </svg>
+                        </button>
                       </div>
                       <div className="min-h-[4.5rem] pt-3">
                         <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">

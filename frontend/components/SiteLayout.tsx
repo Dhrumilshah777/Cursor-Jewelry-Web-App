@@ -9,12 +9,13 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+  const isHome = pathname === '/';
 
   if (isAdmin) return <>{children}</>;
   return (
     <>
       <Header />
-      <NavCategoryStrip />
+      {isHome && <NavCategoryStrip />}
       <div className="pb-24 md:pb-0">
         {children}
         <Footer />

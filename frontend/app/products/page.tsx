@@ -36,6 +36,7 @@ function ProductsContent() {
 
   const [data, setData] = useState<ProductsResponse>({ products: [], facets: defaultFacets });
   const [loading, setLoading] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const queryString = searchParams.toString();
   const apiUrl = queryString ? `/api/products?${queryString}` : '/api/products';
@@ -92,12 +93,37 @@ function ProductsContent() {
             : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}.`}
         </p>
 
+        {/* Mobile filter button */}
+        <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm hover:bg-stone-50"
+            aria-haspopup="dialog"
+            aria-expanded={filtersOpen}
+            aria-controls="products-filter-drawer"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h18M6 12h12M10 20h4" />
+            </svg>
+            Filter
+          </button>
+          {searchParams.toString() && (
+            <Link href="/products" className="text-sm font-medium text-charcoal underline hover:no-underline">
+              Clear
+            </Link>
+          )}
+        </div>
+
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
-          <FilterSidebar
-            facets={facets}
-            totalCount={filteredProducts.length}
-            className="lg:sticky lg:top-8 lg:self-start"
-          />
+          {/* Desktop sidebar */}
+          <div className="hidden lg:block">
+            <FilterSidebar
+              facets={facets}
+              totalCount={filteredProducts.length}
+              className="lg:sticky lg:top-8 lg:self-start"
+            />
+          </div>
           <div className="min-w-0 flex-1">
             {filteredProducts.length === 0 ? (
               <div className="border border-stone-200 bg-stone-50 p-8 text-center">
@@ -148,6 +174,38 @@ function ProductsContent() {
             )}
           </div>
         </div>
+
+        {/* Mobile filter drawer */}
+        {filtersOpen && (
+          <div
+            className="fixed inset-0 z-50 lg:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Filters"
+            id="products-filter-drawer"
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/40"
+              onClick={() => setFiltersOpen(false)}
+              aria-label="Close filters"
+            />
+            <div className="absolute right-0 top-0 h-full w-[88vw] max-w-sm overflow-auto bg-white p-4 shadow-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Filters</h2>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  className="rounded-full border border-stone-300 px-3 py-1.5 text-sm text-charcoal hover:bg-stone-50"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <FilterSidebar facets={facets} totalCount={filteredProducts.length} />
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

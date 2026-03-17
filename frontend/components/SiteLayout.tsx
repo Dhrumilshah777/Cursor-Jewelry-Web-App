@@ -16,10 +16,8 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
     <>
       <Header />
       {isHome && <NavCategoryStrip />}
-      <div className="pb-24 md:pb-0">
-        {children}
-        <Footer />
-      </div>
+      {children}
+      <Footer />
       <MobileBottomNav />
     </>
   );

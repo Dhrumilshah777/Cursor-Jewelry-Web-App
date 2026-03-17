@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const { getProductPrice } = require('../services/priceCalculator');
+const { generateSKU, getCategoryCode, validatePurity } = require('../services/skuGenerator');
 
 function categoryToSlug(cat) {
   return String(cat || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
@@ -107,8 +108,35 @@ exports.create = async (req, res) => {
     if (!hasGold) {
       return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).' });
     }
-    const product = await Product.create(body);
-    res.status(201).json(product);
+
+    const categoryCode = getCategoryCode(body.category);
+    const purityCheck = validatePurity(body.goldPurity);
+    if (!categoryCode) {
+      return res.status(400).json({
+        error: 'Invalid category for SKU. Use one of: Rings, Earrings, Chain, Bracelet, Pendant (or codes: RING, ERNG, CHN, BRCL, PEND).',
+      });
+    }
+    if (!purityCheck.valid) {
+      return res.status(400).json({ error: purityCheck.error });
+    }
+
+    let sku;
+    try {
+      sku = await generateSKU(categoryCode, body.goldPurity);
+    } catch (skuErr) {
+      return res.status(400).json({ error: skuErr.message });
+    }
+    body.sku = sku;
+
+    try {
+      const product = await Product.create(body);
+      res.status(201).json(product);
+    } catch (err) {
+      if (err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
+        return res.status(409).json({ error: 'Duplicate SKU. Please try creating the product again.' });
+      }
+      throw err;
+    }
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

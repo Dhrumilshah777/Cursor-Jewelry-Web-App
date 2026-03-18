@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getApiBase, isUserLoggedIn, clearUserToken } from '@/lib/api';
+import { getApiBase, isUserLoggedIn, clearUserToken, apiGet } from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
@@ -31,11 +32,22 @@ export default function LoginPage() {
 
   const isLoggedIn = mounted && isUserLoggedIn();
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setEmail('');
+      return;
+    }
+    apiGet<{ user?: { email?: string } }>('/api/auth/me', { user: true })
+      .then((me) => setEmail((me?.user?.email || '').toString()))
+      .catch(() => setEmail(''));
+  }, [isLoggedIn]);
+
   const handleLogout = async () => {
     try {
       await fetch(`${getApiBase()}/api/auth/logout`, { credentials: 'include' });
     } catch (_) {}
     clearUserToken();
+    setEmail('');
     router.refresh();
   };
 
@@ -55,6 +67,7 @@ export default function LoginPage() {
         {isLoggedIn && (
           <div className="mt-6 rounded border border-stone-200 bg-stone-50 px-4 py-3">
             <p className="text-sm text-stone-600">You&apos;re already logged in.</p>
+            {email && <p className="mt-1 text-xs text-stone-500">{email}</p>}
             <button
               type="button"
               onClick={handleLogout}

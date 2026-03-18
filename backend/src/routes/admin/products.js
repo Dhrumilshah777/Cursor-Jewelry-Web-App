@@ -7,6 +7,7 @@ router.use(adminAuth);
 
 router.get('/', productController.list);
 router.post('/', productController.create);
+router.post('/bulk', productController.bulkCreate);
 router.put('/:id', productController.update);
 router.delete('/:id', productController.remove);
 

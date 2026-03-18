@@ -1,9 +1,45 @@
 const Product = require('../models/Product');
+const AuditLog = require('../models/AuditLog');
 const { getProductPrice } = require('../services/priceCalculator');
 const { generateSKU, getCategoryCode, validatePurity } = require('../services/skuGenerator');
 
 function categoryToSlug(cat) {
   return String(cat || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
+}
+
+function getAllowedImageHosts() {
+  const hosts = new Set();
+  const envHosts = (process.env.IMAGEKIT_ALLOWED_HOSTS || 'ik.imagekit.io')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  envHosts.forEach((h) => hosts.add(h.toLowerCase()));
+
+  const endpoint = (process.env.IMAGEKIT_URL_ENDPOINT || '').trim();
+  if (endpoint) {
+    try {
+      const u = new URL(endpoint);
+      if (u.hostname) hosts.add(u.hostname.toLowerCase());
+    } catch {
+      // ignore invalid endpoint
+    }
+  }
+
+  return Array.from(hosts);
+}
+
+function isAllowedImageUrl(urlString, allowedHosts) {
+  if (!urlString) return false;
+  let u;
+  try {
+    u = new URL(String(urlString));
+  } catch {
+    return false;
+  }
+  if (!/^https?:$/.test(u.protocol)) return false;
+  const host = (u.hostname || '').toLowerCase();
+  if (!host) return false;
+  return allowedHosts.some((h) => host === h || host.endsWith(`.${h}`));
 }
 
 exports.list = async (req, res) => {
@@ -140,6 +176,135 @@ exports.create = async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
+};
+
+exports.bulkCreate = async (req, res) => {
+  const startedAt = Date.now();
+  const allowedHosts = getAllowedImageHosts();
+
+  const input = req.body?.products ?? req.body;
+  if (!Array.isArray(input)) {
+    return res.status(400).json({ error: 'Expected an array of products (or { products: [...] })' });
+  }
+
+  const failures = [];
+  const created = [];
+
+  // Pre-check duplicates within the upload itself
+  const seenSkus = new Set();
+  input.forEach((row, idx) => {
+    const sku = (row && row.sku !== undefined) ? String(row.sku).trim() : '';
+    if (!sku) return;
+    const key = sku.toUpperCase();
+    if (seenSkus.has(key)) {
+      failures.push({ index: idx, sku, error: 'Duplicate SKU inside upload (SKU must be unique per row)' });
+    } else {
+      seenSkus.add(key);
+    }
+  });
+
+  const skuList = Array.from(seenSkus);
+  const existing = skuList.length ? await Product.find({ sku: { $in: skuList } }).select('sku').lean() : [];
+  const existingSet = new Set(existing.map((p) => String(p.sku || '').toUpperCase()));
+
+  for (let i = 0; i < input.length; i += 1) {
+    const row = input[i];
+    if (!row || typeof row !== 'object') {
+      failures.push({ index: i, sku: '', error: 'Row must be an object' });
+      continue;
+    }
+
+    const sku = (row.sku !== undefined) ? String(row.sku).trim() : '';
+    if (!sku) {
+      failures.push({ index: i, sku: '', error: 'Missing required field: sku' });
+      continue;
+    }
+    const skuKey = sku.toUpperCase();
+
+    if (failures.some((f) => f.index === i)) {
+      continue;
+    }
+    if (existingSet.has(skuKey)) {
+      failures.push({ index: i, sku, error: 'SKU already exists (row rejected)' });
+      continue;
+    }
+
+    const body = { ...row, sku };
+
+    const hasGold = hasValidGoldPricing(body);
+    if (!hasGold) {
+      failures.push({
+        index: i,
+        sku,
+        error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+      });
+      continue;
+    }
+
+    if (!body.name) {
+      failures.push({ index: i, sku, error: 'Missing required field: name' });
+      continue;
+    }
+
+    if (!isAllowedImageUrl(body.image, allowedHosts)) {
+      failures.push({ index: i, sku, error: `Invalid image URL. Must be an ImageKit URL (allowed hosts: ${allowedHosts.join(', ')})` });
+      continue;
+    }
+    if (Array.isArray(body.subImages)) {
+      const bad = body.subImages.find((u) => !isAllowedImageUrl(u, allowedHosts));
+      if (bad) {
+        failures.push({ index: i, sku, error: `Invalid subImages URL: ${String(bad)} (ImageKit URLs only)` });
+        continue;
+      }
+    }
+
+    const purityCheck = validatePurity(body.goldPurity);
+    if (!purityCheck.valid) {
+      failures.push({ index: i, sku, error: purityCheck.error });
+      continue;
+    }
+
+    try {
+      const p = await Product.create(body);
+      created.push(p);
+      existingSet.add(skuKey);
+    } catch (err) {
+      if (err && err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
+        failures.push({ index: i, sku, error: 'Duplicate SKU (row rejected)' });
+      } else {
+        failures.push({ index: i, sku, error: err.message || 'Failed to create product' });
+      }
+    }
+  }
+
+  try {
+    const actor = req.admin ? { role: req.admin.role, email: req.admin.email, sub: req.admin.sub, id: req.admin.id } : null;
+    const meta = {
+      totalRows: input.length,
+      createdCount: created.length,
+      failedCount: failures.length,
+      durationMs: Date.now() - startedAt,
+      failuresSample: failures.slice(0, 50),
+    };
+    await AuditLog.create({
+      action: 'PRODUCT_BULK_CREATE',
+      actor,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'] || '',
+      meta,
+    });
+  } catch {
+    // audit should never block the response
+  }
+
+  return res.status(created.length > 0 ? 201 : 200).json({
+    ok: failures.length === 0,
+    total: input.length,
+    createdCount: created.length,
+    failedCount: failures.length,
+    created,
+    failures,
+  });
 };
 
 exports.update = async (req, res) => {

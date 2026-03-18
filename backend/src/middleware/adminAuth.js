@@ -9,10 +9,11 @@ const adminAuth = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);  
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access only' });
     }
+    req.admin = decoded;
     return next();
   } catch {
     return res.status(401).json({ error: 'Unauthorized' });

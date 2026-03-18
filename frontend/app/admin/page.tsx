@@ -15,6 +15,7 @@ type Product = {
 
 const cards = [
   { href: '/admin/products', title: 'Latest Beauty Products', desc: 'Add, edit, or remove products shown in the Latest Beauty section.' },
+  { href: '/admin/products/bulk', title: 'Bulk Product Upload', desc: 'Upload many products at once using JSON (creates valid rows, reports failures).' },
   { href: '/admin/orders', title: 'Orders', desc: 'View and update order status (paid, shipped, tracking).' },
   { href: '/admin/hero', title: 'Hero Sliders', desc: 'Manage hero slides (images and optional video only).' },
   { href: '/admin/category-cards', title: 'Category Cards', desc: 'Edit the two featured cards (images, titles, descriptions, links) below the hero.' },

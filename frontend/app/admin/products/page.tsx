@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiGet, apiPost, apiPut, apiDelete, uploadFile, assetUrl } from '@/lib/api';
 
 const CATEGORY_OPTIONS = ['Earrings', 'Necklaces', 'Bracelets', 'Rings', 'Accessories', 'Accessories / Beauty bracelets'];
@@ -189,8 +190,18 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal">Latest Beauty Products</h1>
-      <p className="mt-1 text-stone-600">Add or edit products shown in the Latest Beauty section.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-charcoal">Latest Beauty Products</h1>
+          <p className="mt-1 text-stone-600">Add or edit products shown in the Latest Beauty section.</p>
+        </div>
+        <Link
+          href="/admin/products/bulk"
+          className="rounded border border-stone-300 px-3 py-2 text-sm font-medium text-charcoal hover:bg-stone-50"
+        >
+          Bulk upload →
+        </Link>
+      </div>
 
       <form onSubmit={saveProduct} className="mt-8 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
         <h2 className="font-medium text-charcoal">{editingId ? 'Edit product' : 'Add product'}</h2>

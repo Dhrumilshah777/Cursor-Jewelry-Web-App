@@ -69,6 +69,12 @@ export default function AdminBulkProductsPage() {
       return;
     }
 
+    const count = parsed.value.length;
+    const ok = window.confirm(
+      `Confirm bulk upload?\n\nYou are about to upload ${count} product${count === 1 ? '' : 's'}.\n\nExisting SKUs will be rejected, and valid rows will still be created.`
+    );
+    if (!ok) return;
+
     setSubmitting(true);
     try {
       const res = await apiPost<BulkResponse>('/api/admin/products/bulk', { products: parsed.value }, true);

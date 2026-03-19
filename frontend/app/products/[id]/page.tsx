@@ -327,7 +327,8 @@ export default function ProductDetailPage() {
           <span className="font-medium uppercase tracking-wide text-charcoal">{product.name}</span>
         </nav>
 
-        <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
+        {/* items-start: avoid stretching the image column to match the tall right column (removes blank gap under gallery) */}
+        <div className="grid items-start gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
           {/* Left: main image + thumbnail strip */}
           <div className="min-w-0">
             <div className="aspect-[4/5] w-full overflow-hidden rounded-xl bg-stone-100">

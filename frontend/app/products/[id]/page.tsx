@@ -327,10 +327,10 @@ export default function ProductDetailPage() {
           <span className="font-medium uppercase tracking-wide text-charcoal">{product.name}</span>
         </nav>
 
-        {/* items-start: avoid stretching the image column to match the tall right column (removes blank gap under gallery) */}
-        <div className="grid items-start gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
-          {/* Left: main image + thumbnail strip */}
-          <div className="min-w-0">
+        {/* 3-row flow on mobile: gallery → buy column → product details. On lg: gallery+details in col 1, buy in col 2 (details directly under thumbs). */}
+        <div className="grid items-start gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-x-12 lg:gap-y-0">
+          {/* Col 1 row 1: main image + thumbnails only */}
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <div className="aspect-[4/5] w-full overflow-hidden rounded-xl bg-stone-100">
               {!imageError && selectedSrc ? (
                 <img
@@ -392,8 +392,8 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Right: product details (match reference layout) */}
-          <div className="relative z-30 flex flex-col lg:pl-2">
+          {/* Col 2 row 1: title, price, CTAs, accordions (lg aligns top with gallery) */}
+          <div className="relative z-30 flex flex-col lg:col-start-2 lg:row-start-1 lg:pl-2">
             <div className="flex items-center gap-2">
               <div className="flex text-gold" aria-label="4.5 out of 5 stars">
                 {[1, 2, 3, 4].map((i) => (
@@ -618,42 +618,43 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Full-width: Product Details (dynamic), then Price breakup (table), then recommendations */}
-        <div className="mt-2 border-t border-stone-200 pt-4">
-          <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product Details</h3>
-          <p className="mt-4 text-sm text-stone-700">
-            <span className="font-bold italic text-charcoal">{product.name}</span>
-            {product.description?.trim()
-              ? ` ${product.description.split('\n')[0].trim()}`
-              : ' showcases elegant craftsmanship and refined design.'}
-          </p>
-          <hr className="my-6 border-stone-200" />
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold text-charcoal">Weight</p>
-              <ul className="mt-2 space-y-1 text-sm text-stone-700">
-                {product.weight && <li>Gross (Product) – {product.weight}</li>}
-                {product.priceBreakup?.netWeight != null && (
-                  <li>Net (Gold) – {Number(product.priceBreakup.netWeight)} gm</li>
-                )}
-                {!product.weight && product.priceBreakup?.netWeight == null && <li>—</li>}
-              </ul>
+          {/* Col 1 row 2: product copy directly under gallery (no dead space beside tall right column) */}
+          <div className="min-w-0 border-t border-stone-200 pt-6 lg:col-start-1 lg:row-start-2 lg:pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product Details</h3>
+            <p className="mt-4 text-sm text-stone-700">
+              <span className="font-bold italic text-charcoal">{product.name}</span>
+              {product.description?.trim()
+                ? ` ${product.description.split('\n')[0].trim()}`
+                : ' showcases elegant craftsmanship and refined design.'}
+            </p>
+            <hr className="my-6 border-stone-200" />
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <div>
+                <p className="text-sm font-semibold text-charcoal">Weight</p>
+                <ul className="mt-2 space-y-1 text-sm text-stone-700">
+                  {product.weight && <li>Gross (Product) – {product.weight}</li>}
+                  {product.priceBreakup?.netWeight != null && (
+                    <li>Net (Gold) – {Number(product.priceBreakup.netWeight)} gm</li>
+                  )}
+                  {!product.weight && product.priceBreakup?.netWeight == null && <li>—</li>}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-charcoal">Purity</p>
+                <p className="mt-2 text-sm text-stone-700">
+                  {product.priceBreakup?.goldPurity || product.goldPurity || '—'}
+                  {product.colors?.[0] ? ` (${product.colors[0]})` : ''}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-charcoal">Purity</p>
-              <p className="mt-2 text-sm text-stone-700">
-                {product.priceBreakup?.goldPurity || product.goldPurity || '—'}
-                {product.colors?.[0] ? ` (${product.colors[0]})` : ''}
-              </p>
-            </div>
+            {product.description && product.description.split('\n').length > 1 && (
+              <p className="mt-6 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
+            )}
           </div>
-          {product.description && product.description.split('\n').length > 1 && (
-            <p className="mt-6 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
-          )}
         </div>
 
+        {/* Full-width: Price breakup, recommendations */}
         {product.priceBreakup && (
           <div className="mt-8 border-t border-stone-200 pt-8">
             <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>

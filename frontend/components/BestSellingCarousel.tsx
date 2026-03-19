@@ -55,23 +55,27 @@ function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
+
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border bg-white/80 backdrop-blur transition-colors ${
+              wishlisted
+                ? 'border-blue-200 text-blue-600 hover:border-blue-300 hover:text-blue-700'
+                : 'border-stone-200 text-stone-500 hover:border-stone-400 hover:text-charcoal'
+            }`}
+            aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <svg className="h-4 w-4" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+          </button>
         </div>
+
         <div className="min-h-[4rem] pt-3">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="min-w-0 flex-1 font-sans text-sm font-medium uppercase tracking-wide text-charcoal line-clamp-2">
-              {product.name}
-            </h2>
-            <button
-              type="button"
-              onClick={toggleWishlist}
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-400 hover:text-charcoal"
-              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <svg className="h-4 w-4" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-            </button>
-          </div>
+          <h2 className="min-w-0 font-sans text-sm font-medium uppercase tracking-wide text-charcoal line-clamp-2">
+            {product.name}
+          </h2>
           <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
         </div>
       </Link>

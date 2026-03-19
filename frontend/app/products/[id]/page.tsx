@@ -31,6 +31,7 @@ type Product = {
   ringSize?: string;
   sku?: string;
   goldPurity?: string;
+  goldType?: string;
 };
 
 const RECENTLY_VIEWED_KEY = 'recently_viewed_products';
@@ -544,7 +545,12 @@ export default function ProductDetailPage() {
                   <p><span className="font-medium text-stone-600">SKU:</span> {product.sku || product._id || '—'}</p>
                   <p><span className="font-medium text-stone-600">Width:</span> {product.weight || '—'}</p>
                   <p><span className="font-medium text-stone-600">Diamond shape:</span> {product.carat || '—'}</p>
-                  <p><span className="font-medium text-stone-600">Material:</span> {product.priceBreakup?.goldPurity || product.goldPurity || product.category || '—'}</p>
+                  <p>
+                    <span className="font-medium text-stone-600">Material:</span>{' '}
+                    {[product.priceBreakup?.goldPurity || product.goldPurity, product.goldType].filter(Boolean).join(' · ') ||
+                      product.category ||
+                      '—'}
+                  </p>
                   <p><span className="font-medium text-stone-600">Style:</span> {product.category || '—'}</p>
                   <p><span className="font-medium text-stone-600">Profile:</span> Medium</p>
                 </div>

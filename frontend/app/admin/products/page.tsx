@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiGet, apiPost, apiPut, apiDelete, uploadFile, assetUrl } from '@/lib/api';
 
 const CATEGORY_OPTIONS = ['Earrings', 'Necklaces', 'Bracelets', 'Rings', 'Accessories', 'Accessories / Beauty bracelets'];
+const GOLD_TYPE_OPTIONS = ['Yellow Gold', 'Rose Gold', 'White Gold'] as const;
 const CARAT_OPTIONS = ['14kt', '18kt', '22kt', '24kt'];
 const HOME_SECTION_OPTIONS = [
   { key: 'latestBeauty', label: 'Latest Beauty section' },
@@ -34,6 +35,7 @@ type Product = {
   ringSize?: string;
   sku?: string;
   homeSections?: string[];
+  goldType?: string;
 };
 
 export default function AdminProductsPage() {
@@ -58,6 +60,7 @@ export default function AdminProductsPage() {
     ringSize: '',
     sku: '',
     homeSections: [],
+    goldType: '',
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -155,6 +158,7 @@ export default function AdminProductsPage() {
         ringSize: '',
         sku: '',
         homeSections: [],
+        goldType: '',
       });
       load();
     } catch (err) {
@@ -227,18 +231,6 @@ export default function AdminProductsPage() {
               ))}
             </select>
           </div>
-          {form.category === 'Rings' && (
-            <div>
-              <label className="block text-sm font-medium text-stone-700">Ring size</label>
-              <input
-                type="text"
-                value={form.ringSize ?? ''}
-                onChange={(e) => setForm((f) => ({ ...f, ringSize: e.target.value }))}
-                placeholder="e.g. 8, 9, 10"
-                className="mt-1 w-full rounded border border-stone-300 px-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          )}
           <div>
             <label className="block text-sm font-medium text-stone-700">Stock</label>
             <input
@@ -250,6 +242,33 @@ export default function AdminProductsPage() {
             />
             <p className="mt-0.5 text-xs text-stone-500">At 0, product is out of stock until you increase it.</p>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700">Gold type</label>
+            <select
+              value={form.goldType || ''}
+              onChange={(e) => setForm((f) => ({ ...f, goldType: e.target.value }))}
+              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+            >
+              <option value="">Select gold type</option>
+              {GOLD_TYPE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+          {form.category === 'Rings' && (
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-stone-700">Ring size</label>
+              <input
+                type="text"
+                value={form.ringSize ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, ringSize: e.target.value }))}
+                placeholder="e.g. 8, 9, 10"
+                className="mt-1 w-full max-w-md rounded border border-stone-300 px-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+          )}
           <div className="sm:col-span-2">
             <p className="text-sm font-medium text-stone-700">Homepage sections for this product image</p>
             <p className="mt-0.5 text-xs text-stone-500">
@@ -480,6 +499,7 @@ export default function AdminProductsPage() {
                   ringSize: '',
                   sku: '',
                   homeSections: [],
+                  goldType: '',
                 });
                 setSubImageUrlInput('');
               }}
@@ -498,7 +518,10 @@ export default function AdminProductsPage() {
             <div className="min-w-0 flex-1">
               <p className="font-medium text-charcoal">{p.name}</p>
               <p className="text-sm text-stone-500">
-                {p.category} · {p.price ? `₹${p.price}` : 'Gold-based'}
+                {p.category}
+                {(p as Product).goldType ? ` · ${(p as Product).goldType}` : ''}
+                {' · '}
+                {p.price ? `₹${p.price}` : 'Gold-based'}
                 {p.weight ? ` · ${p.weight}` : ''}
                 {p.carat ? ` · ${p.carat}` : ''} · Stock: {p.stock ?? 0}
                 {p.active === false ? ' · Inactive' : ''}
@@ -532,6 +555,7 @@ export default function AdminProductsPage() {
                     ringSize: (p as Product).ringSize ?? '',
                     sku: (p as Product).sku ?? '',
                     homeSections: (p as Product).homeSections ?? [],
+                    goldType: (p as Product).goldType ?? '',
                   });
                   setEditingId(p._id);
                   setError('');

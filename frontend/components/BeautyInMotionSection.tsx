@@ -137,7 +137,7 @@ export default function BeautyInMotionSection() {
                   className="relative flex w-[62vw] flex-shrink-0 snap-center sm:w-[45vw] md:w-[calc((100%-2rem*3)/4)]"
                 >
                   <div
-                    className={`relative w-full overflow-hidden rounded-xl bg-stone-200 transition-all duration-300 ${
+                    className={`relative w-full ovXerflow-hidden rounded-xl bg-stone-200 transition-all duration-300 ${
                       isActive
                         ? 'z-10 scale-105 shadow-lg ring-2 ring-charcoal/10'
                         : 'scale-100 shadow-none'

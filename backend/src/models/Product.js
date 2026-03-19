@@ -4,6 +4,8 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     category: { type: String, default: 'Accessories' },
+    /** Yellow Gold / Rose Gold / White Gold (admin “gold type” select) */
+    goldType: { type: String, default: '' },
     price: { type: String, default: '' }, // fixed price; empty when using gold pricing
     image: { type: String, required: true },
     subImages: [{ type: String }],

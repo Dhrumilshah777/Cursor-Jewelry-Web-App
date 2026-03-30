@@ -2,14 +2,7 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { getProductPrice } = require('../services/priceCalculator');
-const Razorpay = require('razorpay');
-
-const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
-const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
-let razorpayInstance = null;
-if (razorpayKeyId && razorpayKeySecret) {
-  razorpayInstance = new Razorpay({ key_id: razorpayKeyId, key_secret: razorpayKeySecret });
-}
+const { razorpayInstance, razorpayKeyId, razorpayKeySecret } = require('../services/razorpay');
 
 /** Create order (pending_payment). Requires idempotencyKey + shippingAddress. Items and total come from DB cart; duplicate key returns existing order. */
 exports.create = async (req, res) => {
@@ -25,6 +18,9 @@ exports.create = async (req, res) => {
 
     const existing = await Order.findOne({ user: req.userId, idempotencyKey: key });
     if (existing) {
+      if (!existing.razorpayOrderId) {
+        return res.status(500).json({ error: 'Payment service unavailable. Please try again.' });
+      }
       return res.status(200).json({
         order: existing.toObject ? existing.toObject() : existing,
         razorpayOrderId: existing.razorpayOrderId || null,
@@ -75,6 +71,10 @@ exports.create = async (req, res) => {
     });
 
     let razorpayOrderId = null;
+    if (!razorpayInstance) {
+      await Order.findByIdAndDelete(order._id);
+      return res.status(500).json({ error: 'Payment service unavailable. Please try again.' });
+    }
     if (razorpayInstance) {
       try {
         const amountPaise = Math.round(total * 100);
@@ -88,6 +88,9 @@ exports.create = async (req, res) => {
         await order.save();
       } catch (rzErr) {
         console.error('Razorpay order create error:', rzErr.message);
+        // Clean up the ghost order since it cannot be paid
+        await Order.findByIdAndDelete(order._id);
+        return res.status(502).json({ error: 'Payment gateway initialization failed. Please try again.' });
       }
     }
 
@@ -126,7 +129,7 @@ exports.verifyPayment = async (req, res) => {
     const result = await completePaidOrder(order._id.toString(), razorpayPaymentId);
     if (!result.ok) {
       if (result.reason === 'insufficient_stock') {
-        return res.status(400).json({ error: 'Payment received but item is out of stock. Support will contact you.' });
+        return res.status(400).json({ error: 'Item out of stock during payment completion. A refund has been automatically issued to your original payment method.' });
       }
       return res.status(500).json({ error: 'Could not complete order' });
     }

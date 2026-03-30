@@ -65,7 +65,6 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/site', require('./routes/site'));
 const deliveryCheckController = require('./controllers/deliveryCheckController');
 app.get('/api/delivery-check', deliveryCheckController.check);
-app.get('/api/delivery_check', deliveryCheckController.check);
 
 // User API (requires user auth)
 app.use('/api/cart', require('./routes/cart'));

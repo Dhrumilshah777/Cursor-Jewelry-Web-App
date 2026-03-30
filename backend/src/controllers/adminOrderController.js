@@ -33,10 +33,9 @@ exports.updateStatus = async (req, res) => {
 
     let didShiprocket = false;
     if (status && ALLOWED_STATUSES.includes(status)) {
-      if (status === 'processing') {
-        if (order.shiprocketShipmentId) {
-          order.status = 'shipped';
-        } else {
+      if (status === 'shipped') {
+        const hasTracking = Boolean(order.tracking && String(order.tracking).trim());
+        if (!order.shiprocketShipmentId && !hasTracking) {
           const orderWithUser = await Order.findById(req.params.id).populate('user', 'email');
           if (!orderWithUser) return res.status(404).json({ error: 'Order not found' });
           try {
@@ -51,6 +50,8 @@ exports.updateStatus = async (req, res) => {
             res.setHeader('Content-Type', 'application/json');
             return res.status(400).json({ error: msg });
           }
+        } else {
+          order.status = 'shipped';
         }
       } else {
         order.status = status;

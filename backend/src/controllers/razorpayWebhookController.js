@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const { razorpayInstance } = require('../services/razorpay');
 
 const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -47,7 +48,27 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
       );
       if (!result) {
         await session.abortTransaction();
-        await Order.findByIdAndUpdate(orderId, { status: 'stock_failed', razorpayPaymentId });
+        let refundId = '';
+        let refundStatus = '';
+        if (razorpayInstance && razorpayPaymentId) {
+          try {
+            const refund = await razorpayInstance.payments.refund(razorpayPaymentId);
+            refundId = String(refund?.id || '');
+            refundStatus = 'requested';
+            console.log(`Refund requested for stock_failed payment ${razorpayPaymentId} (refund ${refundId}) for order ${orderId}`);
+          } catch (refundErr) {
+            refundStatus = 'failed';
+            console.error(`Failed to automatically refund payment ${razorpayPaymentId}:`, refundErr?.message || refundErr);
+          }
+        }
+
+        await Order.findByIdAndUpdate(orderId, {
+          status: 'stock_failed',
+          razorpayPaymentId,
+          razorpayRefundId: refundId,
+          refundStatus,
+        });
+
         return { ok: false, reason: 'insufficient_stock', productId: it.productId };
       }
     }

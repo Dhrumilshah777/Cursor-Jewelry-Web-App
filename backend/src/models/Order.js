@@ -38,6 +38,12 @@ const orderSchema = new mongoose.Schema(
     idempotencyKey: { type: String, default: '' },
     razorpayOrderId: { type: String, default: '' },
     razorpayPaymentId: { type: String, default: '' },
+    razorpayRefundId: { type: String, default: '' },
+    refundStatus: {
+      type: String,
+      enum: ['', 'requested', 'failed'],
+      default: '',
+    },
     tracking: { type: String, default: '' },
     courier: { type: String, default: '' },
     shiprocketShipmentId: { type: String, default: '' },

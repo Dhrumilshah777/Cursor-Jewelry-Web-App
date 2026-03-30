@@ -42,6 +42,11 @@ export async function api<T>(
   // Auth via httpOnly cookies; send credentials so cookies are included
   const res = await fetch(`${BASE}${path}`, { ...init, headers, credentials: 'include' });
   if (!res.ok) {
+    // If the cookie-based session is missing/expired, avoid getting stuck in a "logged in" UI state.
+    if (typeof window !== 'undefined' && (res.status === 401 || res.status === 403)) {
+      if (user) clearUserLoggedIn();
+      if (admin) clearAdminLoggedIn();
+    }
     const text = await res.text();
     let err: { error?: string; message?: string } = { message: res.statusText };
     try {
@@ -186,7 +191,18 @@ export function setCart(items: CartItem[]) {
 
 export function addToCart(item: Omit<CartItem, 'quantity'> | CartItem) {
   if (getUserToken()) {
-    addToCartApi(item).catch(() => {});
+    addToCartApi(item).catch(() => {
+      // If the session cookie isn't actually present (401/403), fall back to guest cart so the UX still works.
+      const list = getCart();
+      const qty = 'quantity' in item ? item.quantity : 1;
+      const existing = list.find((p) => p.id === item.id);
+      if (existing) {
+        existing.quantity += qty;
+        setCart([...list]);
+      } else {
+        setCart([...list, { ...item, quantity: qty }]);
+      }
+    });
     return;
   }
   const list = getCart();

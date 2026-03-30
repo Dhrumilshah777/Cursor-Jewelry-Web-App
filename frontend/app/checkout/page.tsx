@@ -47,6 +47,11 @@ declare global {
     Razorpay?: new (options: {
       key: string;
       order_id: string;
+      prefill?: {
+        name?: string;
+        email?: string;
+        contact?: string;
+      };
       handler: (res: { razorpay_payment_id: string; razorpay_signature: string }) => void;
     }) => { open: () => void };
   }

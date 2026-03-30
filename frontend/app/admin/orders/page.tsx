@@ -51,6 +51,8 @@ export default function AdminOrdersPage() {
                       ? 'bg-indigo-100 text-indigo-800'
                       : order.status === 'paid'
                       ? 'bg-green-100 text-green-800'
+                      : order.status === 'payment_cancelled'
+                      ? 'bg-red-100 text-red-800'
                       : order.status === 'pending_payment'
                       ? 'bg-amber-100 text-amber-800'
                       : order.status === 'cancelled'

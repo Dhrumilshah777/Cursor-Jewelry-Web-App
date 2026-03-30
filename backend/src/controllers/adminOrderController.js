@@ -23,7 +23,7 @@ exports.getOne = async (req, res) => {
   }
 };
 
-const ALLOWED_STATUSES = ['pending_payment', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+const ALLOWED_STATUSES = ['pending_payment', 'payment_cancelled', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
 
 exports.updateStatus = async (req, res) => {
   try {

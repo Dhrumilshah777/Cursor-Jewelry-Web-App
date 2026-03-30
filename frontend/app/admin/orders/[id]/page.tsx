@@ -132,6 +132,7 @@ export default function AdminOrderDetailPage() {
               className="mt-1 rounded border border-stone-300 px-3 py-2"
             >
               <option value="pending_payment">Pending payment</option>
+              <option value="payment_cancelled">Payment cancelled</option>
               <option value="paid">Paid</option>
               <option value="processing">Processing (create Shiprocket shipment)</option>
               <option value="packed">Packed</option>

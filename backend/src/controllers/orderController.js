@@ -163,3 +163,20 @@ exports.getOne = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/** Mark a pending_payment order as payment_cancelled (user exited Razorpay). */
+exports.cancelPayment = async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, user: req.userId });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.status === 'paid') return res.status(409).json({ error: 'Order is already paid' });
+    if (order.status === 'pending_payment') {
+      order.status = 'payment_cancelled';
+      await order.save();
+    }
+    return res.json({ ok: true, status: order.status });
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    return res.status(500).json({ error: err.message });
+  }
+};

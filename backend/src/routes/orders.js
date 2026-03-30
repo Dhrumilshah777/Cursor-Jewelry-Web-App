@@ -10,6 +10,7 @@ router.use(userAuth);
 
 router.post('/', orderCreateLimiter, orderController.create);
 router.post('/verify-payment', orderController.verifyPayment);
+router.post('/:id/cancel-payment', orderController.cancelPayment);
 router.get('/', orderController.myOrders);
 router.get('/:id', orderController.getOne);
 

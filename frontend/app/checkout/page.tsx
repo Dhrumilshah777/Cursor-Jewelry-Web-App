@@ -52,6 +52,9 @@ declare global {
         email?: string;
         contact?: string;
       };
+      modal?: {
+        ondismiss?: () => void;
+      };
       handler: (res: { razorpay_payment_id: string; razorpay_signature: string }) => void;
     }) => { open: () => void };
   }
@@ -162,6 +165,14 @@ export default function CheckoutPage() {
           prefill: {
             name: address.name?.trim() || undefined,
             contact: contact || undefined,
+          },
+          modal: {
+            ondismiss: async () => {
+              if (!orderId) return;
+              try {
+                await apiPost(`/api/orders/${orderId}/cancel-payment`, undefined, { user: true });
+              } catch (_) {}
+            },
           },
           handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
             try {

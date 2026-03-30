@@ -150,9 +150,14 @@ export default function CheckoutPage() {
           setPlacing(false);
           return;
         }
+        const contact = String(address.phone || '').replace(/\\D/g, '').slice(-10);
         const rz = new Razorpay({
           key: rzKeyId,
           order_id: rzOrderId,
+          prefill: {
+            name: address.name?.trim() || undefined,
+            contact: contact || undefined,
+          },
           handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
             try {
               await apiPost(

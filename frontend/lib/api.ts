@@ -11,18 +11,44 @@ export function assetUrl(path: string): string {
   return `${BASE}${path}`;
 }
 
-const ADMIN_LOGGED_IN_KEY = 'admin_logged_in';
-const USER_LOGGED_IN_KEY = 'user_logged_in';
+type SessionCache = { ok: boolean; checkedAt: number };
+const SESSION_TTL_MS = 30_000;
+let userSession: SessionCache = { ok: false, checkedAt: 0 };
+let adminSession: SessionCache = { ok: false, checkedAt: 0 };
+
+function dispatchAuthUpdated() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth-updated'));
+}
 
 export function isAdminLoggedIn(): boolean {
   if (typeof window === 'undefined') return false;
-  return localStorage.getItem(ADMIN_LOGGED_IN_KEY) === '1';
+  if (!adminSession.checkedAt) return false;
+  if (Date.now() - adminSession.checkedAt > SESSION_TTL_MS) return false;
+  return adminSession.ok;
 }
+
+export async function refreshAdminSession(): Promise<boolean> {
+  try {
+    // Minimal check: if admin-only endpoint works, cookie is valid.
+    await apiGet<{ ok: boolean }>('/api/admin/me', { admin: true });
+    adminSession = { ok: true, checkedAt: Date.now() };
+    dispatchAuthUpdated();
+    return true;
+  } catch {
+    adminSession = { ok: false, checkedAt: Date.now() };
+    dispatchAuthUpdated();
+    return false;
+  }
+}
+
 export function setAdminLoggedIn() {
-  if (typeof window !== 'undefined') localStorage.setItem(ADMIN_LOGGED_IN_KEY, '1');
+  adminSession = { ok: true, checkedAt: Date.now() };
+  dispatchAuthUpdated();
 }
+
 export function clearAdminLoggedIn() {
-  if (typeof window !== 'undefined') localStorage.removeItem(ADMIN_LOGGED_IN_KEY);
+  adminSession = { ok: false, checkedAt: Date.now() };
+  dispatchAuthUpdated();
 }
 
 /** @deprecated Use isAdminLoggedIn; cookie holds the token */
@@ -84,13 +110,17 @@ export function clearAdminKey() {
 
 export function isUserLoggedIn(): boolean {
   if (typeof window === 'undefined') return false;
-  return localStorage.getItem(USER_LOGGED_IN_KEY) === '1';
+  if (!userSession.checkedAt) return false;
+  if (Date.now() - userSession.checkedAt > SESSION_TTL_MS) return false;
+  return userSession.ok;
 }
 export function setUserLoggedIn() {
-  if (typeof window !== 'undefined') localStorage.setItem(USER_LOGGED_IN_KEY, '1');
+  userSession = { ok: true, checkedAt: Date.now() };
+  dispatchAuthUpdated();
 }
 export function clearUserLoggedIn() {
-  if (typeof window !== 'undefined') localStorage.removeItem(USER_LOGGED_IN_KEY);
+  userSession = { ok: false, checkedAt: Date.now() };
+  dispatchAuthUpdated();
 }
 
 /** @deprecated Use isUserLoggedIn; cookie holds the token */
@@ -103,6 +133,19 @@ export function setUserToken(_token: string) {
 }
 export function clearUserToken() {
   clearUserLoggedIn();
+}
+
+export async function refreshUserSession(): Promise<boolean> {
+  try {
+    await apiGet<{ user: unknown }>('/api/auth/me', { user: true });
+    userSession = { ok: true, checkedAt: Date.now() };
+    dispatchAuthUpdated();
+    return true;
+  } catch {
+    userSession = { ok: false, checkedAt: Date.now() };
+    dispatchAuthUpdated();
+    return false;
+  }
 }
 
 export async function uploadFile(file: File, admin = true): Promise<{ url: string; filename: string }> {

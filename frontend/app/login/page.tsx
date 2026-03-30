@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getApiBase, isUserLoggedIn, clearUserToken, apiGet } from '@/lib/api';
+import { getApiBase, isUserLoggedIn, clearUserToken, apiGet, refreshUserSession } from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -31,6 +31,11 @@ export default function LoginPage() {
   }, []);
 
   const isLoggedIn = mounted && isUserLoggedIn();
+
+  useEffect(() => {
+    if (!mounted) return;
+    refreshUserSession().catch(() => {});
+  }, [mounted]);
 
   useEffect(() => {
     if (!isLoggedIn) {

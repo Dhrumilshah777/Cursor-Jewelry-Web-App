@@ -9,6 +9,7 @@ import {
   removeFromCart,
   updateCartQuantity,
   isUserLoggedIn,
+  refreshUserSession,
   assetUrl,
   type CartItem,
 } from '@/lib/api';
@@ -38,19 +39,22 @@ export default function CartPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    if (isUserLoggedIn()) {
-      getValidatedCartFromApi()
-        .then(({ items: validated, subtotal: total }) => {
-          setItems(validated);
-          setSubtotal(total);
-        })
-        .catch(() => setItems([]))
-        .finally(() => setLoading(false));
-    } else {
-      setItems(getCart());
-      setSubtotal(getCart().reduce((sum, i) => sum + (parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0) * i.quantity, 0));
-      setLoading(false);
-    }
+    (async () => {
+      const ok = await refreshUserSession();
+      if (ok) {
+        getValidatedCartFromApi()
+          .then(({ items: validated, subtotal: total }) => {
+            setItems(validated);
+            setSubtotal(total);
+          })
+          .catch(() => setItems([]))
+          .finally(() => setLoading(false));
+      } else {
+        setItems(getCart());
+        setSubtotal(getCart().reduce((sum, i) => sum + (parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0) * i.quantity, 0));
+        setLoading(false);
+      }
+    })();
   }, [mounted]);
 
   const refreshValidated = () => {

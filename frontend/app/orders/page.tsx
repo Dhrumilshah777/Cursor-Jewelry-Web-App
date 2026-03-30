@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { isUserLoggedIn, apiGet } from '@/lib/api';
+import { isUserLoggedIn, apiGet, refreshUserSession } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; quantity: number };
 type Order = {
@@ -20,15 +20,17 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = isUserLoggedIn();
-    if (!token) {
-      router.replace('/login?returnTo=/orders');
-      return;
-    }
-    apiGet<Order[]>('/api/orders', { user: true })
-      .then((list) => setOrders(Array.isArray(list) ? list : []))
-      .catch(() => setOrders([]))
-      .finally(() => setLoading(false));
+    (async () => {
+      const ok = await refreshUserSession();
+      if (!ok) {
+        router.replace('/login?returnTo=/orders');
+        return;
+      }
+      apiGet<Order[]>('/api/orders', { user: true })
+        .then((list) => setOrders(Array.isArray(list) ? list : []))
+        .catch(() => setOrders([]))
+        .finally(() => setLoading(false));
+    })();
   }, [router]);
 
   if (loading) {

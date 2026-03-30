@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { setUserLoggedIn, clearAdminLoggedIn, getCart, setCart, mergeCartApi, apiGet, getApiBase } from '@/lib/api';
+import { clearAdminLoggedIn, getCart, setCart, mergeCartApi, apiGet, getApiBase, refreshUserSession, clearUserLoggedIn } from '@/lib/api';
 
 function LoginCallbackContent() {
   const router = useRouter();
@@ -28,10 +28,11 @@ function LoginCallbackContent() {
         }
       }
       if (!cookieOk) {
+        clearUserLoggedIn();
         setStatus('error');
         return;
       }
-      setUserLoggedIn();
+      await refreshUserSession();
       const guestCart = getCart();
       if (guestCart.length > 0) {
         try {

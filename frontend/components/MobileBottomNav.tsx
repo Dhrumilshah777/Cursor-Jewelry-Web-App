@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { getCartCount, getCartFromApi, isUserLoggedIn, getWishlist } from '@/lib/api';
+import { getCartCount, getCartFromApi, isUserLoggedIn, getWishlist, refreshUserSession } from '@/lib/api';
 
 const items = [
   { href: '/', label: 'Home', icon: 'home' },
@@ -70,7 +70,7 @@ export default function MobileBottomNav() {
     };
     const refreshWishlist = () => setWishlistCount(getWishlist().length);
 
-    refreshCart();
+    refreshUserSession().finally(() => refreshCart());
     refreshWishlist();
 
     window.addEventListener('cart-updated', refreshCart);

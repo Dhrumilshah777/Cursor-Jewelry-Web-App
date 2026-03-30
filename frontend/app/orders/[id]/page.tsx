@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { isUserLoggedIn, apiGet, assetUrl } from '@/lib/api';
+import { isUserLoggedIn, apiGet, assetUrl, refreshUserSession } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; image?: string; quantity: number };
 type Address = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
@@ -67,15 +67,17 @@ export default function OrderDetailPage() {
       setLoading(false);
       return;
     }
-    const token = isUserLoggedIn();
-    if (!token) {
-      router.replace('/login?returnTo=/orders/' + id);
-      return;
-    }
-    apiGet<Order>(`/api/orders/${id}`, { user: true })
-      .then(setOrder)
-      .catch(() => setOrder(null))
-      .finally(() => setLoading(false));
+    (async () => {
+      const ok = await refreshUserSession();
+      if (!ok) {
+        router.replace('/login?returnTo=/orders/' + id);
+        return;
+      }
+      apiGet<Order>(`/api/orders/${id}`, { user: true })
+        .then(setOrder)
+        .catch(() => setOrder(null))
+        .finally(() => setLoading(false));
+    })();
   }, [id, router]);
 
   if (loading) {

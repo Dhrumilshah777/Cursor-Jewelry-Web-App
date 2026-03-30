@@ -76,18 +76,21 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    const token = isUserLoggedIn();
-    if (!token) {
-      router.replace('/login?returnTo=/checkout');
-      return;
-    }
-    getValidatedCartFromApi()
-      .then(({ items: validated, subtotal: total }) => {
-        setItems(validated);
-        setSubtotal(total);
-      })
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
+    (async () => {
+      const { refreshUserSession } = await import('@/lib/api');
+      const ok = await refreshUserSession();
+      if (!ok) {
+        router.replace('/login?returnTo=/checkout');
+        return;
+      }
+      getValidatedCartFromApi()
+        .then(({ items: validated, subtotal: total }) => {
+          setItems(validated);
+          setSubtotal(total);
+        })
+        .catch(() => setItems([]))
+        .finally(() => setLoading(false));
+    })();
   }, [mounted, router]);
 
   const loadRazorpay = (): Promise<void> => {

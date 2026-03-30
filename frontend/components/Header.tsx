@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import SearchOverlay from '@/components/SearchOverlay';
-import { getCartCount, getCartFromApi, isUserLoggedIn } from '@/lib/api';
+import { getCartCount, getCartFromApi, isUserLoggedIn, refreshUserSession } from '@/lib/api';
 
 const mainNavLinks = [
   { href: '/', label: 'HOME' },
@@ -32,7 +32,7 @@ export default function Header() {
         setCartCount(getCartCount());
       }
     };
-    refresh();
+    refreshUserSession().finally(() => refresh());
     window.addEventListener('cart-updated', refresh);
     return () => window.removeEventListener('cart-updated', refresh);
   }, []);

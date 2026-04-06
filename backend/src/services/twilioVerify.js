@@ -29,7 +29,7 @@ function normalizeIndianPhoneToE164(input) {
   return `+91${d}`;
 }
 
-async function sendWhatsAppOtp({ toE164 }) {
+async function sendSmsOtp({ toE164 }) {
   const client = getTwilioClient();
   const serviceSid = getVerifyServiceSid();
   if (!client || !serviceSid) {
@@ -37,10 +37,10 @@ async function sendWhatsAppOtp({ toE164 }) {
     err.code = 'TWILIO_NOT_CONFIGURED';
     throw err;
   }
-  return client.verify.v2.services(serviceSid).verifications.create({ to: toE164, channel: 'whatsapp' });
+  return client.verify.v2.services(serviceSid).verifications.create({ to: toE164, channel: 'sms' });
 }
 
-async function verifyWhatsAppOtp({ toE164, code }) {
+async function verifySmsOtp({ toE164, code }) {
   const client = getTwilioClient();
   const serviceSid = getVerifyServiceSid();
   if (!client || !serviceSid) {
@@ -53,7 +53,7 @@ async function verifyWhatsAppOtp({ toE164, code }) {
 
 module.exports = {
   normalizeIndianPhoneToE164,
-  sendWhatsAppOtp,
-  verifyWhatsAppOtp,
+  sendSmsOtp,
+  verifySmsOtp,
 };
 

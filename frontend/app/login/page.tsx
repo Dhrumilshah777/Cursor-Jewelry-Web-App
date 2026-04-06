@@ -71,7 +71,7 @@ export default function LoginPage() {
     try {
       const res = await apiPost<{ ok?: boolean; to?: string }>('/api/auth/whatsapp/request-otp', { phone });
       setOtpStep('sent');
-      setOtpInfo(res?.to ? `OTP sent on WhatsApp to ${res.to}` : 'OTP sent on WhatsApp.');
+      setOtpInfo(res?.to ? `OTP sent by SMS to ${res.to}` : 'OTP sent by SMS.');
     } catch (e) {
       setError((e as Error)?.message || 'Failed to send OTP');
     } finally {
@@ -140,8 +140,8 @@ export default function LoginPage() {
         </a>
 
         <div className="mt-6 rounded border border-stone-200 bg-white px-4 py-4 shadow-sm">
-          <p className="text-sm font-medium text-charcoal">Login with WhatsApp OTP</p>
-          <p className="mt-1 text-xs text-stone-500">Enter your Indian number. We’ll send an OTP on WhatsApp.</p>
+          <p className="text-sm font-medium text-charcoal">Login with SMS OTP</p>
+          <p className="mt-1 text-xs text-stone-500">Enter your Indian number. We’ll send an OTP by SMS.</p>
 
           <label className="mt-4 block text-xs font-medium text-stone-700" htmlFor="phone">
             Phone number (India)

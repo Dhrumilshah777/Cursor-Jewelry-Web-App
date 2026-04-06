@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const router = express.Router();
 const User = require('../models/User');
-const { normalizeIndianPhoneToE164, sendWhatsAppOtp, verifyWhatsAppOtp } = require('../services/twilioVerify');
+const { normalizeIndianPhoneToE164, sendSmsOtp, verifySmsOtp } = require('../services/twilioVerify');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -95,18 +95,22 @@ router.get(
   }
 );
 
-// ----- WhatsApp OTP (Twilio Verify) -----
+// ----- SMS OTP (Twilio Verify) — routes kept as /whatsapp/ for compatibility -----
 router.post('/whatsapp/request-otp', async (req, res) => {
   try {
     const phone = req.body?.phone;
     const toE164 = normalizeIndianPhoneToE164(phone);
     if (!toE164) return res.status(400).json({ error: 'Enter a valid Indian phone number' });
 
-    await sendWhatsAppOtp({ toE164 });
+    await sendSmsOtp({ toE164 });
     return res.json({ ok: true, to: toE164 });
   } catch (err) {
-    console.error('WhatsApp OTP request error:', err);
-    if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'WhatsApp OTP is not configured' });
+    const twilioDetail =
+      err && typeof err === 'object'
+        ? { message: err.message, code: err.code, status: err.status, moreInfo: err.moreInfo }
+        : err;
+    console.error('SMS OTP request error:', twilioDetail);
+    if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'SMS OTP is not configured' });
     return res.status(500).json({ error: 'Failed to send OTP' });
   }
 });
@@ -119,7 +123,7 @@ router.post('/whatsapp/verify-otp', async (req, res) => {
     if (!toE164) return res.status(400).json({ error: 'Enter a valid Indian phone number' });
     if (!code || typeof code !== 'string' && typeof code !== 'number') return res.status(400).json({ error: 'Enter the OTP' });
 
-    const check = await verifyWhatsAppOtp({ toE164, code });
+    const check = await verifySmsOtp({ toE164, code });
     if (!check || check.status !== 'approved') {
       return res.status(401).json({ error: 'Invalid OTP' });
     }
@@ -133,8 +137,8 @@ router.post('/whatsapp/verify-otp', async (req, res) => {
     issueUserJwtCookie(res, user);
     return res.json({ ok: true });
   } catch (err) {
-    console.error('WhatsApp OTP verify error:', err);
-    if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'WhatsApp OTP is not configured' });
+    console.error('SMS OTP verify error:', err);
+    if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'SMS OTP is not configured' });
     return res.status(500).json({ error: 'Failed to verify OTP' });
   }
 });

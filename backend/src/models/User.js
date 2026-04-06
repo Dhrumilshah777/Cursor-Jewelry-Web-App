@@ -2,8 +2,11 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
-    googleId: { type: String, required: true, unique: true },
-    email: { type: String, required: true },
+    // Either Google OAuth or phone-based login can create a user.
+    // Use sparse unique indexes so multiple docs can have null for these fields.
+    googleId: { type: String, unique: true, sparse: true },
+    email: { type: String },
+    phoneE164: { type: String, unique: true, sparse: true },
     name: { type: String, default: '' },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
   },

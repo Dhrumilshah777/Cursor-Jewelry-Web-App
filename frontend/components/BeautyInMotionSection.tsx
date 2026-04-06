@@ -67,7 +67,7 @@ export default function BeautyInMotionSection() {
     if (!el || videos.length === 0 || isJumpingRef.current) return;
     const setWidth = el.scrollWidth / REPEAT_COUNT;
     if (el.scrollLeft >= setWidth * 2 - 1) {
-      isJumpingRef.current = true;
+      isJumpingRef.current = true; 
       el.scrollLeft -= setWidth;
       requestAnimationFrame(() => { isJumpingRef.current = false; });
     } else if (el.scrollLeft <= 1) {

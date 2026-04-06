@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const router = express.Router();
 const User = require('../models/User');
+const { normalizeIndianPhoneToE164, sendWhatsAppOtp, verifyWhatsAppOtp } = require('../services/twilioVerify');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -25,6 +26,16 @@ function getAllowedEmails() {
   const list = process.env.ALLOWED_ADMIN_EMAILS;
   if (!list || !list.trim()) return [];
   return list.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+}
+
+function issueUserJwtCookie(res, user) {
+  const token = jwt.sign(
+    { sub: user._id.toString(), role: user.role || 'user' },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRY }
+  );
+  res.cookie('user_token', token, cookieOptions(token, 'user_token'));
+  return token;
 }
 
 // ----- Single Google OAuth: /login and /admin/login both use this -----
@@ -75,12 +86,7 @@ router.get(
       }
 
       // User: issue JWT, set httpOnly cookie, and pass token in URL (fallback when cookie is blocked cross-origin)
-      const token = jwt.sign(
-        { sub: user._id.toString(), role: 'user' },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRY }
-      );
-      res.cookie('user_token', token, cookieOptions(token, 'user_token'));
+      const token = issueUserJwtCookie(res, user);
       res.redirect(`${FRONTEND_URL}/login/callback?token=${encodeURIComponent(token)}`);
     } catch (err) {
       console.error('Google auth callback error:', err);
@@ -88,6 +94,50 @@ router.get(
     }
   }
 );
+
+// ----- WhatsApp OTP (Twilio Verify) -----
+router.post('/whatsapp/request-otp', async (req, res) => {
+  try {
+    const phone = req.body?.phone;
+    const toE164 = normalizeIndianPhoneToE164(phone);
+    if (!toE164) return res.status(400).json({ error: 'Enter a valid Indian phone number' });
+
+    await sendWhatsAppOtp({ toE164 });
+    return res.json({ ok: true, to: toE164 });
+  } catch (err) {
+    console.error('WhatsApp OTP request error:', err);
+    if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'WhatsApp OTP is not configured' });
+    return res.status(500).json({ error: 'Failed to send OTP' });
+  }
+});
+
+router.post('/whatsapp/verify-otp', async (req, res) => {
+  try {
+    const phone = req.body?.phone;
+    const code = req.body?.code;
+    const toE164 = normalizeIndianPhoneToE164(phone);
+    if (!toE164) return res.status(400).json({ error: 'Enter a valid Indian phone number' });
+    if (!code || typeof code !== 'string' && typeof code !== 'number') return res.status(400).json({ error: 'Enter the OTP' });
+
+    const check = await verifyWhatsAppOtp({ toE164, code });
+    if (!check || check.status !== 'approved') {
+      return res.status(401).json({ error: 'Invalid OTP' });
+    }
+
+    // Find or create a user for this phone number
+    let user = await User.findOne({ phoneE164: toE164 });
+    if (!user) {
+      user = await User.create({ phoneE164: toE164, role: 'user', name: '' });
+    }
+
+    issueUserJwtCookie(res, user);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('WhatsApp OTP verify error:', err);
+    if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'WhatsApp OTP is not configured' });
+    return res.status(500).json({ error: 'Failed to verify OTP' });
+  }
+});
 
 // Fallback: set cookie from token (when redirect cookie is blocked cross-origin). Token in Authorization header.
 router.post('/set-cookie', (req, res) => {

@@ -3,12 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getApiBase, isUserLoggedIn, clearUserToken, apiGet, refreshUserSession } from '@/lib/api';
+import { getApiBase, isUserLoggedIn, clearUserToken, apiGet, apiPost, refreshUserSession, setUserLoggedIn } from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpStep, setOtpStep] = useState<'idle' | 'sent'>('idle');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpInfo, setOtpInfo] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -59,6 +64,44 @@ export default function LoginPage() {
   const googleLoginUrl = `${getApiBase()}/api/auth/google`;
   const returnTo = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('returnTo') : null;
 
+  const handleSendOtp = async () => {
+    setError('');
+    setOtpInfo('');
+    setOtpLoading(true);
+    try {
+      const res = await apiPost<{ ok?: boolean; to?: string }>('/api/auth/whatsapp/request-otp', { phone });
+      setOtpStep('sent');
+      setOtpInfo(res?.to ? `OTP sent on WhatsApp to ${res.to}` : 'OTP sent on WhatsApp.');
+    } catch (e) {
+      setError((e as Error)?.message || 'Failed to send OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setError('');
+    setOtpInfo('');
+    setOtpLoading(true);
+    try {
+      await apiPost<{ ok?: boolean }>('/api/auth/whatsapp/verify-otp', { phone, code: otp });
+      setUserLoggedIn();
+      await refreshUserSession().catch(() => {});
+
+      const storedReturnTo = typeof window !== 'undefined' ? localStorage.getItem('login-return-to') : null;
+      if (storedReturnTo && typeof window !== 'undefined') {
+        localStorage.removeItem('login-return-to');
+        router.push(storedReturnTo);
+      } else {
+        router.push(returnTo || '/');
+      }
+    } catch (e) {
+      setError((e as Error)?.message || 'Invalid OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-[60vh] px-4 py-16 sm:py-24">
       <div className="mx-auto max-w-sm">
@@ -66,7 +109,7 @@ export default function LoginPage() {
           Login
         </h1>
         <p className="mt-2 text-stone-600">
-          Sign in with your Google account to access your wishlist and more.
+          Sign in with Google or with your phone number to access your wishlist and more.
         </p>
 
         {isLoggedIn && (
@@ -95,6 +138,64 @@ export default function LoginPage() {
           </svg>
           Sign in with Google
         </a>
+
+        <div className="mt-6 rounded border border-stone-200 bg-white px-4 py-4 shadow-sm">
+          <p className="text-sm font-medium text-charcoal">Login with WhatsApp OTP</p>
+          <p className="mt-1 text-xs text-stone-500">Enter your Indian number. We’ll send an OTP on WhatsApp.</p>
+
+          <label className="mt-4 block text-xs font-medium text-stone-700" htmlFor="phone">
+            Phone number (India)
+          </label>
+          <input
+            id="phone"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="e.g. 9876543210"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="mt-1 w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm text-charcoal outline-none focus:border-charcoal"
+            disabled={otpLoading}
+          />
+
+          {otpStep === 'sent' && (
+            <>
+              <label className="mt-4 block text-xs font-medium text-stone-700" htmlFor="otp">
+                OTP
+              </label>
+              <input
+                id="otp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="mt-1 w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm text-charcoal outline-none focus:border-charcoal"
+                disabled={otpLoading}
+              />
+            </>
+          )}
+
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              className="flex-1 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={otpLoading || !phone.trim()}
+            >
+              {otpLoading && otpStep === 'idle' ? 'Sending…' : otpStep === 'sent' ? 'Resend OTP' : 'Send OTP'}
+            </button>
+            <button
+              type="button"
+              onClick={handleVerifyOtp}
+              className="flex-1 rounded border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-charcoal hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={otpLoading || otpStep !== 'sent' || !otp.trim()}
+            >
+              {otpLoading && otpStep === 'sent' ? 'Verifying…' : 'Verify & Login'}
+            </button>
+          </div>
+
+          {otpInfo && <p className="mt-3 text-xs text-stone-600">{otpInfo}</p>}
+        </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 

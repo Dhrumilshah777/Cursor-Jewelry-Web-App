@@ -76,8 +76,8 @@ export default function AdminGoldRatesPage() {
       <h1 className="text-2xl font-semibold text-charcoal">Gold Rates</h1>
       <p className="mt-1 text-stone-600">Set price per gram for 14 KT, 18K, 22K, and 24K. Used to calculate product prices when Gold-based pricing is enabled. Update when market rates change.</p>
 
-      <div className="mt-8 max-w-md rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium text-stone-500">Price per gram (₹/gm) — 14 KT, 18K, 22K, 24K</h2>
+      <div className="mt-8 max-w-md rounded-lg border border-amber-100 bg-gradient-to-b from-amber-50 to-white p-6 shadow-sm">
+        <h2 className="mb-4 text-sm font-medium text-stone-600">Price per gram (₹/gm) — 14 KT, 18K, 22K, 24K</h2>
         {(['14K', '18K', '22K', '24K'] as const).map((purity) => (
           <div key={purity} className="flex flex-col gap-1 py-3 border-b border-stone-100 last:border-0 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export default function AdminGoldRatesPage() {
                 value={inputs[purity] ?? ''}
                 onChange={(e) => handleNumberInput(purity, e.target.value)}
                 placeholder={purity === '14K' ? 'Add 14 KT price…' : purity === '24K' ? 'Add 24 KT price…' : '₹ per gram'}
-                className="flex-1 rounded border border-stone-300 px-3 py-2"
+                className="flex-1 rounded border border-stone-300 bg-white px-3 py-2 text-charcoal placeholder:text-stone-400 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                 aria-label={`${purity} gold price per gram`}
               />
               <span className="text-stone-500 text-sm whitespace-nowrap">₹/gm</span>
@@ -103,7 +103,7 @@ export default function AdminGoldRatesPage() {
           type="button"
           onClick={save}
           disabled={saving}
-          className="mt-6 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+          className="mt-6 rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700 disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save rates'}
         </button>

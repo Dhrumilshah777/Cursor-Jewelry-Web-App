@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const passport = require('passport');
 const connectDB = require('./config/db');
 require('./config/passport');
+const { ensureOneRupeeProduct } = require('./seeds/ensureOneRupeeProduct');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -97,6 +98,11 @@ async function start() {
     process.exit(1);
   }
   await connectDB();
+  try {
+    await ensureOneRupeeProduct();
+  } catch (err) {
+    console.error('Failed to ensure ₹1 product:', err?.message || err);
+  }
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

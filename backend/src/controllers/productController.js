@@ -137,28 +137,41 @@ function hasValidGoldPricing(body) {
   return ['14K', '18K', '22K', '24K'].includes(p) && Number.isFinite(w) && w > 0;
 }
 
+function hasValidFixedPrice(body) {
+  const n = parseFloat(body.price);
+  return Number.isFinite(n) && n > 0;
+}
+
 exports.create = async (req, res) => {
   try {
     const body = { ...req.body };
     const hasGold = hasValidGoldPricing(body);
-    if (!hasGold) {
-      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).' });
+    const hasFixed = hasValidFixedPrice(body);
+    if (!hasGold && !hasFixed) {
+      return res.status(400).json({
+        error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+      });
     }
 
     const categoryCode = getCategoryCode(body.category);
-    const purityCheck = validatePurity(body.goldPurity);
     if (!categoryCode) {
       return res.status(400).json({
         error: 'Invalid category for SKU. Use one of: Rings, Earrings, Chain, Bracelet, Pendant (or codes: RING, ERNG, CHN, BRCL, PEND).',
       });
     }
-    if (!purityCheck.valid) {
-      return res.status(400).json({ error: purityCheck.error });
-    }
 
     let sku;
     try {
-      sku = await generateSKU(categoryCode, body.goldPurity);
+      // For fixed-price products, allow providing a custom SKU; otherwise generate a SKU based on purity.
+      if (hasFixed && body.sku && String(body.sku).trim()) {
+        sku = String(body.sku).trim();
+      } else {
+        const purityCheck = validatePurity(body.goldPurity);
+        if (!purityCheck.valid) {
+          return res.status(400).json({ error: purityCheck.error });
+        }
+        sku = await generateSKU(categoryCode, body.goldPurity);
+      }
     } catch (skuErr) {
       return res.status(400).json({ error: skuErr.message });
     }
@@ -232,11 +245,12 @@ exports.bulkCreate = async (req, res) => {
     const body = { ...row, sku };
 
     const hasGold = hasValidGoldPricing(body);
-    if (!hasGold) {
+    const hasFixed = hasValidFixedPrice(body);
+    if (!hasGold && !hasFixed) {
       failures.push({
         index: i,
         sku,
-        error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+        error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
       continue;
     }
@@ -258,10 +272,12 @@ exports.bulkCreate = async (req, res) => {
       }
     }
 
-    const purityCheck = validatePurity(body.goldPurity);
-    if (!purityCheck.valid) {
-      failures.push({ index: i, sku, error: purityCheck.error });
-      continue;
+    if (!hasFixed) {
+      const purityCheck = validatePurity(body.goldPurity);
+      if (!purityCheck.valid) {
+        failures.push({ index: i, sku, error: purityCheck.error });
+        continue;
+      }
     }
 
     try {
@@ -314,8 +330,11 @@ exports.update = async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Product not found' });
     const merged = { ...existing.toObject(), ...body };
     const hasGold = hasValidGoldPricing(merged);
-    if (!hasGold) {
-      return res.status(400).json({ error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).' });
+    const hasFixed = hasValidFixedPrice(merged);
+    if (!hasGold && !hasFixed) {
+      return res.status(400).json({
+        error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+      });
     }
     const product = await Product.findByIdAndUpdate(req.params.id, body, { new: true });
     res.json(product);

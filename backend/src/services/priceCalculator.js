@@ -12,6 +12,11 @@ const GST_RATE = 0.03; // 3%
  */
 async function getProductPrice(product, goldRatesMap = null) {
   const p = product.toObject ? product.toObject() : product;
+  const fixed = parseFloat(p.price);
+  const hasFixed = Number.isFinite(fixed) && fixed > 0;
+  if (hasFixed) {
+    return { price: Math.round(fixed * 100) / 100, breakup: { fixedPrice: Math.round(fixed * 100) / 100 } };
+  }
   const purity = (p.goldPurity || '').toString().toUpperCase().replace(/\s/g, '');
   const netWeight = parseFloat(p.netWeight);
   const hasGold = purity && (purity === '14K' || purity === '18K' || purity === '22K' || purity === '24K') && Number.isFinite(netWeight) && netWeight > 0;

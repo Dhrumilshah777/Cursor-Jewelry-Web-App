@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { getCartCount, getCartFromApi, isUserLoggedIn, getWishlist, refreshUserSession } from '@/lib/api';
+import { getCartCount, getValidatedCartFromApi, isUserLoggedIn, getWishlist, refreshUserSession } from '@/lib/api';
 
 const items = [
   { href: '/', label: 'Home', icon: 'home' },
@@ -61,8 +61,8 @@ export default function MobileBottomNav() {
   useEffect(() => {
     const refreshCart = () => {
       if (isUserLoggedIn()) {
-        getCartFromApi()
-          .then((items) => setCartCount(items.reduce((s, i) => s + i.quantity, 0)))
+        getValidatedCartFromApi()
+          .then(({ items }) => setCartCount(items.reduce((s, i) => s + i.quantity, 0)))
           .catch(() => setCartCount(0));
       } else {
         setCartCount(getCartCount());

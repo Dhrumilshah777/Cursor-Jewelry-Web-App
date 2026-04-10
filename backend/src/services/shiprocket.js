@@ -53,6 +53,63 @@ function truncate(str, max) {
   return s.length > max ? s.slice(0, max) : s;
 }
 
+function toNumber(val) {
+  const n = typeof val === 'number' ? val : parseFloat(String(val || '').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+async function getLowestCostCourierId({
+  token,
+  pickupPincode,
+  deliveryPincode,
+  weight = 0.5,
+  cod = 0,
+  mode = 'Surface',
+}) {
+  const pickup = parseInt(String(pickupPincode || '').replace(/\D/g, ''), 10);
+  const delivery = parseInt(String(deliveryPincode || '').replace(/\D/g, ''), 10);
+  if (!Number.isFinite(pickup) || pickup <= 0 || !Number.isFinite(delivery) || delivery <= 0) return null;
+
+  const params = new URLSearchParams({
+    pickup_postcode: String(pickup),
+    delivery_postcode: String(delivery),
+    weight: String(weight),
+    cod: String(cod ? 1 : 0),
+    mode: String(mode || 'Surface'),
+  });
+
+  const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/?${params.toString()}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return null;
+
+  const companies =
+    data.data?.available_courier_companies ??
+    data.data?.data?.available_courier_companies ??
+    data.available_courier_companies ??
+    [];
+
+  if (!Array.isArray(companies) || companies.length === 0) return null;
+
+  let best = null;
+  for (const c of companies) {
+    const courierId = c.courier_company_id ?? c.courier_id ?? c.courier_company ?? c.id;
+    const charge = toNumber(c.freight_charge ?? c.rate ?? c.shipping_charges ?? c.charge);
+    const isSurface = String(c.mode || '').toLowerCase() === 'surface';
+    if (!courierId) continue;
+    if (mode && String(mode).toLowerCase() === 'surface' && !isSurface && c.mode) {
+      // If API returns mixed modes, keep requested mode preference.
+      continue;
+    }
+    if (charge == null) continue;
+    if (!best || charge < best.charge) best = { courierId: parseInt(String(courierId), 10), charge };
+  }
+
+  return best && Number.isFinite(best.courierId) ? best.courierId : null;
+}
+
 async function createShipment(order) {
   const token = await getToken();
   const addr = order.shippingAddress || {};
@@ -152,14 +209,28 @@ async function createShipment(order) {
   const oid = parseInt(String(srOrderId), 10);
   const validSid = !Number.isNaN(sid) && sid > 0 ? sid : null;
   const validOid = !Number.isNaN(oid) && oid > 0 ? oid : null;
+
+  // Try to pick the lowest-cost courier for this lane.
+  // If we can't fetch rates (API quirks / account settings), we fall back to Shiprocket's default selection.
+  const pickupPincode = parseInt(String(process.env.SHIPROCKET_PICKUP_PINCODE || '395003').replace(/\D/g, ''), 10);
+  const courierId = await getLowestCostCourierId({
+    token,
+    pickupPincode,
+    deliveryPincode: billingPincode,
+    weight: payload.weight || 0.5,
+    cod: 0,
+    mode: 'Surface',
+  });
+
   // Shiprocket assign AWB: some versions expect order_id, others shipment_id or both (integers)
-  const assignBody = validOid && validSid
+  const baseAssignBody = validOid && validSid
     ? { order_id: validOid, shipment_id: validSid }
     : validSid
       ? { shipment_id: validSid }
       : validOid
         ? { order_id: validOid }
         : { order_id: oid || sid, shipment_id: sid || oid };
+  const assignBody = courierId ? { ...baseAssignBody, courier_id: courierId } : baseAssignBody;
   const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
     method: 'POST',
     headers: {

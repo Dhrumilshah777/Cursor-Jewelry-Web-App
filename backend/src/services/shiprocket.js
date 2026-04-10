@@ -5,6 +5,16 @@
 
 const SHIPROCKET_BASE = 'https://apiv2.shiprocket.in/v1/external';
 
+const SHIPROCKET_DEBUG =
+  String(process.env.SHIPROCKET_DEBUG || '').toLowerCase() === 'true' ||
+  String(process.env.SHIPROCKET_DEBUG || '') === '1';
+
+function srLog(event, meta = {}) {
+  if (!SHIPROCKET_DEBUG) return;
+  // Avoid logging PII (full address/phone/email). Keep only operational debug fields.
+  console.log(`[shiprocket] ${event}`, meta);
+}
+
 let cachedToken = null;
 let tokenExpiry = 0;
 const TOKEN_BUFFER_MS = 5 * 60 * 1000; // refresh 5 min before expiry
@@ -78,12 +88,26 @@ async function getLowestCostCourierId({
     mode: String(mode || 'Surface'),
   });
 
+  srLog('serviceability.request', {
+    pickup_postcode: String(pickup),
+    delivery_postcode: String(delivery),
+    weight: String(weight),
+    cod: String(cod ? 1 : 0),
+    mode: String(mode || 'Surface'),
+  });
+
   const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/?${params.toString()}`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) return null;
+  if (!res.ok) {
+    srLog('serviceability.error', {
+      status: res.status,
+      message: data?.message || data?.error || 'serviceability failed',
+    });
+    return null;
+  }
 
   const companies =
     data.data?.available_courier_companies ??
@@ -106,6 +130,12 @@ async function getLowestCostCourierId({
     if (charge == null) continue;
     if (!best || charge < best.charge) best = { courierId: parseInt(String(courierId), 10), charge };
   }
+
+  srLog('serviceability.selected', {
+    selected_courier_id: best?.courierId ?? null,
+    selected_freight_charge: best?.charge ?? null,
+    options_count: companies.length,
+  });
 
   return best && Number.isFinite(best.courierId) ? best.courierId : null;
 }
@@ -222,6 +252,12 @@ async function createShipment(order) {
     mode: 'Surface',
   });
 
+  srLog('awb.assign.request', {
+    shipment_id: validSid ?? null,
+    order_id: validOid ?? null,
+    courier_id: courierId ?? null,
+  });
+
   // Shiprocket assign AWB: some versions expect order_id, others shipment_id or both (integers)
   const baseAssignBody = validOid && validSid
     ? { order_id: validOid, shipment_id: validSid }
@@ -241,6 +277,12 @@ async function createShipment(order) {
   });
   const assignData = await assignRes.json().catch(() => ({}));
   if (!assignRes.ok) {
+    srLog('awb.assign.error', {
+      status: assignRes.status,
+      message: assignData?.message || assignData?.error || 'awb assign failed',
+      shipment_id: String(shipmentId || srOrderId),
+      courier_id: courierId ?? null,
+    });
     // Order was created in Shiprocket; assign AWB often fails (API quirk). Return partial success so admin can assign AWB from dashboard.
     return {
       shipment_id: String(shipmentId || srOrderId),
@@ -250,6 +292,13 @@ async function createShipment(order) {
   }
   const awb = assignData.awb_code ?? assignData.data?.awb_code ?? assignData.courier_awb ?? '';
   const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';
+
+  srLog('awb.assign.success', {
+    shipment_id: String(shipmentId || srOrderId),
+    awb_code: awb ? String(awb) : '',
+    courier_name: courier ? String(courier) : '',
+    courier_id: courierId ?? null,
+  });
 
   return {
     shipment_id: String(shipmentId || srOrderId),

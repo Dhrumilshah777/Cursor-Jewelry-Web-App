@@ -45,6 +45,12 @@ exports.updateStatus = async (req, res) => {
             order.courier = shipment.courier_name || order.courier;
             order.status = 'shipped';
             didShiprocket = true;
+            if (!String(order.tracking || '').trim()) {
+              console.warn(
+                '[order] Marked shipped but no AWB yet. Check server logs for [shiprocket] awb.assign.failed. ' +
+                  `orderId=${order._id} shiprocketShipmentId=${order.shiprocketShipmentId}`
+              );
+            }
           } catch (shipErr) {
             const msg = (shipErr && shipErr.message) ? String(shipErr.message) : 'Shiprocket shipment failed';
             res.setHeader('Content-Type', 'application/json');

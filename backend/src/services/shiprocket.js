@@ -15,6 +15,11 @@ function srLog(event, meta = {}) {
   console.log(`[shiprocket] ${event}`, meta);
 }
 
+/** Always-on operational log (no PII). Use for AWB issues that are otherwise silent in production. */
+function srWarn(event, meta = {}) {
+  console.warn(`[shiprocket] ${event}`, meta);
+}
+
 let cachedToken = null;
 let tokenExpiry = 0;
 const TOKEN_BUFFER_MS = 5 * 60 * 1000; // refresh 5 min before expiry
@@ -277,10 +282,23 @@ async function createShipment(order) {
   });
   const assignData = await assignRes.json().catch(() => ({}));
   if (!assignRes.ok) {
+    const errMsg = assignData?.message || assignData?.error || 'awb assign failed';
+    const errExtra =
+      Array.isArray(assignData?.errors) ? assignData.errors.join('; ') : assignData?.errors && typeof assignData.errors === 'object'
+        ? JSON.stringify(assignData.errors).slice(0, 300)
+        : '';
     srLog('awb.assign.error', {
       status: assignRes.status,
-      message: assignData?.message || assignData?.error || 'awb assign failed',
+      message: errMsg,
       shipment_id: String(shipmentId || srOrderId),
+      courier_id: courierId ?? null,
+    });
+    srWarn('awb.assign.failed', {
+      http_status: assignRes.status,
+      message: errMsg,
+      detail: errExtra || undefined,
+      shipment_id: String(shipmentId || srOrderId),
+      order_id: validOid ?? null,
       courier_id: courierId ?? null,
     });
     // Order was created in Shiprocket; assign AWB often fails (API quirk). Return partial success so admin can assign AWB from dashboard.
@@ -292,6 +310,15 @@ async function createShipment(order) {
   }
   const awb = assignData.awb_code ?? assignData.data?.awb_code ?? assignData.courier_awb ?? '';
   const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';
+
+  if (!String(awb || '').trim()) {
+    srWarn('awb.assign.ok_but_no_awb_in_body', {
+      shipment_id: String(shipmentId || srOrderId),
+      order_id: validOid ?? null,
+      response_status_code: assignData?.status_code ?? assignData?.status ?? undefined,
+      message: assignData?.message || assignData?.error || undefined,
+    });
+  }
 
   srLog('awb.assign.success', {
     shipment_id: String(shipmentId || srOrderId),

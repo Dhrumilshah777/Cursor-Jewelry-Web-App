@@ -7,7 +7,7 @@ async function ensureOneRupeeProduct() {
     name: '₹1 Product',
     category: 'Accessories',
     price: '1',
-    image: 'https://via.placeholder.com/256?text=%E2%82%B91',
+    image: 'https://i.pinimg.com/736x/63/c8/84/63c8843ca6bf89c0979967db22e2e3c7.jpg',
     active: true,
     stock: 999999,
     sku: ONE_RUPEE_SKU,

@@ -10,15 +10,28 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 const isProduction = process.env.NODE_ENV === 'production';
 
+function isLikelyHttpsUrl(url) {
+  return typeof url === 'string' && url.toLowerCase().startsWith('https://');
+}
+
+function isLocalhostUrl(url) {
+  if (typeof url !== 'string') return false;
+  const u = url.toLowerCase();
+  return u.includes('localhost') || u.includes('127.0.0.1');
+}
+
 function cookieOptions(token, name) {
   const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
+  // iOS/Safari is strict about cross-site cookies. If frontend is on HTTPS and not localhost,
+  // we must use SameSite=None; Secure or the auth cookie can be dropped.
+  const crossSite = isProduction || (isLikelyHttpsUrl(FRONTEND_URL) && !isLocalhostUrl(FRONTEND_URL));
   const opts = {
     httpOnly: true,
     maxAge: maxAge * 1000,
     path: '/',
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: crossSite ? 'none' : 'lax',
   };
-  if (isProduction) opts.secure = true;
+  if (crossSite) opts.secure = true;
   return opts;
 }
 

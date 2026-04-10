@@ -16,15 +16,37 @@ const SESSION_TTL_MS = 30_000;
 let userSession: SessionCache = { ok: false, checkedAt: 0 };
 let adminSession: SessionCache = { ok: false, checkedAt: 0 };
 
+const LS_USER_LOGGED_IN = 'user_logged_in';
+const LS_ADMIN_LOGGED_IN = 'admin_logged_in';
+
+function readLoginFlag(key: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeLoginFlag(key: string, value: boolean) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (value) localStorage.setItem(key, '1');
+    else localStorage.removeItem(key);
+  } catch {
+    // ignore (Safari private mode / storage blocked)
+  }
+}
+
 function dispatchAuthUpdated() {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth-updated'));
 }
 
 export function isAdminLoggedIn(): boolean {
   if (typeof window === 'undefined') return false;
-  if (!adminSession.checkedAt) return false;
-  if (Date.now() - adminSession.checkedAt > SESSION_TTL_MS) return false;
-  return adminSession.ok;
+  // Prefer fresh in-memory cache when available; otherwise fall back to persisted hint.
+  if (adminSession.checkedAt && Date.now() - adminSession.checkedAt <= SESSION_TTL_MS) return adminSession.ok;
+  return readLoginFlag(LS_ADMIN_LOGGED_IN);
 }
 
 export async function refreshAdminSession(): Promise<boolean> {
@@ -32,10 +54,12 @@ export async function refreshAdminSession(): Promise<boolean> {
     // Minimal check: if admin-only endpoint works, cookie is valid.
     await apiGet<{ ok: boolean }>('/api/admin/me', { admin: true });
     adminSession = { ok: true, checkedAt: Date.now() };
+    writeLoginFlag(LS_ADMIN_LOGGED_IN, true);
     dispatchAuthUpdated();
     return true;
   } catch {
     adminSession = { ok: false, checkedAt: Date.now() };
+    writeLoginFlag(LS_ADMIN_LOGGED_IN, false);
     dispatchAuthUpdated();
     return false;
   }
@@ -43,11 +67,13 @@ export async function refreshAdminSession(): Promise<boolean> {
 
 export function setAdminLoggedIn() {
   adminSession = { ok: true, checkedAt: Date.now() };
+  writeLoginFlag(LS_ADMIN_LOGGED_IN, true);
   dispatchAuthUpdated();
 }
 
 export function clearAdminLoggedIn() {
   adminSession = { ok: false, checkedAt: Date.now() };
+  writeLoginFlag(LS_ADMIN_LOGGED_IN, false);
   dispatchAuthUpdated();
 }
 
@@ -110,16 +136,18 @@ export function clearAdminKey() {
 
 export function isUserLoggedIn(): boolean {
   if (typeof window === 'undefined') return false;
-  if (!userSession.checkedAt) return false;
-  if (Date.now() - userSession.checkedAt > SESSION_TTL_MS) return false;
-  return userSession.ok;
+  // Prefer fresh in-memory cache when available; otherwise fall back to persisted hint.
+  if (userSession.checkedAt && Date.now() - userSession.checkedAt <= SESSION_TTL_MS) return userSession.ok;
+  return readLoginFlag(LS_USER_LOGGED_IN);
 }
 export function setUserLoggedIn() {
   userSession = { ok: true, checkedAt: Date.now() };
+  writeLoginFlag(LS_USER_LOGGED_IN, true);
   dispatchAuthUpdated();
 }
 export function clearUserLoggedIn() {
   userSession = { ok: false, checkedAt: Date.now() };
+  writeLoginFlag(LS_USER_LOGGED_IN, false);
   dispatchAuthUpdated();
 }
 
@@ -139,10 +167,12 @@ export async function refreshUserSession(): Promise<boolean> {
   try {
     await apiGet<{ user: unknown }>('/api/auth/me', { user: true });
     userSession = { ok: true, checkedAt: Date.now() };
+    writeLoginFlag(LS_USER_LOGGED_IN, true);
     dispatchAuthUpdated();
     return true;
   } catch {
     userSession = { ok: false, checkedAt: Date.now() };
+    writeLoginFlag(LS_USER_LOGGED_IN, false);
     dispatchAuthUpdated();
     return false;
   }

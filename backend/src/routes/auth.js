@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const User = require('../models/User');
 const { normalizeIndianPhoneToE164, sendSmsOtp, verifySmsOtp } = require('../services/twilioVerify');
@@ -9,6 +10,22 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 const isProduction = process.env.NODE_ENV === 'production';
+
+const oauthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests' },
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests' },
+});
 
 function isLikelyHttpsUrl(url) {
   return typeof url === 'string' && url.toLowerCase().startsWith('https://');
@@ -52,7 +69,7 @@ function issueUserJwtCookie(res, user) {
 }
 
 // ----- Single Google OAuth: /login and /admin/login both use this -----
-router.get('/google', (req, res, next) => {
+router.get('/google', oauthLimiter, (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.redirect(`${FRONTEND_URL}/login?error=google_not_configured`);
   }
@@ -61,6 +78,7 @@ router.get('/google', (req, res, next) => {
 
 router.get(
   '/google/callback',
+  oauthLimiter,
   passport.authenticate('google', { session: false, failureRedirect: `${FRONTEND_URL}/login?error=google_denied` }),
   async (req, res) => {
     try {
@@ -109,7 +127,7 @@ router.get(
 );
 
 // ----- SMS OTP (Twilio Verify) — routes kept as /whatsapp/ for compatibility -----
-router.post('/whatsapp/request-otp', async (req, res) => {
+router.post('/whatsapp/request-otp', otpLimiter, async (req, res) => {
   try {
     const phone = req.body?.phone;
     const toE164 = normalizeIndianPhoneToE164(phone);
@@ -128,7 +146,7 @@ router.post('/whatsapp/request-otp', async (req, res) => {
   }
 });
 
-router.post('/whatsapp/verify-otp', async (req, res) => {
+router.post('/whatsapp/verify-otp', otpLimiter, async (req, res) => {
   try {
     const phone = req.body?.phone;
     const code = req.body?.code;

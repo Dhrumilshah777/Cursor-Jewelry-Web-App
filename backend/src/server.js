@@ -68,8 +68,11 @@ app.get('/api/health', (req, res) => {
 // Rate limits
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50, message: { error: 'Too many requests' } });
 
-// Auth (Google OAuth can be added later)
-app.use('/api/auth', authLimiter, require('./routes/auth'));
+// Auth
+// Note: Do not apply a global limiter to all /api/auth routes, because the frontend
+// calls /api/auth/me to verify sessions and can hit 429s (especially on iOS/Safari).
+// Rate limiting is applied per-route inside the auth router for sensitive endpoints.
+app.use('/api/auth', require('./routes/auth'));
 
 // Public API (no auth)
 app.use('/api/products', require('./routes/products'));

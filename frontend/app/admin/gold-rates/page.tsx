@@ -73,8 +73,8 @@ export default function AdminGoldRatesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal">Gold Rates</h1>
-      <p className="mt-1 text-stone-600">Set price per gram for 14 KT, 18K, 22K, and 24K. Used to calculate product prices when Gold-based pricing is enabled. Update when market rates change.</p>
+      <h1 className="text-2xl font-semibold tracking-tight text-charcoal">Gold Rates</h1>
+      <p className="mt-1 text-sm leading-relaxed text-stone-600">Set price per gram for 14 KT, 18K, 22K, and 24K. Used to calculate product prices when Gold-based pricing is enabled. Update when market rates change.</p>
 
       <div className="mt-8 max-w-md rounded-lg border border-amber-100 bg-gradient-to-b from-amber-50 to-white p-6 shadow-sm">
         <h2 className="mb-4 text-sm font-medium text-stone-600">Price per gram (₹/gm) — 14 KT, 18K, 22K, 24K</h2>

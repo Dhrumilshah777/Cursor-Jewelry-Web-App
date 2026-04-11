@@ -14,6 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+// Render (and similar) terminate TLS and set X-Forwarded-For. Required for express-rate-limit and accurate req.ip.
+if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 
 // Middleware: CORS with credentials so frontend can send httpOnly cookies

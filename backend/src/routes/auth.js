@@ -68,6 +68,51 @@ function issueUserJwtCookie(res, user) {
   return token;
 }
 
+/** Google profile from passport-google-oauth20 verify: { id, email, name } */
+async function finalizeGoogleOAuth(res, profile) {
+  try {
+    const { id, email, name } = profile || {};
+    if (!id || !email) {
+      return res.redirect(`${FRONTEND_URL}/login?error=no_email`);
+    }
+    const emailLower = email.toLowerCase();
+    const allowed = getAllowedEmails();
+    const isAdminEmail = allowed.length > 0 && allowed.includes(emailLower);
+
+    let user = await User.findOne({ googleId: id });
+    if (!user) {
+      user = await User.create({
+        googleId: id,
+        email: emailLower,
+        name: name || '',
+        role: isAdminEmail ? 'admin' : 'user',
+      });
+    } else {
+      user.role = isAdminEmail ? 'admin' : 'user';
+      if (name && user.name !== name) user.name = name;
+      await user.save();
+    }
+
+    if (user.role === 'admin') {
+      const token = jwt.sign(
+        { sub: user._id.toString(), role: 'admin', email: emailLower },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY }
+      );
+      res.cookie('admin_token', token, cookieOptions(token, 'admin_token'));
+      return res.redirect(`${FRONTEND_URL}/admin/auth/callback?token=${encodeURIComponent(token)}`);
+    }
+
+    const token = issueUserJwtCookie(res, user);
+    return res.redirect(`${FRONTEND_URL}/login/callback?token=${encodeURIComponent(token)}`);
+  } catch (err) {
+    console.error('Google auth callback error:', err);
+    if (!res.headersSent) {
+      return res.redirect(`${FRONTEND_URL}/login?error=server_error`);
+    }
+  }
+}
+
 // ----- Single Google OAuth: /login and /admin/login both use this -----
 router.get('/google', oauthLimiter, (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -76,55 +121,23 @@ router.get('/google', oauthLimiter, (req, res, next) => {
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
 });
 
-router.get(
-  '/google/callback',
-  oauthLimiter,
-  passport.authenticate('google', { session: false, failureRedirect: `${FRONTEND_URL}/login?error=google_denied` }),
-  async (req, res) => {
-    try {
-      const { id, email, name } = req.user || {};
-      if (!id || !email) {
-        return res.redirect(`${FRONTEND_URL}/login?error=no_email`);
-      }
-      const emailLower = email.toLowerCase();
-      const allowed = getAllowedEmails();
-      const isAdminEmail = allowed.length > 0 && allowed.includes(emailLower);
-
-      // Find or create user and set/update role from ALLOWED_ADMIN_EMAILS
-      let user = await User.findOne({ googleId: id });
-      if (!user) {
-        user = await User.create({
-          googleId: id,
-          email: emailLower,
-          name: name || '',
-          role: isAdminEmail ? 'admin' : 'user',
-        });
-      } else {
-        user.role = isAdminEmail ? 'admin' : 'user';
-        if (name && user.name !== name) user.name = name;
-        await user.save();
-      }
-
-      // Admin: issue JWT, set httpOnly cookie, and pass token in URL (fallback when cookie is blocked cross-origin)
-      if (user.role === 'admin') {
-        const token = jwt.sign(
-          { sub: user._id.toString(), role: 'admin', email: emailLower },
-          JWT_SECRET,
-          { expiresIn: JWT_EXPIRY }
-        );
-        res.cookie('admin_token', token, cookieOptions(token, 'admin_token'));
-        return res.redirect(`${FRONTEND_URL}/admin/auth/callback?token=${encodeURIComponent(token)}`);
-      }
-
-      // User: issue JWT, set httpOnly cookie, and pass token in URL (fallback when cookie is blocked cross-origin)
-      const token = issueUserJwtCookie(res, user);
-      res.redirect(`${FRONTEND_URL}/login/callback?token=${encodeURIComponent(token)}`);
-    } catch (err) {
-      console.error('Google auth callback error:', err);
-      res.redirect(`${FRONTEND_URL}/login?error=server_error`);
+router.get('/google/callback', oauthLimiter, (req, res, next) => {
+  passport.authenticate('google', { session: false }, (err, profile /* , info */) => {
+    if (err) {
+      console.error('Google OAuth error:', err?.message || err, err?.code || '');
+      return res.redirect(`${FRONTEND_URL}/login?error=google_oauth_failed`);
     }
-  }
-);
+    if (!profile) {
+      return res.redirect(`${FRONTEND_URL}/login?error=google_denied`);
+    }
+    finalizeGoogleOAuth(res, profile).catch((e) => {
+      console.error('Google auth finalize error:', e);
+      if (!res.headersSent) {
+        res.redirect(`${FRONTEND_URL}/login?error=server_error`);
+      }
+    });
+  })(req, res, next);
+});
 
 // ----- SMS OTP (Twilio Verify) — routes kept as /whatsapp/ for compatibility -----
 router.post('/whatsapp/request-otp', otpLimiter, async (req, res) => {

@@ -11,6 +11,8 @@ export default function AdminLoginPage() {
     const err = searchParams.get('error');
     if (err === 'not_allowed') setError('Your Google account is not allowed to access admin.');
     else if (err === 'google_denied') setError('Google sign-in was cancelled or failed.');
+    else if (err === 'google_oauth_failed')
+      setError('Google sign-in could not complete (e.g. expired link). Try again from this page.');
     else if (err === 'google_not_configured') setError('Google sign-in is not configured.');
   }, [searchParams]);
 

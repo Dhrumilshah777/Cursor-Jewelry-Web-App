@@ -44,6 +44,8 @@ export default function LoginPage() {
       } catch (_) {}
     }
     if (err === 'google_denied') setError('Google sign-in was cancelled or failed.');
+    else if (err === 'google_oauth_failed')
+      setError('Google sign-in could not complete (e.g. expired link). Please try again from the login page.');
     else if (err === 'google_not_configured') setError('Google sign-in is not configured.');
     else if (err === 'no_email') setError('Could not get your email from Google.');
     else if (err === 'server_error') setError('Something went wrong. Please try again.');

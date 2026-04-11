@@ -69,8 +69,14 @@ function ProductsContent() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const ids = new Set(getWishlist().map((p) => p.id));
-    setWishlistedIds(ids);
+    const sync = () => setWishlistedIds(new Set(getWishlist().map((p) => p.id)));
+    sync();
+    window.addEventListener('wishlist-updated', sync);
+    window.addEventListener('auth-updated', sync);
+    return () => {
+      window.removeEventListener('wishlist-updated', sync);
+      window.removeEventListener('auth-updated', sync);
+    };
   }, [filteredProducts.length]);
   const categoryLabel = categoryParam
     ? categoryParam.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())

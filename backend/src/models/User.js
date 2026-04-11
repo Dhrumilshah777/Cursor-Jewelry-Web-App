@@ -9,6 +9,15 @@ const userSchema = new mongoose.Schema(
     phoneE164: { type: String, unique: true, sparse: true },
     name: { type: String, default: '' },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    wishlist: [
+      {
+        productId: { type: String, required: true },
+        name: { type: String, required: true },
+        category: { type: String, default: '' },
+        price: { type: String, required: true },
+        image: { type: String, default: '' },
+      },
+    ],
   },
   { timestamps: true }
 );

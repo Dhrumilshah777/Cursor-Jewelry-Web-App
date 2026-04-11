@@ -3,7 +3,21 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getApiBase, isUserLoggedIn, clearUserToken, apiGet, apiPost, refreshUserSession, setUserLoggedIn } from '@/lib/api';
+import {
+  getApiBase,
+  isUserLoggedIn,
+  clearUserToken,
+  apiGet,
+  apiPost,
+  refreshUserSession,
+  setUserLoggedIn,
+  getCart,
+  setCart,
+  mergeCartApi,
+  getLocalGuestWishlist,
+  mergeWishlistApi,
+  clearGuestWishlistStorage,
+} from '@/lib/api';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -87,6 +101,21 @@ export default function LoginPage() {
       await apiPost<{ ok?: boolean }>('/api/auth/whatsapp/verify-otp', { phone, code: otp });
       setUserLoggedIn();
       await refreshUserSession().catch(() => {});
+
+      const guestCart = getCart();
+      if (guestCart.length > 0) {
+        try {
+          await mergeCartApi(guestCart);
+          setCart([]);
+        } catch (_) {}
+      }
+      const guestWishlist = getLocalGuestWishlist();
+      if (guestWishlist.length > 0) {
+        try {
+          await mergeWishlistApi(guestWishlist);
+          clearGuestWishlistStorage();
+        } catch (_) {}
+      }
 
       const storedReturnTo = typeof window !== 'undefined' ? localStorage.getItem('login-return-to') : null;
       if (storedReturnTo && typeof window !== 'undefined') {

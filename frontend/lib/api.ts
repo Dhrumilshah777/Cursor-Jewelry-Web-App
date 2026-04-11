@@ -16,6 +16,10 @@ const SESSION_TTL_MS = 30_000;
 let userSession: SessionCache = { ok: false, checkedAt: 0 };
 let adminSession: SessionCache = { ok: false, checkedAt: 0 };
 
+export type WishlistProduct = { id: string; name: string; category: string; price: string; image: string };
+/** Logged-in user's wishlist from API; null = not loaded yet */
+let userWishlistCache: WishlistProduct[] | null = null;
+
 const LS_USER_LOGGED_IN = 'user_logged_in';
 const LS_ADMIN_LOGGED_IN = 'admin_logged_in';
 
@@ -148,6 +152,7 @@ export function setUserLoggedIn() {
 export function clearUserLoggedIn() {
   userSession = { ok: false, checkedAt: Date.now() };
   writeLoginFlag(LS_USER_LOGGED_IN, false);
+  userWishlistCache = null;
   dispatchAuthUpdated();
 }
 
@@ -163,16 +168,87 @@ export function clearUserToken() {
   clearUserLoggedIn();
 }
 
+const WISHLIST_KEY = 'wishlist-items';
+
+function readGuestWishlistOnly(): WishlistProduct[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(WISHLIST_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Guest wishlist in localStorage (for merge on login). Ignores logged-in cache. */
+export function getLocalGuestWishlist(): WishlistProduct[] {
+  return readGuestWishlistOnly();
+}
+
+export function clearGuestWishlistStorage(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(WISHLIST_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+function writeGuestWishlist(items: WishlistProduct[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify(items));
+  } catch {
+    // ignore
+  }
+  window.dispatchEvent(new Event('wishlist-updated'));
+}
+
+export async function refreshWishlistFromApi(): Promise<void> {
+  if (typeof window === 'undefined' || !isUserLoggedIn()) {
+    userWishlistCache = null;
+    return;
+  }
+  try {
+    const items = await apiGet<WishlistProduct[]>('/api/wishlist', { user: true });
+    userWishlistCache = Array.isArray(items) ? items : [];
+  } catch {
+    userWishlistCache = [];
+  }
+  window.dispatchEvent(new Event('wishlist-updated'));
+}
+
+async function putWishlistApi(items: WishlistProduct[]): Promise<WishlistProduct[]> {
+  return apiPut<WishlistProduct[]>('/api/wishlist', { items }, { user: true });
+}
+
+async function addWishlistItemApi(product: WishlistProduct): Promise<WishlistProduct[]> {
+  return apiPost<WishlistProduct[]>('/api/wishlist/items', product, { user: true });
+}
+
+async function removeWishlistItemApi(productId: string): Promise<WishlistProduct[]> {
+  return apiDelete<WishlistProduct[]>(`/api/wishlist/items/${encodeURIComponent(productId)}`, { user: true });
+}
+
+export async function mergeWishlistApi(items: WishlistProduct[]): Promise<void> {
+  const merged = await apiPost<WishlistProduct[]>('/api/wishlist/merge', { items }, { user: true });
+  userWishlistCache = Array.isArray(merged) ? merged : [];
+  window.dispatchEvent(new Event('wishlist-updated'));
+}
+
 export async function refreshUserSession(): Promise<boolean> {
   try {
     await apiGet<{ user: unknown }>('/api/auth/me', { user: true });
     userSession = { ok: true, checkedAt: Date.now() };
     writeLoginFlag(LS_USER_LOGGED_IN, true);
     dispatchAuthUpdated();
+    await refreshWishlistFromApi();
     return true;
   } catch {
     userSession = { ok: false, checkedAt: Date.now() };
     writeLoginFlag(LS_USER_LOGGED_IN, false);
+    userWishlistCache = null;
     dispatchAuthUpdated();
     return false;
   }
@@ -200,36 +276,75 @@ export async function uploadFiles(files: File[], admin = true): Promise<{ urls: 
   return res.json();
 }
 
-// Wishlist (localStorage) – product shape: { id, name, category, price, image }
-const WISHLIST_KEY = 'wishlist-items';
-
-export type WishlistProduct = { id: string; name: string; category: string; price: string; image: string };
-
 export function getWishlist(): WishlistProduct[] {
   if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(WISHLIST_KEY);
-    const list = raw ? JSON.parse(raw) : [];
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
+  if (isUserLoggedIn()) {
+    return userWishlistCache !== null ? userWishlistCache : [];
   }
+  return readGuestWishlistOnly();
 }
 
 export function setWishlist(items: WishlistProduct[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(WISHLIST_KEY, JSON.stringify(items));
-  if (typeof window !== 'undefined') window.dispatchEvent(new Event('wishlist-updated'));
+  if (isUserLoggedIn()) {
+    userWishlistCache = [...items];
+    window.dispatchEvent(new Event('wishlist-updated'));
+    void putWishlistApi(items)
+      .then((server) => {
+        userWishlistCache = server;
+        window.dispatchEvent(new Event('wishlist-updated'));
+      })
+      .catch(() => {
+        void refreshWishlistFromApi();
+      });
+  } else {
+    writeGuestWishlist(items);
+  }
 }
 
 export function addToWishlist(product: WishlistProduct) {
-  const list = getWishlist();
+  if (typeof window === 'undefined') return;
+  if (!isUserLoggedIn()) {
+    const list = readGuestWishlistOnly();
+    if (list.some((p) => p.id === product.id)) return;
+    writeGuestWishlist([...list, product]);
+    return;
+  }
+  const list = userWishlistCache !== null ? userWishlistCache : [];
   if (list.some((p) => p.id === product.id)) return;
-  setWishlist([...list, product]);
+  const prev = userWishlistCache !== null ? [...userWishlistCache] : [];
+  userWishlistCache = [...list, product];
+  window.dispatchEvent(new Event('wishlist-updated'));
+  void addWishlistItemApi(product)
+    .then((items) => {
+      userWishlistCache = items;
+      window.dispatchEvent(new Event('wishlist-updated'));
+    })
+    .catch(() => {
+      userWishlistCache = prev.length ? prev : null;
+      window.dispatchEvent(new Event('wishlist-updated'));
+    });
 }
 
 export function removeFromWishlist(productId: string) {
-  setWishlist(getWishlist().filter((p) => p.id !== productId));
+  if (typeof window === 'undefined') return;
+  if (!isUserLoggedIn()) {
+    writeGuestWishlist(readGuestWishlistOnly().filter((p) => p.id !== productId));
+    return;
+  }
+  const list = userWishlistCache !== null ? userWishlistCache : [];
+  const prev = [...list];
+  userWishlistCache = list.filter((p) => p.id !== productId);
+  window.dispatchEvent(new Event('wishlist-updated'));
+  void removeWishlistItemApi(productId)
+    .then((items) => {
+      userWishlistCache = items;
+      window.dispatchEvent(new Event('wishlist-updated'));
+    })
+    .catch(() => {
+      userWishlistCache = prev;
+      window.dispatchEvent(new Event('wishlist-updated'));
+    });
 }
 
 export function isInWishlist(productId: string): boolean {

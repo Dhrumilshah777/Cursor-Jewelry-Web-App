@@ -35,7 +35,14 @@ function ProductCard({ product }: { product: Product }) {
   const [wishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
-    setWishlisted(isInWishlist(product._id));
+    const sync = () => setWishlisted(isInWishlist(product._id));
+    sync();
+    window.addEventListener('wishlist-updated', sync);
+    window.addEventListener('auth-updated', sync);
+    return () => {
+      window.removeEventListener('wishlist-updated', sync);
+      window.removeEventListener('auth-updated', sync);
+    };
   }, [product._id]);
 
   const toggleWishlist = (e: React.MouseEvent) => {

@@ -2,7 +2,19 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { clearAdminLoggedIn, getCart, setCart, mergeCartApi, apiGet, getApiBase, refreshUserSession, clearUserLoggedIn } from '@/lib/api';
+import {
+  clearAdminLoggedIn,
+  getCart,
+  setCart,
+  mergeCartApi,
+  apiGet,
+  getApiBase,
+  refreshUserSession,
+  clearUserLoggedIn,
+  getLocalGuestWishlist,
+  mergeWishlistApi,
+  clearGuestWishlistStorage,
+} from '@/lib/api';
 
 function LoginCallbackContent() {
   const router = useRouter();
@@ -38,6 +50,13 @@ function LoginCallbackContent() {
         try {
           await mergeCartApi(guestCart);
           setCart([]);
+        } catch (_) {}
+      }
+      const guestWishlist = getLocalGuestWishlist();
+      if (guestWishlist.length > 0) {
+        try {
+          await mergeWishlistApi(guestWishlist);
+          clearGuestWishlistStorage();
         } catch (_) {}
       }
       const returnTo = typeof window !== 'undefined' ? localStorage.getItem('login-return-to') : null;

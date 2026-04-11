@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getWishlist, removeFromWishlist, assetUrl, type WishlistProduct } from '@/lib/api';
+import {
+  getWishlist,
+  removeFromWishlist,
+  assetUrl,
+  type WishlistProduct,
+  isUserLoggedIn,
+  refreshWishlistFromApi,
+} from '@/lib/api';
 
 export default function WishlistPage() {
   const [items, setItems] = useState<WishlistProduct[]>([]);
@@ -13,7 +20,22 @@ export default function WishlistPage() {
   }, []);
 
   useEffect(() => {
-    if (mounted) setItems(getWishlist());
+    if (!mounted) return;
+    let cancelled = false;
+    (async () => {
+      if (isUserLoggedIn()) {
+        await refreshWishlistFromApi();
+      }
+      if (!cancelled) setItems(getWishlist());
+    })();
+    const onUpdate = () => setItems(getWishlist());
+    window.addEventListener('wishlist-updated', onUpdate);
+    window.addEventListener('auth-updated', onUpdate);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('wishlist-updated', onUpdate);
+      window.removeEventListener('auth-updated', onUpdate);
+    };
   }, [mounted]);
 
   const handleRemove = (productId: string) => {

@@ -132,6 +132,20 @@ export default function ProductDetailPage() {
   }, [product?._id]);
 
   useEffect(() => {
+    if (!product?._id) return;
+    const syncWish = () => setWishlisted(isInWishlist(product._id));
+    syncWish();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('wishlist-updated', syncWish);
+      window.addEventListener('auth-updated', syncWish);
+      return () => {
+        window.removeEventListener('wishlist-updated', syncWish);
+        window.removeEventListener('auth-updated', syncWish);
+      };
+    }
+  }, [product?._id]);
+
+  useEffect(() => {
     setImageError(false);
     setSelectedImageIndex(0);
   }, [id]);

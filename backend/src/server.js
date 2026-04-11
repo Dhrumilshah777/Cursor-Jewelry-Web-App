@@ -87,6 +87,7 @@ app.get('/api/delivery-check', deliveryCheckController.check);
 
 // User API (requires user auth)
 app.use('/api/cart', require('./routes/cart'));
+app.use('/api/wishlist', require('./routes/wishlist'));
 app.use('/api/orders', require('./routes/orders'));
 
 // Admin API (cookie admin_token or x-admin-key header)

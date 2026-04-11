@@ -36,12 +36,27 @@ function ProductCard({ product }: { product: Product }) {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    setWishlisted(isInWishlist(product.id));
+    const sync = () => setWishlisted(isInWishlist(product.id));
+    sync();
+    window.addEventListener('wishlist-updated', sync);
+    window.addEventListener('auth-updated', sync);
+    return () => {
+      window.removeEventListener('wishlist-updated', sync);
+      window.removeEventListener('auth-updated', sync);
+    };
   }, [product.id]);
 
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
-    wishlisted ? removeFromWishlist(product.id) : addToWishlist(product);
+    wishlisted
+      ? removeFromWishlist(product.id)
+      : addToWishlist({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          image: product.image,
+        });
     setWishlisted(!wishlisted);
   };
 

@@ -122,7 +122,12 @@ router.get('/google', oauthLimiter, (req, res, next) => {
     console.warn('[auth] GET /google: GOOGLE_CLIENT_ID/SECRET not set; redirecting to login');
     return res.redirect(`${FRONTEND_URL}/login?error=google_not_configured`);
   }
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+    // Always show Google’s account chooser (otherwise a single signed-in session is used silently).
+    prompt: 'select_account',
+  })(req, res, next);
 });
 
 router.get('/google/callback', oauthLimiter, (req, res, next) => {

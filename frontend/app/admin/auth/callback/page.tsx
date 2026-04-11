@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setAdminLoggedIn, apiGet, getApiBase } from '@/lib/api';
 
@@ -8,8 +8,12 @@ function AdminAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const tokenFromUrl = searchParams.get('token');
     (async () => {
       let ok = false;

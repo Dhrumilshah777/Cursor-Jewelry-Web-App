@@ -100,11 +100,13 @@ async function finalizeGoogleOAuth(res, profile) {
         { expiresIn: JWT_EXPIRY }
       );
       res.cookie('admin_token', token, cookieOptions(token, 'admin_token'));
-      return res.redirect(`${FRONTEND_URL}/admin/auth/callback?token=${encodeURIComponent(token)}`);
+      const enc = encodeURIComponent(token);
+      return res.redirect(`${FRONTEND_URL}/admin/auth/callback?token=${enc}#token=${enc}`);
     }
 
     const token = issueUserJwtCookie(res, user);
-    return res.redirect(`${FRONTEND_URL}/login/callback?token=${encodeURIComponent(token)}`);
+    const enc = encodeURIComponent(token);
+    return res.redirect(`${FRONTEND_URL}/login/callback?token=${enc}#token=${enc}`);
   } catch (err) {
     console.error('Google auth callback error:', err);
     if (!res.headersSent) {
@@ -178,8 +180,8 @@ router.post('/whatsapp/verify-otp', otpLimiter, async (req, res) => {
       user = await User.create({ phoneE164: toE164, role: 'user', name: '' });
     }
 
-    issueUserJwtCookie(res, user);
-    return res.json({ ok: true });
+    const token = issueUserJwtCookie(res, user);
+    return res.json({ ok: true, token });
   } catch (err) {
     console.error('SMS OTP verify error:', err);
     if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'SMS OTP is not configured' });

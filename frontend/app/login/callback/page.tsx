@@ -14,6 +14,8 @@ import {
   getLocalGuestWishlist,
   mergeWishlistApi,
   clearGuestWishlistStorage,
+  storeUserAuthTokenFallback,
+  readOAuthTokenFromUrlHash,
 } from '@/lib/api';
 
 function LoginCallbackContent() {
@@ -28,7 +30,12 @@ function LoginCallbackContent() {
 
     clearAdminLoggedIn();
     (async () => {
-      const tokenFromUrl = searchParams.get('token');
+      const tokenFromUrl = searchParams.get('token') || readOAuthTokenFromUrlHash();
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const { pathname, search } = window.location;
+        window.history.replaceState(null, '', pathname + search);
+      }
+      if (tokenFromUrl) storeUserAuthTokenFallback(tokenFromUrl);
       let cookieOk = false;
       try {
         await apiGet<{ user: unknown }>('/api/auth/me', { user: true });

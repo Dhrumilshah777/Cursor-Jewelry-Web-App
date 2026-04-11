@@ -3,7 +3,12 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 
 const adminAuth = (req, res, next) => {
-  const token = req.cookies?.admin_token || req.headers['x-admin-key'] || req.query.adminKey;
+  const authHeader = req.headers.authorization;
+  const bearer =
+    authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : null;
+  const token = req.cookies?.admin_token || bearer || req.headers['x-admin-key'] || req.query.adminKey;
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }

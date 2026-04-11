@@ -22,6 +22,56 @@ let userWishlistCache: WishlistProduct[] | null = null;
 
 const LS_USER_LOGGED_IN = 'user_logged_in';
 const LS_ADMIN_LOGGED_IN = 'admin_logged_in';
+/** iOS/Safari often blocks third-party API cookies; Bearer from sessionStorage keeps auth working (clear on logout). */
+const SS_USER_JWT = 'jewelry_user_jwt_fallback';
+const SS_ADMIN_JWT = 'jewelry_admin_jwt_fallback';
+
+function readUserAuthFallback(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem(SS_USER_JWT);
+  } catch {
+    return null;
+  }
+}
+
+function readAdminAuthFallback(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem(SS_ADMIN_JWT);
+  } catch {
+    return null;
+  }
+}
+
+/** Call after Google/OTP login when the API cookie may not stick on iOS cross-site. */
+export function storeUserAuthTokenFallback(token: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(SS_USER_JWT, token);
+  } catch {
+    // ignore
+  }
+}
+
+export function storeAdminAuthTokenFallback(token: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(SS_ADMIN_JWT, token);
+  } catch {
+    // ignore
+  }
+}
+
+/** Some mobile WebViews strip query params; OAuth token may be duplicated in the hash. */
+export function readOAuthTokenFromUrlHash(): string | null {
+  if (typeof window === 'undefined') return null;
+  const h = window.location.hash;
+  if (!h || h.length < 2) return null;
+  const q = h.startsWith('#') ? h.slice(1) : h;
+  const params = new URLSearchParams(q);
+  return params.get('token') || params.get('t');
+}
 
 function readLoginFlag(key: string): boolean {
   if (typeof window === 'undefined') return false;
@@ -78,6 +128,11 @@ export function setAdminLoggedIn() {
 export function clearAdminLoggedIn() {
   adminSession = { ok: false, checkedAt: Date.now() };
   writeLoginFlag(LS_ADMIN_LOGGED_IN, false);
+  try {
+    if (typeof window !== 'undefined') sessionStorage.removeItem(SS_ADMIN_JWT);
+  } catch {
+    // ignore
+  }
   dispatchAuthUpdated();
 }
 
@@ -91,9 +146,18 @@ export async function api<T>(
   options: RequestInit & { admin?: boolean; user?: boolean } = {}
 ): Promise<T> {
   const { admin, user, ...init } = options;
-  const headers: HeadersInit = { ...((init.headers as Record<string, string>) || {}) };
+  const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) };
   if (init.body && typeof init.body === 'string' && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
+  }
+  if (!headers['Authorization']) {
+    if (user) {
+      const t = readUserAuthFallback();
+      if (t) headers['Authorization'] = `Bearer ${t}`;
+    } else if (admin) {
+      const t = readAdminAuthFallback();
+      if (t) headers['Authorization'] = `Bearer ${t}`;
+    }
   }
   // Auth via httpOnly cookies; send credentials so cookies are included
   const res = await fetch(`${BASE}${path}`, { ...init, headers, credentials: 'include' });
@@ -153,6 +217,11 @@ export function clearUserLoggedIn() {
   userSession = { ok: false, checkedAt: Date.now() };
   writeLoginFlag(LS_USER_LOGGED_IN, false);
   userWishlistCache = null;
+  try {
+    if (typeof window !== 'undefined') sessionStorage.removeItem(SS_USER_JWT);
+  } catch {
+    // ignore
+  }
   dispatchAuthUpdated();
 }
 
@@ -257,7 +326,10 @@ export async function refreshUserSession(): Promise<boolean> {
 export async function uploadFile(file: File, admin = true): Promise<{ url: string; filename: string }> {
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${BASE}/api/admin/upload/single`, { method: 'POST', body: form, credentials: 'include' });
+  const bearer = readAdminAuthFallback();
+  const headers: Record<string, string> = {};
+  if (bearer) headers['Authorization'] = `Bearer ${bearer}`;
+  const res = await fetch(`${BASE}/api/admin/upload/single`, { method: 'POST', body: form, credentials: 'include', headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(err.error || err.message || res.statusText);
@@ -268,7 +340,10 @@ export async function uploadFile(file: File, admin = true): Promise<{ url: strin
 export async function uploadFiles(files: File[], admin = true): Promise<{ urls: string[]; filenames: string[] }> {
   const form = new FormData();
   files.forEach((f) => form.append('files', f));
-  const res = await fetch(`${BASE}/api/admin/upload/multiple`, { method: 'POST', body: form, credentials: 'include' });
+  const bearer = readAdminAuthFallback();
+  const headers: Record<string, string> = {};
+  if (bearer) headers['Authorization'] = `Bearer ${bearer}`;
+  const res = await fetch(`${BASE}/api/admin/upload/multiple`, { method: 'POST', body: form, credentials: 'include', headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(err.error || err.message || res.statusText);

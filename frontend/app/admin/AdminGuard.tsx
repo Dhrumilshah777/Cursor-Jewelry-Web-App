@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { getApiBase, isAdminLoggedIn, clearAdminLoggedIn } from '@/lib/api';
+import { getApiBase, isAdminLoggedIn, clearAdminLoggedIn, apiGet } from '@/lib/api';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
@@ -39,15 +39,8 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       setSessionVerified(false);
       return;
     }
-    fetch(`${getApiBase()}/api/admin/me`, { credentials: 'include' })
-      .then((res) => {
-        if (res.ok) setSessionVerified(true);
-        else {
-          clearAdminLoggedIn();
-          setSessionVerified(false);
-          router.replace('/admin/login');
-        }
-      })
+    apiGet<{ ok: boolean }>('/api/admin/me', { admin: true })
+      .then(() => setSessionVerified(true))
       .catch(() => {
         clearAdminLoggedIn();
         setSessionVerified(false);

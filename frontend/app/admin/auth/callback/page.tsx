@@ -2,7 +2,13 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { setAdminLoggedIn, apiGet, getApiBase } from '@/lib/api';
+import {
+  setAdminLoggedIn,
+  apiGet,
+  getApiBase,
+  storeAdminAuthTokenFallback,
+  readOAuthTokenFromUrlHash,
+} from '@/lib/api';
 
 function AdminAuthCallbackContent() {
   const router = useRouter();
@@ -14,11 +20,16 @@ function AdminAuthCallbackContent() {
     if (hasRun.current) return;
     hasRun.current = true;
 
-    const tokenFromUrl = searchParams.get('token');
+    const tokenFromUrl = searchParams.get('token') || readOAuthTokenFromUrlHash();
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const { pathname, search } = window.location;
+      window.history.replaceState(null, '', pathname + search);
+    }
+    if (tokenFromUrl) storeAdminAuthTokenFallback(tokenFromUrl);
     (async () => {
       let ok = false;
       try {
-        await apiGet('/api/admin/me', true);
+        await apiGet('/api/admin/me', { admin: true });
         ok = true;
       } catch {
         if (tokenFromUrl) {

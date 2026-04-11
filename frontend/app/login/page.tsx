@@ -17,6 +17,7 @@ import {
   getLocalGuestWishlist,
   mergeWishlistApi,
   clearGuestWishlistStorage,
+  storeUserAuthTokenFallback,
 } from '@/lib/api';
 
 export default function LoginPage() {
@@ -100,7 +101,11 @@ export default function LoginPage() {
     setOtpInfo('');
     setOtpLoading(true);
     try {
-      await apiPost<{ ok?: boolean }>('/api/auth/whatsapp/verify-otp', { phone, code: otp });
+      const otpRes = await apiPost<{ ok?: boolean; token?: string }>('/api/auth/whatsapp/verify-otp', {
+        phone,
+        code: otp,
+      });
+      if (otpRes?.token) storeUserAuthTokenFallback(otpRes.token);
       setUserLoggedIn();
       await refreshUserSession().catch(() => {});
 

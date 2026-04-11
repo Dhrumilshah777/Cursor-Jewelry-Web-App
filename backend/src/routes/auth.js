@@ -73,6 +73,7 @@ async function finalizeGoogleOAuth(res, profile) {
   try {
     const { id, email, name } = profile || {};
     if (!id || !email) {
+      console.warn('[auth] finalizeGoogleOAuth: missing id or email on profile');
       return res.redirect(`${FRONTEND_URL}/login?error=no_email`);
     }
     const emailLower = email.toLowerCase();
@@ -118,6 +119,7 @@ async function finalizeGoogleOAuth(res, profile) {
 // ----- Single Google OAuth: /login and /admin/login both use this -----
 router.get('/google', oauthLimiter, (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn('[auth] GET /google: GOOGLE_CLIENT_ID/SECRET not set; redirecting to login');
     return res.redirect(`${FRONTEND_URL}/login?error=google_not_configured`);
   }
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
@@ -130,6 +132,7 @@ router.get('/google/callback', oauthLimiter, (req, res, next) => {
       return res.redirect(`${FRONTEND_URL}/login?error=google_oauth_failed`);
     }
     if (!profile) {
+      console.warn('[auth] GET /google/callback: no profile (user cancelled or Google returned no profile)');
       return res.redirect(`${FRONTEND_URL}/login?error=google_denied`);
     }
     finalizeGoogleOAuth(res, profile).catch((e) => {
@@ -171,6 +174,11 @@ router.post('/whatsapp/verify-otp', otpLimiter, async (req, res) => {
 
     const check = await verifySmsOtp({ toE164, code });
     if (!check || check.status !== 'approved') {
+      const tail = toE164.length > 4 ? toE164.slice(-4) : '****';
+      console.warn('[auth] POST /whatsapp/verify-otp: not approved', {
+        phoneTail: tail,
+        verifyStatus: check?.status || 'no_result',
+      });
       return res.status(401).json({ error: 'Invalid OTP' });
     }
 
@@ -192,25 +200,39 @@ router.post('/whatsapp/verify-otp', otpLimiter, async (req, res) => {
 // Fallback: set cookie from token (when redirect cookie is blocked cross-origin). Token in Authorization header.
 router.post('/set-cookie', (req, res) => {
   const token = req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
-  if (!token) return res.status(400).json({ error: 'Missing token' });
+  if (!token) {
+    console.warn('[auth] POST /set-cookie: missing Authorization bearer', { ip: req.ip });
+    return res.status(400).json({ error: 'Missing token' });
+  }
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'user' && decoded.role !== 'admin') return res.status(403).json({ error: 'Invalid token' });
+    if (decoded.role !== 'user' && decoded.role !== 'admin') {
+      console.warn('[auth] POST /set-cookie: invalid role', { role: decoded.role, ip: req.ip });
+      return res.status(403).json({ error: 'Invalid token' });
+    }
     res.cookie('user_token', token, cookieOptions(token, 'user_token'));
     return res.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.warn('[auth] POST /set-cookie: JWT verify failed', err?.message || err, { ip: req.ip });
     return res.status(401).json({ error: 'Invalid token' });
   }
 });
 router.post('/set-admin-cookie', (req, res) => {
   const token = req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
-  if (!token) return res.status(400).json({ error: 'Missing token' });
+  if (!token) {
+    console.warn('[auth] POST /set-admin-cookie: missing Authorization bearer', { ip: req.ip });
+    return res.status(400).json({ error: 'Missing token' });
+  }
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    if (decoded.role !== 'admin') {
+      console.warn('[auth] POST /set-admin-cookie: not admin role', { role: decoded.role, ip: req.ip });
+      return res.status(403).json({ error: 'Admin only' });
+    }
     res.cookie('admin_token', token, cookieOptions(token, 'admin_token'));
     return res.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.warn('[auth] POST /set-admin-cookie: JWT verify failed', err?.message || err, { ip: req.ip });
     return res.status(401).json({ error: 'Invalid token' });
   }
 });
@@ -221,11 +243,18 @@ router.get('/me', async (req, res) => {
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'user' && decoded.role !== 'admin') return res.status(403).json({ error: 'Invalid session' });
+    if (decoded.role !== 'user' && decoded.role !== 'admin') {
+      console.warn('[auth] GET /me: invalid role in token', { role: decoded.role, ip: req.ip });
+      return res.status(403).json({ error: 'Invalid session' });
+    }
     const user = await User.findById(decoded.sub).select('name email').lean();
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!user) {
+      console.warn('[auth] GET /me: no user for token sub', { sub: decoded.sub, ip: req.ip });
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     return res.json({ user: { _id: user._id, name: user.name, email: user.email } });
-  } catch {
+  } catch (err) {
+    console.warn('[auth] GET /me: JWT verify failed', err?.message || err, { ip: req.ip });
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });

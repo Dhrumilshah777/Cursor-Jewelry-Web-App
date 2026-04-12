@@ -73,6 +73,36 @@ function toNumber(val) {
   return Number.isFinite(n) ? n : null;
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Shiprocket assign/AWB must use shipment_id from create response — never substitute order_id. */
+function extractShipmentIdFromCreateResponse(data) {
+  const raw = data?.data || data?.order || data;
+  const candidates = [
+    raw?.shipment_id,
+    data?.shipment_id,
+    data?.order?.shipment_id,
+    data?.data?.shipment_id,
+    data?.data?.order?.shipment_id,
+    raw?.shipments?.[0]?.shipment_id,
+    raw?.shipments?.[0]?.id,
+    data?.shipments?.[0]?.shipment_id,
+    data?.shipments?.[0]?.id,
+  ];
+  for (const c of candidates) {
+    if (c != null && c !== '' && (typeof c === 'number' || (typeof c === 'string' && String(c).trim() !== ''))) {
+      return c;
+    }
+  }
+  return null;
+}
+
+const PRE_ASSIGN_AW_DELAY_MS = 2000;
+const ASSIGN_AW_RETRY_DELAY_MS = 2000;
+const ASSIGN_AW_MAX_ATTEMPTS = 3;
+
 async function getLowestCostCourierId({
   token,
   pickupPincode,
@@ -222,31 +252,37 @@ async function createShipment(order) {
   const raw = data.data || data.order || data;
   const srOrderId =
     raw.order_id ?? raw.id ?? data.order_id ?? data.order?.id ?? data.id;
-  const shipmentId =
-    raw.shipment_id ?? data.shipment_id ?? data.order?.shipment_id ?? srOrderId;
 
-  if (!srOrderId && !shipmentId) {
-    const hint = JSON.stringify(data).slice(0, 300);
-    throw new Error(`Shiprocket did not return order or shipment id. Response: ${hint}`);
+  const shipmentIdRaw = extractShipmentIdFromCreateResponse(data);
+  if (shipmentIdRaw == null) {
+    const hint = JSON.stringify(data).slice(0, 400);
+    throw new Error(`Shipment ID missing from Shiprocket create response. Response (truncated): ${hint}`);
   }
+
+  const shipmentIdStr = String(shipmentIdRaw);
 
   const awbFromCreate = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';
   const courierFromCreate = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
   if (awbFromCreate) {
     return {
-      shipment_id: String(shipmentId || srOrderId),
+      shipment_id: shipmentIdStr,
       awb_code: String(awbFromCreate),
       courier_name: String(courierFromCreate),
     };
   }
 
-  const sid = parseInt(String(shipmentId), 10);
-  const oid = parseInt(String(srOrderId), 10);
+  const sid = parseInt(String(shipmentIdRaw), 10);
+  const oid = srOrderId != null ? parseInt(String(srOrderId), 10) : NaN;
   const validSid = !Number.isNaN(sid) && sid > 0 ? sid : null;
   const validOid = !Number.isNaN(oid) && oid > 0 ? oid : null;
 
+  if (!validSid) {
+    throw new Error(`Invalid shipment_id from Shiprocket: ${shipmentIdStr}`);
+  }
+
+  await delay(PRE_ASSIGN_AW_DELAY_MS);
+
   // Try to pick the lowest-cost courier for this lane.
-  // If we can't fetch rates (API quirks / account settings), we fall back to Shiprocket's default selection.
   const pickupPincode = parseInt(String(process.env.SHIPROCKET_PICKUP_PINCODE || '395003').replace(/\D/g, ''), 10);
   const courierId = await getLowestCostCourierId({
     token,
@@ -257,80 +293,104 @@ async function createShipment(order) {
     mode: 'Surface',
   });
 
-  srLog('awb.assign.request', {
-    shipment_id: validSid ?? null,
-    order_id: validOid ?? null,
-    courier_id: courierId ?? null,
-  });
-
-  // Shiprocket assign AWB: some versions expect order_id, others shipment_id or both (integers)
-  const baseAssignBody = validOid && validSid
-    ? { order_id: validOid, shipment_id: validSid }
-    : validSid
-      ? { shipment_id: validSid }
-      : validOid
-        ? { order_id: validOid }
-        : { order_id: oid || sid, shipment_id: sid || oid };
+  const baseAssignBody =
+    validOid != null ? { shipment_id: validSid, order_id: validOid } : { shipment_id: validSid };
   const assignBody = courierId ? { ...baseAssignBody, courier_id: courierId } : baseAssignBody;
-  const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(assignBody),
-  });
-  const assignData = await assignRes.json().catch(() => ({}));
-  if (!assignRes.ok) {
-    const errMsg = assignData?.message || assignData?.error || 'awb assign failed';
+
+  let lastAssignData = null;
+  let lastStatus = 0;
+
+  for (let attempt = 1; attempt <= ASSIGN_AW_MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) await delay(ASSIGN_AW_RETRY_DELAY_MS);
+
+    srLog('awb.assign.request', {
+      attempt,
+      max: ASSIGN_AW_MAX_ATTEMPTS,
+      shipment_id: validSid,
+      order_id: validOid ?? null,
+      courier_id: courierId ?? null,
+    });
+
+    const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(assignBody),
+    });
+    lastAssignData = await assignRes.json().catch(() => ({}));
+    lastStatus = assignRes.status;
+
+    const awb =
+      lastAssignData.awb_code ?? lastAssignData.data?.awb_code ?? lastAssignData.courier_awb ?? '';
+    const courier =
+      lastAssignData.courier_name ?? lastAssignData.data?.courier_name ?? lastAssignData.courier ?? '';
+
+    if (assignRes.ok && String(awb || '').trim()) {
+      srLog('awb.assign.success', {
+        attempt,
+        shipment_id: shipmentIdStr,
+        awb_code: String(awb),
+        courier_name: courier ? String(courier) : '',
+        courier_id: courierId ?? null,
+      });
+      return {
+        shipment_id: shipmentIdStr,
+        awb_code: String(awb),
+        courier_name: String(courier),
+      };
+    }
+
+    const errMsg = lastAssignData?.message || lastAssignData?.error || 'awb assign failed';
     const errExtra =
-      Array.isArray(assignData?.errors) ? assignData.errors.join('; ') : assignData?.errors && typeof assignData.errors === 'object'
-        ? JSON.stringify(assignData.errors).slice(0, 300)
-        : '';
+      Array.isArray(lastAssignData?.errors)
+        ? lastAssignData.errors.join('; ')
+        : lastAssignData?.errors && typeof lastAssignData.errors === 'object'
+          ? JSON.stringify(lastAssignData.errors).slice(0, 300)
+          : '';
     srLog('awb.assign.error', {
+      attempt,
       status: assignRes.status,
       message: errMsg,
-      shipment_id: String(shipmentId || srOrderId),
+      shipment_id: shipmentIdStr,
       courier_id: courierId ?? null,
     });
-    srWarn('awb.assign.failed', {
-      http_status: assignRes.status,
-      message: errMsg,
-      detail: errExtra || undefined,
-      shipment_id: String(shipmentId || srOrderId),
-      order_id: validOid ?? null,
-      courier_id: courierId ?? null,
-    });
-    // Order was created in Shiprocket; assign AWB often fails (API quirk). Return partial success so admin can assign AWB from dashboard.
-    return {
-      shipment_id: String(shipmentId || srOrderId),
-      awb_code: '',
-      courier_name: '',
-    };
+    if (attempt === ASSIGN_AW_MAX_ATTEMPTS) {
+      srWarn('awb.assign.failed', {
+        attempts: ASSIGN_AW_MAX_ATTEMPTS,
+        http_status: assignRes.status,
+        message: errMsg,
+        detail: errExtra || undefined,
+        shipment_id: shipmentIdStr,
+        order_id: validOid ?? null,
+        courier_id: courierId ?? null,
+      });
+    } else {
+      srWarn('awb.assign.retry', {
+        attempt,
+        next_in_ms: ASSIGN_AW_RETRY_DELAY_MS,
+        http_status: assignRes.status,
+        message: errMsg,
+      });
+    }
+
+    if (assignRes.ok && !String(awb || '').trim()) {
+      srWarn('awb.assign.ok_but_no_awb_in_body', {
+        attempt,
+        shipment_id: shipmentIdStr,
+        order_id: validOid ?? null,
+        response_status_code: lastAssignData?.status_code ?? lastAssignData?.status ?? undefined,
+        message: lastAssignData?.message || lastAssignData?.error || undefined,
+      });
+    }
   }
-  const awb = assignData.awb_code ?? assignData.data?.awb_code ?? assignData.courier_awb ?? '';
-  const courier = assignData.courier_name ?? assignData.data?.courier_name ?? assignData.courier ?? '';
 
-  if (!String(awb || '').trim()) {
-    srWarn('awb.assign.ok_but_no_awb_in_body', {
-      shipment_id: String(shipmentId || srOrderId),
-      order_id: validOid ?? null,
-      response_status_code: assignData?.status_code ?? assignData?.status ?? undefined,
-      message: assignData?.message || assignData?.error || undefined,
-    });
-  }
-
-  srLog('awb.assign.success', {
-    shipment_id: String(shipmentId || srOrderId),
-    awb_code: awb ? String(awb) : '',
-    courier_name: courier ? String(courier) : '',
-    courier_id: courierId ?? null,
-  });
-
+  // Order exists in Shiprocket; AWB not assigned after retries — admin can finish in dashboard.
   return {
-    shipment_id: String(shipmentId || srOrderId),
-    awb_code: String(awb),
-    courier_name: String(courier),
+    shipment_id: shipmentIdStr,
+    awb_code: '',
+    courier_name: '',
   };
 }
 

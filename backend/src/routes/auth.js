@@ -172,12 +172,17 @@ router.post('/whatsapp/request-otp', otpLimiter, async (req, res) => {
 router.post('/whatsapp/verify-otp', otpLimiter, async (req, res) => {
   try {
     const phone = req.body?.phone;
-    const code = req.body?.code;
+    const codeRaw = req.body?.code;
     const toE164 = normalizeIndianPhoneToE164(phone);
     if (!toE164) return res.status(400).json({ error: 'Enter a valid Indian phone number' });
-    if (!code || typeof code !== 'string' && typeof code !== 'number') return res.status(400).json({ error: 'Enter the OTP' });
+    if (codeRaw === undefined || codeRaw === null) return res.status(400).json({ error: 'Enter the OTP' });
+    if (typeof codeRaw !== 'string' && typeof codeRaw !== 'number') {
+      return res.status(400).json({ error: 'Enter the OTP' });
+    }
+    const codeStr = String(codeRaw).trim().replace(/\s+/g, '');
+    if (!codeStr) return res.status(400).json({ error: 'Enter the OTP' });
 
-    const check = await verifySmsOtp({ toE164, code });
+    const check = await verifySmsOtp({ toE164, code: codeStr });
     if (!check || check.status !== 'approved') {
       const tail = toE164.length > 4 ? toE164.slice(-4) : '****';
       console.warn('[auth] POST /whatsapp/verify-otp: not approved', {
@@ -187,16 +192,29 @@ router.post('/whatsapp/verify-otp', otpLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid OTP' });
     }
 
-    // Find or create a user for this phone number
+    // Find or create a user for this phone number (handle race: two verifies → duplicate key)
     let user = await User.findOne({ phoneE164: toE164 });
     if (!user) {
-      user = await User.create({ phoneE164: toE164, role: 'user', name: '' });
+      try {
+        user = await User.create({ phoneE164: toE164, role: 'user', name: '' });
+      } catch (createErr) {
+        if (createErr && createErr.code === 11000) {
+          user = await User.findOne({ phoneE164: toE164 });
+        } else {
+          throw createErr;
+        }
+      }
     }
+    if (!user) return res.status(500).json({ error: 'Could not create account' });
 
     const token = issueUserJwtCookie(res, user);
     return res.json({ ok: true, token });
   } catch (err) {
-    console.error('SMS OTP verify error:', err);
+    const detail =
+      err && typeof err === 'object'
+        ? { message: err.message, code: err.code, status: err.status, moreInfo: err.moreInfo }
+        : err;
+    console.error('SMS OTP verify error:', detail);
     if (err && err.code === 'TWILIO_NOT_CONFIGURED') return res.status(500).json({ error: 'SMS OTP is not configured' });
     return res.status(500).json({ error: 'Failed to verify OTP' });
   }

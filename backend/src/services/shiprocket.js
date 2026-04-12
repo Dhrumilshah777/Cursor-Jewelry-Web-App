@@ -68,11 +68,6 @@ function truncate(str, max) {
   return s.length > max ? s.slice(0, max) : s;
 }
 
-function toNumber(val) {
-  const n = typeof val === 'number' ? val : parseFloat(String(val || '').replace(/[^0-9.]/g, ''));
-  return Number.isFinite(n) ? n : null;
-}
-
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -102,78 +97,6 @@ function extractShipmentIdFromCreateResponse(data) {
 const PRE_ASSIGN_AW_DELAY_MS = 2000;
 const ASSIGN_AW_RETRY_DELAY_MS = 2000;
 const ASSIGN_AW_MAX_ATTEMPTS = 3;
-
-async function getLowestCostCourierId({
-  token,
-  pickupPincode,
-  deliveryPincode,
-  weight = 0.5,
-  cod = 0,
-  mode = 'Surface',
-}) {
-  const pickup = parseInt(String(pickupPincode || '').replace(/\D/g, ''), 10);
-  const delivery = parseInt(String(deliveryPincode || '').replace(/\D/g, ''), 10);
-  if (!Number.isFinite(pickup) || pickup <= 0 || !Number.isFinite(delivery) || delivery <= 0) return null;
-
-  const params = new URLSearchParams({
-    pickup_postcode: String(pickup),
-    delivery_postcode: String(delivery),
-    weight: String(weight),
-    cod: String(cod ? 1 : 0),
-    mode: String(mode || 'Surface'),
-  });
-
-  srLog('serviceability.request', {
-    pickup_postcode: String(pickup),
-    delivery_postcode: String(delivery),
-    weight: String(weight),
-    cod: String(cod ? 1 : 0),
-    mode: String(mode || 'Surface'),
-  });
-
-  const res = await fetch(`${SHIPROCKET_BASE}/courier/serviceability/?${params.toString()}`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    srLog('serviceability.error', {
-      status: res.status,
-      message: data?.message || data?.error || 'serviceability failed',
-    });
-    return null;
-  }
-
-  const companies =
-    data.data?.available_courier_companies ??
-    data.data?.data?.available_courier_companies ??
-    data.available_courier_companies ??
-    [];
-
-  if (!Array.isArray(companies) || companies.length === 0) return null;
-
-  let best = null;
-  for (const c of companies) {
-    const courierId = c.courier_company_id ?? c.courier_id ?? c.courier_company ?? c.id;
-    const charge = toNumber(c.freight_charge ?? c.rate ?? c.shipping_charges ?? c.charge);
-    const isSurface = String(c.mode || '').toLowerCase() === 'surface';
-    if (!courierId) continue;
-    if (mode && String(mode).toLowerCase() === 'surface' && !isSurface && c.mode) {
-      // If API returns mixed modes, keep requested mode preference.
-      continue;
-    }
-    if (charge == null) continue;
-    if (!best || charge < best.charge) best = { courierId: parseInt(String(courierId), 10), charge };
-  }
-
-  srLog('serviceability.selected', {
-    selected_courier_id: best?.courierId ?? null,
-    selected_freight_charge: best?.charge ?? null,
-    options_count: companies.length,
-  });
-
-  return best && Number.isFinite(best.courierId) ? best.courierId : null;
-}
 
 async function createShipment(order) {
   const token = await getToken();
@@ -282,23 +205,11 @@ async function createShipment(order) {
 
   await delay(PRE_ASSIGN_AW_DELAY_MS);
 
-  // Try to pick the lowest-cost courier for this lane.
-  const pickupPincode = parseInt(String(process.env.SHIPROCKET_PICKUP_PINCODE || '395003').replace(/\D/g, ''), 10);
-  const courierId = await getLowestCostCourierId({
-    token,
-    pickupPincode,
-    deliveryPincode: billingPincode,
-    weight: payload.weight || 0.5,
-    cod: 0,
-    mode: 'Surface',
-  });
-
-  const baseAssignBody =
-    validOid != null ? { shipment_id: validSid, order_id: validOid } : { shipment_id: validSid };
-  const assignBody = courierId ? { ...baseAssignBody, courier_id: courierId } : baseAssignBody;
+  // Let Shiprocket choose the courier. Passing courier_id from serviceability often 400s
+  // (courier not allowed for this shipment at assign time vs generic "possible" list).
+  const assignBody = { shipment_id: validSid };
 
   let lastAssignData = null;
-  let lastStatus = 0;
 
   for (let attempt = 1; attempt <= ASSIGN_AW_MAX_ATTEMPTS; attempt++) {
     if (attempt > 1) await delay(ASSIGN_AW_RETRY_DELAY_MS);
@@ -307,8 +218,7 @@ async function createShipment(order) {
       attempt,
       max: ASSIGN_AW_MAX_ATTEMPTS,
       shipment_id: validSid,
-      order_id: validOid ?? null,
-      courier_id: courierId ?? null,
+      body: assignBody,
     });
 
     const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
@@ -320,7 +230,6 @@ async function createShipment(order) {
       body: JSON.stringify(assignBody),
     });
     lastAssignData = await assignRes.json().catch(() => ({}));
-    lastStatus = assignRes.status;
 
     const awb =
       lastAssignData.awb_code ?? lastAssignData.data?.awb_code ?? lastAssignData.courier_awb ?? '';
@@ -333,7 +242,6 @@ async function createShipment(order) {
         shipment_id: shipmentIdStr,
         awb_code: String(awb),
         courier_name: courier ? String(courier) : '',
-        courier_id: courierId ?? null,
       });
       return {
         shipment_id: shipmentIdStr,
@@ -349,13 +257,22 @@ async function createShipment(order) {
         : lastAssignData?.errors && typeof lastAssignData.errors === 'object'
           ? JSON.stringify(lastAssignData.errors).slice(0, 300)
           : '';
+    const responseBodyTruncated = JSON.stringify(lastAssignData).slice(0, 1500);
     srLog('awb.assign.error', {
       attempt,
       status: assignRes.status,
       message: errMsg,
       shipment_id: shipmentIdStr,
-      courier_id: courierId ?? null,
+      response_body: responseBodyTruncated,
     });
+    if (!assignRes.ok) {
+      srWarn('awb.assign.error_full', {
+        attempt,
+        http_status: assignRes.status,
+        shipment_id: shipmentIdStr,
+        response_body: responseBodyTruncated,
+      });
+    }
     if (attempt === ASSIGN_AW_MAX_ATTEMPTS) {
       srWarn('awb.assign.failed', {
         attempts: ASSIGN_AW_MAX_ATTEMPTS,
@@ -364,7 +281,7 @@ async function createShipment(order) {
         detail: errExtra || undefined,
         shipment_id: shipmentIdStr,
         order_id: validOid ?? null,
-        courier_id: courierId ?? null,
+        response_body: responseBodyTruncated,
       });
     } else {
       srWarn('awb.assign.retry', {

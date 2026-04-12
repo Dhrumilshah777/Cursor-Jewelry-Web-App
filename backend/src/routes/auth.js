@@ -252,12 +252,14 @@ router.get('/me', async (req, res) => {
       console.warn('[auth] GET /me: invalid role in token', { role: decoded.role, ip: req.ip });
       return res.status(403).json({ error: 'Invalid session' });
     }
-    const user = await User.findById(decoded.sub).select('name email').lean();
+    const user = await User.findById(decoded.sub).select('name email phoneE164').lean();
     if (!user) {
       console.warn('[auth] GET /me: no user for token sub', { sub: decoded.sub, ip: req.ip });
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    return res.json({ user: { _id: user._id, name: user.name, email: user.email } });
+    return res.json({
+      user: { _id: user._id, name: user.name, email: user.email, phoneE164: user.phoneE164 || null },
+    });
   } catch (err) {
     console.warn('[auth] GET /me: JWT verify failed', err?.message || err, { ip: req.ip });
     return res.status(401).json({ error: 'Unauthorized' });

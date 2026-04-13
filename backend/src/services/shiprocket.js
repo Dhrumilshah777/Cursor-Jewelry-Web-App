@@ -104,6 +104,123 @@ const PRE_ASSIGN_AW_DELAY_MS = 2000;
 const ASSIGN_AW_RETRY_DELAY_MS = 2000;
 const ASSIGN_AW_MAX_ATTEMPTS = 3;
 
+/**
+ * Call Shiprocket assign AWB for an existing shipment_id (retries).
+ * @param {number} validSid - Parsed positive shipment_id
+ * @param {string} shipmentIdStr - Same id as string (logging)
+ * @param {number | null} orderIdForLog - Optional Shiprocket order id for logs
+ * @returns {Promise<{ awb_code: string, courier_name: string }>}
+ */
+async function assignAwbWithRetries(validSid, shipmentIdStr, orderIdForLog = null) {
+  const token = await getToken();
+  const assignBody = { shipment_id: validSid };
+  let lastAssignData = null;
+
+  for (let attempt = 1; attempt <= ASSIGN_AW_MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) await delay(ASSIGN_AW_RETRY_DELAY_MS);
+
+    srLog('awb.assign.request', {
+      attempt,
+      max: ASSIGN_AW_MAX_ATTEMPTS,
+      shipment_id: validSid,
+      body: assignBody,
+    });
+
+    const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(assignBody),
+    });
+    lastAssignData = await assignRes.json().catch(() => ({}));
+
+    const awb =
+      lastAssignData.awb_code ?? lastAssignData.data?.awb_code ?? lastAssignData.courier_awb ?? '';
+    const courier =
+      lastAssignData.courier_name ?? lastAssignData.data?.courier_name ?? lastAssignData.courier ?? '';
+
+    if (assignRes.ok && String(awb || '').trim()) {
+      srLog('awb.assign.success', {
+        attempt,
+        shipment_id: shipmentIdStr,
+        awb_code: String(awb),
+        courier_name: courier ? String(courier) : '',
+      });
+      return {
+        awb_code: String(awb),
+        courier_name: String(courier),
+      };
+    }
+
+    const errMsg = lastAssignData?.message || lastAssignData?.error || 'awb assign failed';
+    const errExtra =
+      Array.isArray(lastAssignData?.errors)
+        ? lastAssignData.errors.join('; ')
+        : lastAssignData?.errors && typeof lastAssignData.errors === 'object'
+          ? JSON.stringify(lastAssignData.errors).slice(0, 300)
+          : '';
+    const responseBodyTruncated = JSON.stringify(lastAssignData).slice(0, 1500);
+    srLog('awb.assign.error', {
+      attempt,
+      status: assignRes.status,
+      message: errMsg,
+      shipment_id: shipmentIdStr,
+      response_body: responseBodyTruncated,
+    });
+    if (!assignRes.ok) {
+      srWarn('awb.assign.error_full', {
+        attempt,
+        http_status: assignRes.status,
+        shipment_id: shipmentIdStr,
+        response_body: responseBodyTruncated,
+      });
+    }
+    if (attempt === ASSIGN_AW_MAX_ATTEMPTS) {
+      srWarn('awb.assign.failed', {
+        attempts: ASSIGN_AW_MAX_ATTEMPTS,
+        http_status: assignRes.status,
+        message: errMsg,
+        detail: errExtra || undefined,
+        shipment_id: shipmentIdStr,
+        order_id: orderIdForLog ?? null,
+        response_body: responseBodyTruncated,
+      });
+    } else {
+      srWarn('awb.assign.retry', {
+        attempt,
+        next_in_ms: ASSIGN_AW_RETRY_DELAY_MS,
+        http_status: assignRes.status,
+        message: errMsg,
+      });
+    }
+
+    if (assignRes.ok && !String(awb || '').trim()) {
+      srWarn('awb.assign.ok_but_no_awb_in_body', {
+        attempt,
+        shipment_id: shipmentIdStr,
+        order_id: orderIdForLog ?? null,
+        response_status_code: lastAssignData?.status_code ?? lastAssignData?.status ?? undefined,
+        message: lastAssignData?.message || lastAssignData?.error || undefined,
+      });
+    }
+  }
+
+  return { awb_code: '', courier_name: '' };
+}
+
+/** Re-run AWB assign for an existing Shiprocket shipment (e.g. first assign returned empty). */
+async function retryAssignAwb(shipmentIdRaw) {
+  const shipmentIdStr = String(shipmentIdRaw ?? '').trim();
+  const sid = parseInt(shipmentIdStr, 10);
+  if (!shipmentIdStr || Number.isNaN(sid) || sid <= 0) {
+    throw new Error('Invalid Shiprocket shipment id');
+  }
+  await delay(PRE_ASSIGN_AW_DELAY_MS);
+  return assignAwbWithRetries(sid, shipmentIdStr, null);
+}
+
 async function createShipment(order) {
   const token = await getToken();
   const addr = order.shippingAddress || {};
@@ -210,110 +327,11 @@ async function createShipment(order) {
   }
 
   await delay(PRE_ASSIGN_AW_DELAY_MS);
-
-  // Let Shiprocket choose the courier. Passing courier_id from serviceability often 400s
-  // (courier not allowed for this shipment at assign time vs generic "possible" list).
-  const assignBody = { shipment_id: validSid };
-
-  let lastAssignData = null;
-
-  for (let attempt = 1; attempt <= ASSIGN_AW_MAX_ATTEMPTS; attempt++) {
-    if (attempt > 1) await delay(ASSIGN_AW_RETRY_DELAY_MS);
-
-    srLog('awb.assign.request', {
-      attempt,
-      max: ASSIGN_AW_MAX_ATTEMPTS,
-      shipment_id: validSid,
-      body: assignBody,
-    });
-
-    const assignRes = await fetch(`${SHIPROCKET_BASE}/courier/assign/awb`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(assignBody),
-    });
-    lastAssignData = await assignRes.json().catch(() => ({}));
-
-    const awb =
-      lastAssignData.awb_code ?? lastAssignData.data?.awb_code ?? lastAssignData.courier_awb ?? '';
-    const courier =
-      lastAssignData.courier_name ?? lastAssignData.data?.courier_name ?? lastAssignData.courier ?? '';
-
-    if (assignRes.ok && String(awb || '').trim()) {
-      srLog('awb.assign.success', {
-        attempt,
-        shipment_id: shipmentIdStr,
-        awb_code: String(awb),
-        courier_name: courier ? String(courier) : '',
-      });
-      return {
-        shipment_id: shipmentIdStr,
-        awb_code: String(awb),
-        courier_name: String(courier),
-      };
-    }
-
-    const errMsg = lastAssignData?.message || lastAssignData?.error || 'awb assign failed';
-    const errExtra =
-      Array.isArray(lastAssignData?.errors)
-        ? lastAssignData.errors.join('; ')
-        : lastAssignData?.errors && typeof lastAssignData.errors === 'object'
-          ? JSON.stringify(lastAssignData.errors).slice(0, 300)
-          : '';
-    const responseBodyTruncated = JSON.stringify(lastAssignData).slice(0, 1500);
-    srLog('awb.assign.error', {
-      attempt,
-      status: assignRes.status,
-      message: errMsg,
-      shipment_id: shipmentIdStr,
-      response_body: responseBodyTruncated,
-    });
-    if (!assignRes.ok) {
-      srWarn('awb.assign.error_full', {
-        attempt,
-        http_status: assignRes.status,
-        shipment_id: shipmentIdStr,
-        response_body: responseBodyTruncated,
-      });
-    }
-    if (attempt === ASSIGN_AW_MAX_ATTEMPTS) {
-      srWarn('awb.assign.failed', {
-        attempts: ASSIGN_AW_MAX_ATTEMPTS,
-        http_status: assignRes.status,
-        message: errMsg,
-        detail: errExtra || undefined,
-        shipment_id: shipmentIdStr,
-        order_id: validOid ?? null,
-        response_body: responseBodyTruncated,
-      });
-    } else {
-      srWarn('awb.assign.retry', {
-        attempt,
-        next_in_ms: ASSIGN_AW_RETRY_DELAY_MS,
-        http_status: assignRes.status,
-        message: errMsg,
-      });
-    }
-
-    if (assignRes.ok && !String(awb || '').trim()) {
-      srWarn('awb.assign.ok_but_no_awb_in_body', {
-        attempt,
-        shipment_id: shipmentIdStr,
-        order_id: validOid ?? null,
-        response_status_code: lastAssignData?.status_code ?? lastAssignData?.status ?? undefined,
-        message: lastAssignData?.message || lastAssignData?.error || undefined,
-      });
-    }
-  }
-
-  // Order exists in Shiprocket; AWB not assigned after retries — admin can finish in dashboard.
+  const assigned = await assignAwbWithRetries(validSid, shipmentIdStr, validOid);
   return {
     shipment_id: shipmentIdStr,
-    awb_code: '',
-    courier_name: '',
+    awb_code: assigned.awb_code,
+    courier_name: assigned.courier_name,
   };
 }
 
@@ -512,4 +530,4 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
   };
 }
 
-module.exports = { getToken, createShipment, checkServiceability };
+module.exports = { getToken, createShipment, retryAssignAwb, checkServiceability };

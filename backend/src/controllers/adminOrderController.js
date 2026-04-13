@@ -1,5 +1,5 @@
 const Order = require('../models/Order');
-const { createShipment } = require('../services/shiprocket');
+const { createShipment, retryAssignAwb } = require('../services/shiprocket');
 
 exports.list = async (req, res) => {
   try {
@@ -35,7 +35,9 @@ exports.updateStatus = async (req, res) => {
     if (status && ALLOWED_STATUSES.includes(status)) {
       if (status === 'shipped') {
         const hasTracking = Boolean(order.tracking && String(order.tracking).trim());
-        if (!order.shiprocketShipmentId && !hasTracking) {
+        const hasShipmentId = Boolean(order.shiprocketShipmentId && String(order.shiprocketShipmentId).trim());
+
+        if (!hasShipmentId && !hasTracking) {
           const orderWithUser = await Order.findById(req.params.id).populate('user', 'email');
           if (!orderWithUser) return res.status(404).json({ error: 'Order not found' });
           try {
@@ -53,6 +55,24 @@ exports.updateStatus = async (req, res) => {
             }
           } catch (shipErr) {
             const msg = (shipErr && shipErr.message) ? String(shipErr.message) : 'Shiprocket shipment failed';
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(400).json({ error: msg });
+          }
+        } else if (hasShipmentId && !hasTracking) {
+          try {
+            const assigned = await retryAssignAwb(order.shiprocketShipmentId);
+            order.tracking = assigned.awb_code || order.tracking;
+            order.courier = assigned.courier_name || order.courier;
+            order.status = 'shipped';
+            didShiprocket = true;
+            if (!String(order.tracking || '').trim()) {
+              console.warn(
+                '[order] Retry AWB still empty after assign. Check [shiprocket] logs. ' +
+                  `orderId=${order._id} shiprocketShipmentId=${order.shiprocketShipmentId}`
+              );
+            }
+          } catch (shipErr) {
+            const msg = (shipErr && shipErr.message) ? String(shipErr.message) : 'Shiprocket AWB retry failed';
             res.setHeader('Content-Type', 'application/json');
             return res.status(400).json({ error: msg });
           }

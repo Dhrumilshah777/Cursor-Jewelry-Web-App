@@ -377,25 +377,138 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
     data.data?.data?.available_courier_companies ??
     data.available_courier_companies ??
     [];
-  const availableCouriers = Array.isArray(companies)
-    ? companies.map((c) => ({ name: c.name || c.courier_name || 'Courier', etd: c.etd || c.etd_min_max || c.estimated_delivery_days || '' }))
-    : [];
-  const MAX_DAYS = 30; // cap to avoid wrong ETD (e.g. year codes) showing year 2250
-  let estimatedDays = null;
-  for (const c of availableCouriers) {
-    const etdStr = String(c.etd || '').trim();
-    const match = etdStr.match(/(\d+)\s*-\s*(\d+)/);
-    let days = match ? Math.max(parseInt(match[1], 10), parseInt(match[2], 10)) : parseInt(etdStr.replace(/\D/g, ''), 10);
-    if (Number.isFinite(days) && days > 0) {
-      if (days > MAX_DAYS) days = MAX_DAYS; // e.g. "2250" or "81816" from API → cap to 30
-      estimatedDays = estimatedDays == null ? days : Math.min(estimatedDays, days);
-    }
+
+  const root =
+    data.data?.data && typeof data.data.data === 'object'
+      ? data.data.data
+      : data.data && typeof data.data === 'object'
+        ? data.data
+        : data;
+
+  const recommendedIdRaw =
+    root?.recommended_courier_company_id ??
+    root?.recommended_courier_id ??
+    data?.recommended_courier_company_id ??
+    data?.recommended_courier_id ??
+    null;
+  const recommendedId =
+    recommendedIdRaw != null && String(recommendedIdRaw).trim() !== '' ? String(recommendedIdRaw) : null;
+
+  function toNumber(val) {
+    const n = typeof val === 'number' ? val : parseFloat(String(val ?? '').replace(/[^0-9.]/g, ''));
+    return Number.isFinite(n) ? n : null;
   }
-  if (estimatedDays != null && estimatedDays > MAX_DAYS) estimatedDays = MAX_DAYS;
+
+  function toInt(val) {
+    const n = parseInt(String(val ?? '').replace(/\D/g, ''), 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  const normalized = Array.isArray(companies)
+    ? companies.map((c) => {
+        const id = c?.courier_company_id ?? c?.id ?? c?.courier_id ?? null;
+        const idStr = id != null && String(id).trim() !== '' ? String(id) : null;
+        const name = c?.name || c?.courier_name || 'Courier';
+        const days =
+          toInt(c?.estimated_delivery_days) ??
+          toInt(c?.estimated_delivery_days_min) ??
+          toInt(c?.estimated_delivery_days_max) ??
+          toInt(c?.etd);
+        const rating = toNumber(c?.rating);
+        const deliveryDelay =
+          c?.delivery_delay === true ||
+          String(c?.delivery_delay || '').toLowerCase() === 'true' ||
+          String(c?.delivery_delay || '') === '1';
+        const deliveryPerformance = toNumber(c?.delivery_performance ?? c?.performance ?? c?.delivery_performance_score);
+        const zone = String(c?.zone ?? c?.zone_code ?? '').trim().toLowerCase();
+        const isRecommended =
+          (recommendedId != null && idStr != null && idStr === recommendedId) ||
+          c?.is_recommended === true ||
+          c?.recommended === true ||
+          String(c?.recommended || '').toLowerCase() === 'true';
+        return {
+          id: idStr,
+          name: String(name),
+          estimated_delivery_days: days,
+          rating,
+          delivery_delay: deliveryDelay,
+          delivery_performance: deliveryPerformance,
+          zone: zone || null,
+          is_recommended: isRecommended,
+          raw: c,
+        };
+      })
+    : [];
+
+  // 🧠 🎯 DELIVERY FILTER LOGIC (FINAL)
+  // 1) If estimated_delivery_days > 7 -> block courier
+  // 2) If rating < 4 -> block courier
+  // 3) If delivery_delay = true -> block courier
+  // 4) If delivery_performance < 4 -> block courier
+  // 🟡 Remote Zone Rule: if zone = z_e -> block courier
+  const filtered = normalized.filter((c) => {
+    if (c.zone === 'z_e') return false;
+    if (c.estimated_delivery_days != null && c.estimated_delivery_days > 7) return false;
+    if (c.rating != null && c.rating < 4) return false;
+    if (c.delivery_delay === true) return false;
+    if (c.delivery_performance != null && c.delivery_performance < 4) return false;
+    return true;
+  });
+
+  // 5) If no courier remains -> block delivery
+  if (filtered.length === 0) {
+    return { serviceable: false, estimatedDays: null, availableCouriers: [], selectedCourier: null };
+  }
+
+  // 6) Recommended courier preference (only if it passes all rules)
+  let selected = filtered.find((c) => c.is_recommended);
+
+  // 7) Fallback: highest rating AND lowest delivery_days
+  if (!selected) {
+    const byScore = [...filtered].sort((a, b) => {
+      const ar = a.rating ?? -1;
+      const br = b.rating ?? -1;
+      if (br !== ar) return br - ar; // highest rating
+      const ad = a.estimated_delivery_days ?? 9999;
+      const bd = b.estimated_delivery_days ?? 9999;
+      if (ad !== bd) return ad - bd; // lowest days
+      return String(a.name).localeCompare(String(b.name));
+    });
+    selected = byScore[0];
+  }
+
+  const estimatedDays =
+    selected?.estimated_delivery_days != null && selected.estimated_delivery_days > 0
+      ? selected.estimated_delivery_days
+      : null;
+
+  const availableCouriers = filtered.map((c) => ({
+    id: c.id,
+    name: c.name,
+    estimated_delivery_days: c.estimated_delivery_days,
+    rating: c.rating,
+    delivery_delay: c.delivery_delay,
+    delivery_performance: c.delivery_performance,
+    zone: c.zone,
+    is_recommended: c.is_recommended,
+  }));
+
   return {
-    serviceable: availableCouriers.length > 0,
-    estimatedDays: estimatedDays ?? (availableCouriers.length > 0 ? 5 : null),
+    serviceable: true,
+    estimatedDays,
     availableCouriers,
+    selectedCourier: selected
+      ? {
+          id: selected.id,
+          name: selected.name,
+          estimated_delivery_days: selected.estimated_delivery_days,
+          rating: selected.rating,
+          delivery_delay: selected.delivery_delay,
+          delivery_performance: selected.delivery_performance,
+          zone: selected.zone,
+          is_recommended: selected.is_recommended,
+        }
+      : null,
   };
 }
 

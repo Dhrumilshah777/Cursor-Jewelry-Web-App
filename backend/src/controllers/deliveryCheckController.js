@@ -11,24 +11,49 @@ exports.check = async (req, res) => {
     if (!pincode) {
       return res.status(400).json({ error: 'Pincode is required', serviceable: false });
     }
-    const { serviceable, estimatedDays, availableCouriers } = await checkServiceability(pincode);
-    let estimatedDate = null;
-    if (serviceable && estimatedDays != null && estimatedDays > 0) {
-      const d = new Date();
-      const daysWithBuffer = Math.ceil(estimatedDays) + 1; // +1 buffer day
-      d.setDate(d.getDate() + daysWithBuffer);
-      estimatedDate = d.toISOString().split('T')[0];
+    const { serviceable, estimatedDays, availableCouriers, selectedCourier } = await checkServiceability(pincode);
+
+    if (!serviceable) {
+      return res.json({
+        serviceable: false,
+        estimatedDays: null,
+        estimatedDateMin: null,
+        estimatedDateMax: null,
+        availableCouriers: [],
+        selectedCourier: null,
+        message: '📦 Delivery not available for this location',
+      });
     }
-    const message = serviceable
-      ? estimatedDate
-        ? `Delivery by ${formatDeliveryDate(estimatedDate)}`
-        : 'Delivery available'
-      : 'Delivery not available for this pincode';
+
+    // UX rule:
+    // minDays = estimated_delivery_days
+    // maxDays = estimated_delivery_days + 2
+    const minDays = estimatedDays != null && estimatedDays > 0 ? Math.ceil(estimatedDays) : null;
+    const maxDays = minDays != null ? minDays + 2 : null;
+
+    let estimatedDateMin = null;
+    let estimatedDateMax = null;
+    if (minDays != null && maxDays != null) {
+      const d1 = new Date();
+      d1.setDate(d1.getDate() + minDays);
+      estimatedDateMin = d1.toISOString().split('T')[0];
+
+      const d2 = new Date();
+      d2.setDate(d2.getDate() + maxDays);
+      estimatedDateMax = d2.toISOString().split('T')[0];
+    }
+
+    const message =
+      estimatedDateMin && estimatedDateMax
+        ? `Delivery Date ${formatDeliveryDate(estimatedDateMin)} - ${formatDeliveryDate(estimatedDateMax)}`
+        : 'Delivery available';
     res.json({
-      serviceable: !!serviceable,
+      serviceable: true,
       estimatedDays: estimatedDays ?? null,
-      estimatedDate,
+      estimatedDateMin,
+      estimatedDateMax,
       availableCouriers: availableCouriers || [],
+      selectedCourier: selectedCourier || null,
       message,
     });
   } catch (err) {
@@ -37,9 +62,11 @@ exports.check = async (req, res) => {
     res.status(200).json({
       serviceable: false,
       estimatedDays: null,
-      estimatedDate: null,
+      estimatedDateMin: null,
+      estimatedDateMax: null,
       availableCouriers: [],
-      message: 'Estimated delivery: 4–7 business days.',
+      selectedCourier: null,
+      message: '📦 Delivery not available for this location',
       fallback: true,
     });
   }

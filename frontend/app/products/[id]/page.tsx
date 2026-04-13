@@ -230,14 +230,18 @@ export default function ProductDetailPage() {
       setLastCheckedPincode(pin);
       setDeliveryError('');
       setDeliveryCheck({
-        message: data.message || (data.estimatedDate ? `Delivery by ${formatDeliveryDate(data.estimatedDate)}` : 'Delivery available'),
-        estimatedDate: data.estimatedDate ?? null,
+        message:
+          data.message ||
+          (data.estimatedDateMin && data.estimatedDateMax
+            ? `Delivery Date ${formatDeliveryDate(data.estimatedDateMin)} - ${formatDeliveryDate(data.estimatedDateMax)}`
+            : 'Delivery available'),
+        estimatedDate: data.estimatedDateMin ?? data.estimatedDate ?? null,
         serviceable: data.serviceable,
         fallback: data.fallback === true,
       });
     } catch {
       setLastCheckedPincode(pin);
-      setDeliveryCheck({ message: 'Estimated delivery: 4–7 business days.', serviceable: false, fallback: true });
+      setDeliveryCheck({ message: '📦 Delivery not available for this location', serviceable: false, fallback: true });
       setDeliveryError('');
     } finally {
       setDeliveryChecking(false);

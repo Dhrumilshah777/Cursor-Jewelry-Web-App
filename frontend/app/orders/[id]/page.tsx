@@ -204,45 +204,42 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {(order.tracking || order.courier) && (
-          <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4">
-            <h2 className="font-medium text-charcoal mb-2">Tracking</h2>
-            {order.tracking && (
-              <p className="text-sm text-stone-600">
-                <span className="font-medium">AWB:</span> {order.tracking}
-              </p>
-            )}
-            {order.courier && (
-              <p className="text-sm text-stone-600 mt-1">
-                <span className="font-medium">Courier:</span> {order.courier}
-              </p>
-            )}
-            {order.tracking && (
-              <a
-                href={`https://track.shiprocket.co/?awb=${encodeURIComponent(order.tracking)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-charcoal underline hover:no-underline"
-              >
-                Track here
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-            )}
-          </div>
-        )}
-
         {/* Delivery address */}
         <div className="rounded-lg border border-stone-200 bg-white p-4">
           <h2 className="font-medium text-charcoal mb-2">Delivery address</h2>
           <address className="text-sm text-stone-600 not-italic">
             {order.shippingAddress.name}<br />
-            {order.shippingAddress.phone}<br />
+            {order.shippingAddress.phone}
+            {order.tracking && (
+              <>
+                <br />
+                <span className="font-medium text-charcoal">AWB:</span> {order.tracking}
+              </>
+            )}
+            {order.courier && String(order.courier).trim() && (
+              <>
+                <br />
+                <span className="font-medium text-charcoal">Courier:</span> {order.courier}
+              </>
+            )}
+            <br />
             {order.shippingAddress.line1}
             {order.shippingAddress.line2 && <>, {order.shippingAddress.line2}</>}<br />
             {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}
           </address>
+          {order.tracking && (
+            <a
+              href={`https://track.shiprocket.co/?awb=${encodeURIComponent(order.tracking)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-charcoal underline hover:no-underline"
+            >
+              Track here
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          )}
         </div>
 
         <p className="mt-8">

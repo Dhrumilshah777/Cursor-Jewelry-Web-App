@@ -104,6 +104,25 @@ const PRE_ASSIGN_AW_DELAY_MS = 2000;
 const ASSIGN_AW_RETRY_DELAY_MS = 2000;
 const ASSIGN_AW_MAX_ATTEMPTS = 3;
 
+/** Shiprocket returns 200 with awb_assign_error like "AWB is already assigned with awb - SF123... and status - ..." */
+function extractAwbFromAlreadyAssignedMessage(text) {
+  if (!text || typeof text !== 'string') return '';
+  const m = text.match(/awb\s*-\s*([A-Za-z0-9]+)/i);
+  return m ? String(m[1]).trim() : '';
+}
+
+function extractAwbFromAssignResponsePayload(data) {
+  if (!data || typeof data !== 'object') return '';
+  const nested =
+    data.response?.data?.awb_assign_error ||
+    data.data?.awb_assign_error ||
+    data.awb_assign_error ||
+    data.message ||
+    data.error ||
+    '';
+  return extractAwbFromAlreadyAssignedMessage(String(nested));
+}
+
 /**
  * Call Shiprocket assign AWB for an existing shipment_id (retries).
  * @param {number} validSid - Parsed positive shipment_id
@@ -205,6 +224,25 @@ async function assignAwbWithRetries(validSid, shipmentIdStr, orderIdForLog = nul
         message: lastAssignData?.message || lastAssignData?.error || undefined,
       });
     }
+
+    const recovered = extractAwbFromAssignResponsePayload(lastAssignData);
+    if (recovered) {
+      srLog('awb.assign.recovered_already_assigned', {
+        attempt,
+        shipment_id: shipmentIdStr,
+        awb_code: recovered,
+      });
+      return {
+        awb_code: recovered,
+        courier_name: String(courier || '').trim(),
+      };
+    }
+  }
+
+  const fallback = extractAwbFromAssignResponsePayload(lastAssignData);
+  if (fallback) {
+    srLog('awb.assign.recovered_already_assigned', { shipment_id: shipmentIdStr, awb_code: fallback });
+    return { awb_code: fallback, courier_name: '' };
   }
 
   return { awb_code: '', courier_name: '' };

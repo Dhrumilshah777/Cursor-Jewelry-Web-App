@@ -88,8 +88,7 @@ exports.updateStatus = async (req, res) => {
       if (t) order.tracking = t;
     }
     if (courier !== undefined) {
-      const c = String(courier).trim();
-      if (c) order.courier = c;
+      order.courier = String(courier).trim();
     }
     await order.save();
     res.json(order);

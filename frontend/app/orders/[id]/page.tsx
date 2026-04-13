@@ -254,13 +254,16 @@ export default function OrderDetailPage() {
           <address className="text-sm text-stone-600 not-italic">
             {order.shippingAddress.name}<br />
             {order.shippingAddress.phone}
-            {order.tracking && (
+            {order.tracking && String(order.tracking).trim() && (
               <>
                 <br />
                 <span className="font-medium text-charcoal">AWB:</span> {order.tracking}
+                <br />
+                <span className="font-medium text-charcoal">Courier:</span>{' '}
+                {order.courier && String(order.courier).trim() ? order.courier : '—'}
               </>
             )}
-            {order.courier && String(order.courier).trim() && (
+            {!order.tracking?.trim() && order.courier && String(order.courier).trim() && (
               <>
                 <br />
                 <span className="font-medium text-charcoal">Courier:</span> {order.courier}

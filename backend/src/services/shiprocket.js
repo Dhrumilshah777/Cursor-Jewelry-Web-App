@@ -123,6 +123,19 @@ function extractAwbFromAssignResponsePayload(data) {
   return extractAwbFromAlreadyAssignedMessage(String(nested));
 }
 
+/** Courier name sometimes nested under response.data on assign (incl. already-assigned errors). */
+function extractCourierFromAssignResponsePayload(data) {
+  if (!data || typeof data !== 'object') return '';
+  const d = data.response?.data ?? data.data ?? data;
+  const name =
+    d?.courier_name ??
+    d?.courier_company_name ??
+    data.courier_name ??
+    data.courier ??
+    '';
+  return String(name || '').trim();
+}
+
 /**
  * Call Shiprocket assign AWB for an existing shipment_id (retries).
  * @param {number} validSid - Parsed positive shipment_id
@@ -227,22 +240,30 @@ async function assignAwbWithRetries(validSid, shipmentIdStr, orderIdForLog = nul
 
     const recovered = extractAwbFromAssignResponsePayload(lastAssignData);
     if (recovered) {
+      const recoveredCourier =
+        String(courier || '').trim() || extractCourierFromAssignResponsePayload(lastAssignData);
       srLog('awb.assign.recovered_already_assigned', {
         attempt,
         shipment_id: shipmentIdStr,
         awb_code: recovered,
+        courier_name: recoveredCourier || undefined,
       });
       return {
         awb_code: recovered,
-        courier_name: String(courier || '').trim(),
+        courier_name: recoveredCourier,
       };
     }
   }
 
   const fallback = extractAwbFromAssignResponsePayload(lastAssignData);
   if (fallback) {
-    srLog('awb.assign.recovered_already_assigned', { shipment_id: shipmentIdStr, awb_code: fallback });
-    return { awb_code: fallback, courier_name: '' };
+    const recoveredCourier = extractCourierFromAssignResponsePayload(lastAssignData);
+    srLog('awb.assign.recovered_already_assigned', {
+      shipment_id: shipmentIdStr,
+      awb_code: fallback,
+      courier_name: recoveredCourier || undefined,
+    });
+    return { awb_code: fallback, courier_name: recoveredCourier };
   }
 
   return { awb_code: '', courier_name: '' };

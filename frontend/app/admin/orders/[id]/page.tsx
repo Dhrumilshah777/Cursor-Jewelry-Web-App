@@ -35,6 +35,7 @@ export default function AdminOrderDetailPage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
   const [tracking, setTracking] = useState('');
+  const [courier, setCourier] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
 
@@ -48,6 +49,7 @@ export default function AdminOrderDetailPage() {
         setOrder(o);
         setStatus(o.status);
         setTracking(o.tracking || '');
+        setCourier(o.courier || '');
       })
       .catch(() => setOrder(null))
       .finally(() => setLoading(false));
@@ -60,10 +62,11 @@ export default function AdminOrderDetailPage() {
     setSaveErrorDetail(null);
     setSaving(true);
     try {
-      const updated = await apiPatch<Order>(`/api/admin/orders/${id}`, { status, tracking }, true);
+      const updated = await apiPatch<Order>(`/api/admin/orders/${id}`, { status, tracking, courier }, true);
       setOrder(updated);
       setStatus(updated.status);
       setTracking(updated.tracking || '');
+      setCourier(updated.courier || '');
     } catch (err) {
       const ex = err as Error & { responseBody?: string };
       let msg = ex instanceof Error ? ex.message : 'Failed to save';
@@ -142,18 +145,27 @@ export default function AdminOrderDetailPage() {
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
-          <div className="min-w-[200px]">
-            <label className="block text-sm font-medium text-stone-700">Tracking</label>
-            <input
-              type="text"
-              value={tracking}
-              onChange={(e) => setTracking(e.target.value)}
-              placeholder="Tracking number"
-              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
-            />
-            {order.courier && (
-              <p className="mt-1 text-sm text-stone-500">Courier: {order.courier}</p>
-            )}
+          <div className="min-w-[200px] flex-1 max-w-md space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Tracking (AWB)</label>
+              <input
+                type="text"
+                value={tracking}
+                onChange={(e) => setTracking(e.target.value)}
+                placeholder="Tracking / AWB number"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700">Courier</label>
+              <input
+                type="text"
+                value={courier}
+                onChange={(e) => setCourier(e.target.value)}
+                placeholder="e.g. Delhivery, Blue Dart"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+              />
+            </div>
             {order.shiprocketShipmentId && !order.tracking && (
               <p className="mt-1 text-sm text-amber-600">Order is in Shiprocket. Assign AWB from Shiprocket dashboard (Orders) and paste the tracking number here, then Save.</p>
             )}

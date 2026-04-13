@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { isUserLoggedIn, apiGet, assetUrl, refreshUserSession } from '@/lib/api';
+import { apiGet, assetUrl, getApiBase, refreshUserSession } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; image?: string; quantity: number };
 type Address = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
@@ -15,8 +15,11 @@ type Order = {
   status: string;
   tracking?: string;
   courier?: string;
+  shiprocketShipmentId?: string;
   createdAt: string;
 };
+
+const LOG_PREFIX = '[order-detail]';
 
 function imageSrc(image: string) {
   if (!image) return '';
@@ -67,17 +70,58 @@ export default function OrderDetailPage() {
       setLoading(false);
       return;
     }
+    let cancelled = false;
     (async () => {
+      const path = `/api/orders/${id}`;
+      const absoluteUrl = `${getApiBase()}${path}`;
+      console.info(`${LOG_PREFIX} fetch start`, { orderId: id, path, apiBase: getApiBase(), absoluteUrl });
+
       const ok = await refreshUserSession();
+      if (cancelled) return;
       if (!ok) {
+        console.error(`${LOG_PREFIX} refreshUserSession failed — redirecting to login`, { orderId: id });
         router.replace('/login?returnTo=/orders/' + id);
+        setLoading(false);
         return;
       }
-      apiGet<Order>(`/api/orders/${id}`, { user: true })
-        .then(setOrder)
-        .catch(() => setOrder(null))
-        .finally(() => setLoading(false));
+
+      try {
+        const data = await apiGet<Order>(path, { user: true });
+        if (cancelled) return;
+        console.info(`${LOG_PREFIX} fetch success`, {
+          orderId: id,
+          _id: data._id,
+          status: data.status,
+          tracking: data.tracking?.trim() ? data.tracking : '(empty)',
+          courier: data.courier?.trim() ? data.courier : '(empty)',
+          shiprocketShipmentId: data.shiprocketShipmentId?.trim() ? data.shiprocketShipmentId : '(empty)',
+        });
+        const postShip = ['shipped', 'out_for_delivery', 'delivered'].includes(data.status);
+        if (postShip && !String(data.tracking || '').trim()) {
+          console.warn(`${LOG_PREFIX} status is post-shipment but tracking (AWB) is empty`, {
+            orderId: id,
+            status: data.status,
+            shiprocketShipmentId: data.shiprocketShipmentId || null,
+          });
+        }
+        setOrder(data);
+      } catch (err) {
+        if (cancelled) return;
+        const e = err as Error & { responseBody?: string };
+        console.error(`${LOG_PREFIX} fetch failed`, {
+          orderId: id,
+          absoluteUrl,
+          message: e?.message || String(err),
+          responseBody: e?.responseBody ?? null,
+        });
+        setOrder(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [id, router]);
 
   if (loading) {

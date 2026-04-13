@@ -82,6 +82,7 @@ export default function ProductDetailPage() {
   const [deliveryCheck, setDeliveryCheck] = useState<{ message: string; estimatedDate?: string | null; serviceable?: boolean; fallback?: boolean } | null>(null);
   const [deliveryChecking, setDeliveryChecking] = useState(false);
   const [deliveryError, setDeliveryError] = useState('');
+  const [lastCheckedPincode, setLastCheckedPincode] = useState('');
   const [addedToCart, setAddedToCart] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
@@ -213,6 +214,7 @@ export default function ProductDetailPage() {
       setDeliveryCheck(null);
       return;
     }
+    if (pin === lastCheckedPincode && deliveryCheck) return;
     setDeliveryError('');
     setDeliveryCheck(null);
     setDeliveryChecking(true);
@@ -225,6 +227,7 @@ export default function ProductDetailPage() {
         setDeliveryError(data.error || '');
         return;
       }
+      setLastCheckedPincode(pin);
       setDeliveryError('');
       setDeliveryCheck({
         message: data.message || (data.estimatedDate ? `Delivery by ${formatDeliveryDate(data.estimatedDate)}` : 'Delivery available'),
@@ -233,12 +236,26 @@ export default function ProductDetailPage() {
         fallback: data.fallback === true,
       });
     } catch {
+      setLastCheckedPincode(pin);
       setDeliveryCheck({ message: 'Estimated delivery: 4–7 business days.', serviceable: false, fallback: true });
       setDeliveryError('');
     } finally {
       setDeliveryChecking(false);
     }
   };
+
+  // Auto-trigger delivery check when pincode becomes 6 digits (debounced).
+  useEffect(() => {
+    const pin = pincode.trim().replace(/\D/g, '');
+    if (pin.length !== 6) return;
+    if (deliveryChecking) return;
+    if (pin === lastCheckedPincode && deliveryCheck) return;
+    const t = window.setTimeout(() => {
+      checkDelivery();
+    }, 500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pincode]);
 
   function formatDeliveryDate(isoDate: string) {
     const d = new Date(isoDate + 'T12:00:00Z');

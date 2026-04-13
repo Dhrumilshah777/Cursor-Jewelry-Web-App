@@ -9,6 +9,12 @@ const SHIPROCKET_DEBUG =
   String(process.env.SHIPROCKET_DEBUG || '').toLowerCase() === 'true' ||
   String(process.env.SHIPROCKET_DEBUG || '') === '1';
 
+// NOTE: This logs the raw Shiprocket serviceability JSON (may include operational metadata).
+// Keep it opt-in and use only for debugging.
+const SHIPROCKET_LOG_SERVICEABILITY_RAW =
+  String(process.env.SHIPROCKET_LOG_SERVICEABILITY_RAW || '').toLowerCase() === 'true' ||
+  String(process.env.SHIPROCKET_LOG_SERVICEABILITY_RAW || '') === '1';
+
 function srLog(event, meta = {}) {
   if (!SHIPROCKET_DEBUG) return;
   // Avoid logging PII (full address/phone/email). Keep only operational debug fields.
@@ -347,6 +353,24 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json().catch(() => ({}));
+
+  if (SHIPROCKET_LOG_SERVICEABILITY_RAW) {
+    // Log raw JSON (truncated) to Render logs for debugging.
+    // Truncate to avoid oversized log lines.
+    const rawStr = (() => {
+      try {
+        return JSON.stringify(data);
+      } catch {
+        return String(data);
+      }
+    })();
+    console.log('[shiprocket] serviceability.raw_response', {
+      pickup_postcode: String(validPickup),
+      delivery_postcode: String(delivery),
+      http_status: res.status,
+      raw: rawStr.length > 12000 ? rawStr.slice(0, 12000) + '…(truncated)' : rawStr,
+    });
+  }
   // Response may be { data: { available_courier_companies: [...] } } or { available_courier_companies: [...] } or nested under data.data
   const companies =
     data.data?.available_courier_companies ??

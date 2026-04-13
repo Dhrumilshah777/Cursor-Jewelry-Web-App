@@ -236,14 +236,25 @@ export default function LoginPage() {
           Don&apos;t have an account? We&apos;ll create one when you verify your phone number.
         </p>
         )}
-        <p className="mt-4 text-center">
-          <Link href={returnTo || '/'} className="text-sm text-charcoal underline hover:no-underline">
+        <p className="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-stone-500">
+          <Link href={returnTo || '/'} className="text-charcoal underline hover:no-underline">
             ← Back to home
           </Link>
+          <span aria-hidden className="text-stone-300">
+            ·
+          </span>
+          <Link href="/orders" className="text-charcoal underline hover:no-underline">
+            My orders
+          </Link>
           {returnTo && (
-            <span className="ml-2">
-              <Link href="/cart" className="text-sm text-charcoal underline hover:no-underline">Cart</Link>
-            </span>
+            <>
+              <span aria-hidden className="text-stone-300">
+                ·
+              </span>
+              <Link href="/cart" className="text-charcoal underline hover:no-underline">
+                Cart
+              </Link>
+            </>
           )}
         </p>
       </div>

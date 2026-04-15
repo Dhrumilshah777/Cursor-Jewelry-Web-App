@@ -166,7 +166,7 @@ export default function AdminOrderDetailPage() {
                 className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
               />
             </div>
-            {order.shiprocketShipmentId && !order.tracking && (
+            {order.shiprocketShipmentId && !tracking && (
               <p className="mt-1 text-sm text-amber-600">Order is in Shiprocket. Assign AWB from Shiprocket dashboard (Orders) and paste the tracking number here, then Save.</p>
             )}
           </div>

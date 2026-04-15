@@ -30,6 +30,21 @@ function extractAwb(payload) {
   return extractAwbFromText(String(msg));
 }
 
+function extractCourierName(payload) {
+  const direct =
+    payload?.courier_name ??
+    payload?.courier ??
+    payload?.courier_company_name ??
+    payload?.courier_company ??
+    payload?.courierCompanyName ??
+    payload?.data?.courier_name ??
+    payload?.data?.courier_company_name ??
+    payload?.data?.courier ??
+    '';
+  const name = direct != null ? String(direct).trim() : '';
+  return name;
+}
+
 function extractShipmentStatus(payload) {
   return (
     payload?.shipment_status ??
@@ -71,6 +86,7 @@ exports.handleShiprocketWebhook = async (req, res) => {
     const payload = req.body || {};
 
     const awb = extractAwb(payload);
+    const courierName = extractCourierName(payload);
     const shipmentStatus = extractShipmentStatus(payload);
     const shipmentId = extractShipmentId(payload);
 
@@ -92,10 +108,16 @@ exports.handleShiprocketWebhook = async (req, res) => {
       return res.status(200).json({ ok: true, notFound: true });
     }
 
+    let changed = false;
     if (awb && !String(order.tracking || '').trim()) {
       order.tracking = awb;
-      await order.save();
+      changed = true;
     }
+    if (courierName && !String(order.courier || '').trim()) {
+      order.courier = courierName;
+      changed = true;
+    }
+    if (changed) await order.save();
 
     return res.status(200).json({ ok: true, shipment_status: shipmentStatus || undefined });
   } catch (err) {

@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { razorpayInstance } = require('../services/razorpay');
+const { sendOrderSMS } = require('../services/twilioSms');
 
 const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -133,6 +134,23 @@ async function handleRazorpayWebhook(req, res) {
     const result = await completePaidOrder(order._id.toString(), razorpayPaymentId);
     if (!result.ok && result.reason === 'insufficient_stock') {
       console.error('Razorpay webhook: order', order._id, 'payment captured but stock update failed');
+    }
+    // Send SMS only on first-time payment completion (avoid duplicates on webhook retries).
+    if (result.ok && !result.alreadyPaid) {
+      try {
+        const fresh = await Order.findById(order._id).populate('user', 'name');
+        const phone = fresh?.shippingAddress?.phone || order.shippingAddress?.phone || '';
+        const name = fresh?.user?.name || fresh?.shippingAddress?.name || 'Customer';
+        const amount = typeof fresh?.subtotal === 'number' ? fresh.subtotal : order.subtotal;
+        await sendOrderSMS({
+          phone,
+          name,
+          orderId: fresh?._id?.toString?.() || order._id.toString(),
+          amount,
+        });
+      } catch (smsErr) {
+        console.error('[sms] Non-blocking send failed:', smsErr?.message || smsErr);
+      }
     }
   } catch (err) {
     console.error('Razorpay webhook error:', err);

@@ -57,6 +57,10 @@ app.use((err, req, res, next) => {
   }
   next(err);
 });
+
+// Shiprocket webhook (JSON)
+const shiprocketWebhook = require('./controllers/shiprocketWebhookController').handleShiprocketWebhook;
+app.post('/api/webhooks/shiprocket', shiprocketWebhook);
 app.use(passport.initialize());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

@@ -61,6 +61,8 @@ app.use((err, req, res, next) => {
 // Shiprocket webhook (JSON)
 const shiprocketWebhook = require('./controllers/shiprocketWebhookController').handleShiprocketWebhook;
 app.post('/api/webhooks/shiprocket', shiprocketWebhook);
+// Alias route: Shiprocket UI blocks URLs containing "shiprocket"
+app.post('/api/webhooks/shipment', shiprocketWebhook);
 app.use(passport.initialize());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

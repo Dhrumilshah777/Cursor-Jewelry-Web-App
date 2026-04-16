@@ -14,6 +14,15 @@ function formatInrAmount(amount) {
   return String(Math.round(n * 100) / 100);
 }
 
+/** Twilio Messages API expects e.g. whatsapp:+14155238886 */
+function normalizeWhatsAppFrom(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  if (s.toLowerCase().startsWith('whatsapp:')) return s;
+  if (s.startsWith('+')) return `whatsapp:${s}`;
+  return '';
+}
+
 /**
  * Send order confirmation SMS via Twilio.
  * Does NOT throw (callers can still wrap, but this is safe).
@@ -62,5 +71,52 @@ async function sendOrderSMS({ phone, name, orderId, amount }) {
   }
 }
 
-module.exports = { sendOrderSMS, normalizeIndianE164 };
+/**
+ * Send order confirmation on WhatsApp via Twilio (same Messages API as SMS).
+ * Set TWILIO_WHATSAPP_FROM e.g. whatsapp:+14155238886 (sandbox) or your approved live sender.
+ * Does NOT throw.
+ * @param {{ phone: string, name: string, orderId: string, amount: number }} params
+ */
+async function sendOrderWhatsApp({ phone, name, orderId, amount }) {
+  try {
+    if (!phone) {
+      console.warn('[whatsapp] skipped: no phone number');
+      return { ok: false, skipped: true, reason: 'missing_phone' };
+    }
+
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const from = normalizeWhatsAppFrom(process.env.TWILIO_WHATSAPP_FROM);
+    if (!accountSid || !authToken || !from) {
+      console.warn('[whatsapp] Twilio env missing (need TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM); skipping');
+      return { ok: false, skipped: true, reason: 'missing_env' };
+    }
+
+    const e164 = normalizeIndianE164(phone);
+    if (!e164 || e164.length !== 13) {
+      console.warn('[whatsapp] Invalid phone; skipping', { phone });
+      return { ok: false, skipped: true, reason: 'invalid_phone' };
+    }
+    const to = `whatsapp:${e164}`;
+
+    const safeName = String(name || '').trim() || 'Customer';
+    const safeOrderId = String(orderId || '').trim();
+    const safeAmount = formatInrAmount(amount);
+    const body = `Hi ${safeName}, your order #${safeOrderId} is confirmed. Amount: ₹${safeAmount}. We’ll notify you when shipped.`;
+
+    const client = twilio(accountSid, authToken);
+    const result = await client.messages.create({
+      body,
+      from,
+      to,
+    });
+
+    return { ok: true, sid: result?.sid || '' };
+  } catch (err) {
+    console.error('[whatsapp] Failed to send Twilio WhatsApp:', err?.message || err);
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+module.exports = { sendOrderSMS, sendOrderWhatsApp, normalizeIndianE164, normalizeWhatsAppFrom };
 

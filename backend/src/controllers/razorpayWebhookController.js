@@ -4,7 +4,7 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { razorpayInstance } = require('../services/razorpay');
-const { sendOrderSMS } = require('../services/twilioSms');
+const { sendOrderSMS, sendOrderWhatsApp } = require('../services/twilioSms');
 
 const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -164,13 +164,21 @@ async function handleRazorpayWebhook(req, res) {
           name: String(name || '').trim() || 'Customer',
           amount,
         });
+        const orderIdStr = fresh?._id?.toString?.() || order._id.toString();
         await sendOrderSMS({
           phone,
           name,
-          orderId: fresh?._id?.toString?.() || order._id.toString(),
+          orderId: orderIdStr,
           amount,
         });
         console.log('[rz.webhook] sms attempt done');
+        await sendOrderWhatsApp({
+          phone,
+          name,
+          orderId: orderIdStr,
+          amount,
+        });
+        console.log('[rz.webhook] whatsapp attempt done');
       } catch (smsErr) {
         console.error('[sms] Non-blocking send failed:', smsErr?.message || smsErr);
       }

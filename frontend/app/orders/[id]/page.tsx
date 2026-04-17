@@ -232,7 +232,12 @@ export default function OrderDetailPage() {
           ) : (
             <p className="text-sm text-stone-600">No return requested for this order.</p>
           )}
-          {isDelivered && !withinReturnWindow && (
+          {isDelivered && !deliveredAtDate && (
+            <p className="mt-2 text-sm text-amber-700">
+              Delivery date is missing for this order. Please contact support (or re-mark delivered in admin) to enable returns.
+            </p>
+          )}
+          {isDelivered && deliveredAtDate && !withinReturnWindow && (
             <p className="mt-2 text-sm text-stone-500">Return window closed (7 days from delivery).</p>
           )}
           {canRequestReturn && (

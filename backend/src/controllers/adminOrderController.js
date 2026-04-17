@@ -83,6 +83,9 @@ exports.updateStatus = async (req, res) => {
         }
       } else {
         order.status = status;
+        if (status === 'delivered' && !order.deliveredAt) {
+          order.deliveredAt = new Date();
+        }
       }
     }
     // Non-empty tracking/courier from the request always apply (after Shiprocket paths) so pasted AWB is never dropped.

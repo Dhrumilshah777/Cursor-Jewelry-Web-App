@@ -1,5 +1,8 @@
 const Order = require('../models/Order');
+const Return = require('../models/Return');
 const { createShipment, retryAssignAwb } = require('../services/shiprocket');
+const { razorpayInstance } = require('../services/razorpay');
+const { sendWhatsAppMessage } = require('../services/whatsappService');
 
 exports.list = async (req, res) => {
   try {
@@ -94,5 +97,113 @@ exports.updateStatus = async (req, res) => {
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+// PATCH /api/admin/orders/:id/deliver (manual testing flow)
+exports.markDelivered = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('user', 'name');
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    if (order.status === 'delivered') {
+      return res.json({ ok: true, alreadyDelivered: true, order });
+    }
+
+    order.status = 'delivered';
+    order.deliveredAt = new Date();
+    await order.save();
+
+    console.log('[order] delivered (manual)', { orderId: String(order._id) });
+
+    // Non-blocking WhatsApp
+    try {
+      const phone = order?.shippingAddress?.phone || '';
+      const name = order?.user?.name || order?.shippingAddress?.name || 'Customer';
+      const body = `Hi ${name}, your order #${order._id} has been delivered 🎉\nYou can request a return within 7 days.`;
+      await sendWhatsAppMessage({ phone, body });
+    } catch (msgErr) {
+      console.error('[whatsapp] deliver message failed (non-blocking):', msgErr?.message || msgErr);
+    }
+
+    return res.json({ ok: true, order });
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// POST /api/admin/orders/:id/refund (manual testing flow)
+exports.refundOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('user', 'name');
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    if (order.isRefunded === true || order.status === 'refunded' || String(order.razorpayRefundId || '').trim()) {
+      return res.status(409).json({ error: 'Order already refunded' });
+    }
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ error: 'Order not delivered' });
+    }
+    if (!razorpayInstance) {
+      return res.status(500).json({ error: 'Payment service unavailable. Configure Razorpay keys.' });
+    }
+    const paymentId = String(order.razorpayPaymentId || '').trim();
+    if (!paymentId) {
+      return res.status(400).json({ error: 'Missing razorpayPaymentId on order' });
+    }
+
+    const paidInr = typeof order.totalAmount === 'number' && order.totalAmount > 0 ? order.totalAmount : order.subtotal;
+    const amountPaise = Math.round((paidInr || 0) * 100);
+    if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
+      return res.status(400).json({ error: 'Invalid refund amount' });
+    }
+
+    console.log('[refund] requested', { orderId: String(order._id), paymentId, amountPaise });
+
+    let refund;
+    try {
+      refund = await razorpayInstance.payments.refund(paymentId, { amount: amountPaise });
+    } catch (refundErr) {
+      console.error('[refund] failed', {
+        orderId: String(order._id),
+        paymentId,
+        message: refundErr?.message || String(refundErr),
+      });
+      const desc = refundErr?.error?.description ? String(refundErr.error.description) : '';
+      return res.status(502).json({ error: desc || 'Refund failed' });
+    }
+    const refundId = String(refund?.id || '');
+
+    order.isRefunded = true;
+    order.refundedAt = new Date();
+    order.status = 'refunded';
+    order.razorpayRefundId = refundId;
+    order.refundStatus = 'requested';
+    await order.save();
+
+    const ret = await Return.findOne({ order: order._id });
+    if (ret) {
+      ret.status = 'refunded';
+      await ret.save();
+    }
+
+    // Non-blocking WhatsApp
+    try {
+      const phone = order?.shippingAddress?.phone || '';
+      const name = order?.user?.name || order?.shippingAddress?.name || 'Customer';
+      const body = `Hi ${name}, your refund for order #${order._id} has been processed 💰`;
+      await sendWhatsAppMessage({ phone, body });
+    } catch (msgErr) {
+      console.error('[whatsapp] refund message failed (non-blocking):', msgErr?.message || msgErr);
+    }
+
+    console.log('[refund] saved', { orderId: String(order._id), paymentId, refundId });
+    return res.json({ ok: true, refundId, order });
+  } catch (err) {
+    if (err?.error?.description) {
+      return res.status(502).json({ error: String(err.error.description) });
+    }
+    return res.status(500).json({ error: err.message });
   }
 };

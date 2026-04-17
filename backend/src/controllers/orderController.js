@@ -67,6 +67,7 @@ exports.create = async (req, res) => {
         pincode: shippingAddress.pincode,
       },
       subtotal: total,
+      totalAmount: total,
       status: 'pending_payment',
     });
 

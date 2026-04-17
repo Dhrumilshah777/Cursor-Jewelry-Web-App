@@ -8,5 +8,7 @@ router.use(adminAuth);
 router.get('/', adminOrderController.list);
 router.get('/:id', adminOrderController.getOne);
 router.patch('/:id', adminOrderController.updateStatus);
+router.patch('/:id/deliver', adminOrderController.markDelivered);
+router.post('/:id/refund', adminOrderController.refundOrder);
 
 module.exports = router;

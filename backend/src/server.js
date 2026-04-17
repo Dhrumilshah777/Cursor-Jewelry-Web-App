@@ -95,12 +95,14 @@ app.get('/api/delivery-check', deliveryCheckController.check);
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/wishlist', require('./routes/wishlist'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/returns', require('./routes/returns'));
 
 // Admin API (cookie admin_token or x-admin-key header)
 const adminAuth = require('./middleware/adminAuth');
 app.get('/api/admin/me', adminAuth, (req, res) => res.json({ ok: true }));
 app.use('/api/admin/products', require('./routes/admin/products'));
 app.use('/api/admin/orders', require('./routes/admin/orders'));
+app.use('/api/admin/returns', require('./routes/admin/returns'));
 app.use('/api/admin/hero', require('./routes/admin/hero'));
 app.use('/api/admin/category-cards', require('./routes/admin/categoryCards'));
 app.use('/api/admin/video', require('./routes/admin/video'));

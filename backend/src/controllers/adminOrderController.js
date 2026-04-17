@@ -191,15 +191,8 @@ exports.refundOrder = async (req, res) => {
       await ret.save();
     }
 
-    // Non-blocking WhatsApp
-    try {
-      const phone = order?.shippingAddress?.phone || '';
-      const name = order?.user?.name || order?.shippingAddress?.name || 'Customer';
-      const body = `Hi ${name}, your refund for order #${order._id} has been processed 💰`;
-      await sendWhatsAppMessage({ phone, body });
-    } catch (msgErr) {
-      console.error('[whatsapp] refund message failed (non-blocking):', msgErr?.message || msgErr);
-    }
+    // WhatsApp when money reaches the customer is sent from Razorpay `refund.processed` webhook
+    // (see razorpayWebhookController). Configure that event on the same webhook URL in Razorpay Dashboard.
 
     console.log('[refund] saved', { orderId: String(order._id), paymentId, refundId });
     return res.json({ ok: true, refundId, order });

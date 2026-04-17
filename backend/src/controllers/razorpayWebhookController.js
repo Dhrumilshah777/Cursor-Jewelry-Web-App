@@ -5,6 +5,7 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { razorpayInstance } = require('../services/razorpay');
 const { sendOrderSMS, sendOrderWhatsApp } = require('../services/twilioSms');
+const { sendWhatsAppMessage } = require('../services/whatsappService');
 
 const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -98,6 +99,59 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
 }
 
 /**
+ * Razorpay `refund.processed` — refund reached customer's bank/card per Razorpay.
+ * Sends WhatsApp once per order (idempotent on webhook retries).
+ */
+async function handleRefundProcessedPayload(payload) {
+  const refund = payload.payload?.refund?.entity;
+  const status = String(refund?.status || '').toLowerCase();
+  if (!refund || status !== 'processed') {
+    console.log('[rz.webhook] refund.processed skipped', { hasRefund: Boolean(refund), status: refund?.status });
+    return;
+  }
+  const paymentId = String(refund.payment_id || '').trim();
+  if (!paymentId) {
+    console.warn('[rz.webhook] refund.processed missing payment_id');
+    return;
+  }
+
+  const order = await Order.findOne({ razorpayPaymentId: paymentId }).populate('user', 'name');
+  if (!order) {
+    console.warn('[rz.webhook] refund.processed no order for payment_id', { paymentId: `${paymentId.slice(0, 8)}…` });
+    return;
+  }
+
+  await Order.updateOne(
+    { _id: order._id },
+    { $set: { refundStatus: 'processed' } }
+  );
+
+  if (order.refundSettlementWhatsAppSentAt) {
+    console.log('[rz.webhook] refund.processed whatsapp already sent', { orderId: String(order._id) });
+    return;
+  }
+
+  const phone = order.shippingAddress?.phone || '';
+  const name = order.user?.name || order.shippingAddress?.name || 'Customer';
+  const body =
+    `Hi ${name}, your refund for order #${order._id} is complete — the amount should show on your original payment method (bank/UPI/card) as per their timing.`;
+
+  const sendResult = await sendWhatsAppMessage({ phone, body });
+  if (sendResult.ok) {
+    await Order.updateOne(
+      { _id: order._id, refundSettlementWhatsAppSentAt: null },
+      { $set: { refundSettlementWhatsAppSentAt: new Date() } }
+    );
+    console.log('[rz.webhook] refund.processed whatsapp sent', { orderId: String(order._id) });
+  } else {
+    console.warn('[rz.webhook] refund.processed whatsapp not sent (will retry on webhook redelivery)', {
+      orderId: String(order._id),
+      reason: sendResult.reason || sendResult.error || sendResult.skipped,
+    });
+  }
+}
+
+/**
  * POST /api/webhooks/razorpay — raw body required. Verify signature, handle payment.captured.
  */
 async function handleRazorpayWebhook(req, res) {
@@ -123,6 +177,19 @@ async function handleRazorpayWebhook(req, res) {
     return;
   }
   console.log('[rz.webhook] event', { event: payload?.event || '' });
+
+  if (payload.event === 'refund.processed') {
+    try {
+      await handleRefundProcessedPayload(payload);
+    } catch (err) {
+      console.error('[rz.webhook] refund.processed handler error:', err);
+      res.status(500).send('Error');
+      return;
+    }
+    res.status(200).send('OK');
+    return;
+  }
+
   if (payload.event !== 'payment.captured') {
     res.status(200).send('OK');
     return;

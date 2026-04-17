@@ -92,3 +92,30 @@ exports.adminUpdateStatus = async (req, res) => {
   }
 };
 
+// GET /api/admin/returns (admin)
+exports.adminList = async (req, res) => {
+  try {
+    const list = await Return.find()
+      .sort({ createdAt: -1 })
+      .populate('order', 'status subtotal deliveredAt createdAt')
+      .populate('user', 'name email');
+    return res.json(list);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /api/admin/returns/:id (admin)
+exports.adminGetOne = async (req, res) => {
+  try {
+    const ret = await Return.findById(req.params.id)
+      .populate('order', 'status subtotal deliveredAt createdAt')
+      .populate('user', 'name email');
+    if (!ret) return res.status(404).json({ error: 'Return not found' });
+    return res.json(ret);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Return not found' });
+    return res.status(500).json({ error: err.message });
+  }
+};
+

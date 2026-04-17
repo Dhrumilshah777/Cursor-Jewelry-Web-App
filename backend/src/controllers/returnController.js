@@ -6,6 +6,31 @@ function daysSince(date) {
   return ms / (1000 * 60 * 60 * 24);
 }
 
+// GET /api/returns (user)
+exports.myReturns = async (req, res) => {
+  try {
+    const list = await Return.find({ user: req.userId }).sort({ createdAt: -1 });
+    return res.json(list);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /api/returns/order/:orderId (user)
+exports.getForOrder = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findOne({ _id: orderId, user: req.userId }).select('_id');
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const ret = await Return.findOne({ order: order._id, user: req.userId }).sort({ createdAt: -1 });
+    return res.json(ret || null);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 // POST /api/returns (user)
 exports.create = async (req, res) => {
   try {

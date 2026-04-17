@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { apiGet, assetUrl, getApiBase, refreshUserSession } from '@/lib/api';
+import { apiGet, apiPost, assetUrl, getApiBase, refreshUserSession } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; image?: string; quantity: number };
 type Address = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
@@ -13,9 +13,18 @@ type Order = {
   shippingAddress: Address;
   subtotal: number;
   status: string;
+  deliveredAt?: string | null;
   tracking?: string;
   courier?: string;
   shiprocketShipmentId?: string;
+  createdAt: string;
+};
+
+type ReturnReq = {
+  _id: string;
+  order: string;
+  status: 'requested' | 'approved' | 'rejected' | 'refunded';
+  reason?: string;
   createdAt: string;
 };
 
@@ -63,7 +72,11 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const id = params?.id as string;
   const [order, setOrder] = useState<Order | null>(null);
+  const [ret, setRet] = useState<ReturnReq | null>(null);
   const [loading, setLoading] = useState(true);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnBusy, setReturnBusy] = useState(false);
+  const [returnMsg, setReturnMsg] = useState<string>('');
 
   useEffect(() => {
     if (!id) {
@@ -105,6 +118,12 @@ export default function OrderDetailPage() {
           });
         }
         setOrder(data);
+        try {
+          const r = await apiGet<ReturnReq | null>(`/api/returns/order/${encodeURIComponent(id)}`, { user: true });
+          if (!cancelled) setRet(r || null);
+        } catch {
+          if (!cancelled) setRet(null);
+        }
       } catch (err) {
         if (cancelled) return;
         const e = err as Error & { responseBody?: string };
@@ -149,6 +168,28 @@ export default function OrderDetailPage() {
 
   const orderDate = new Date(order.createdAt);
   const isDelivered = order.status === 'delivered';
+  const deliveredAtDate = order.deliveredAt ? new Date(order.deliveredAt) : null;
+  const daysSinceDelivery = deliveredAtDate ? (Date.now() - deliveredAtDate.getTime()) / (1000 * 60 * 60 * 24) : Number.POSITIVE_INFINITY;
+  const withinReturnWindow = isDelivered && deliveredAtDate && daysSinceDelivery <= 7;
+  const canRequestReturn = Boolean(withinReturnWindow && (!ret || ret.status === 'rejected'));
+
+  async function submitReturn() {
+    // Defensive: should never happen because the UI only renders the button when order is loaded.
+    if (!order) return;
+    setReturnMsg('');
+    setReturnBusy(true);
+    try {
+      await apiPost('/api/returns', { orderId: order._id, reason: returnReason.trim() }, { user: true });
+      setReturnReason('');
+      setReturnMsg('Return request submitted.');
+      const r = await apiGet<ReturnReq | null>(`/api/returns/order/${encodeURIComponent(order._id)}`, { user: true });
+      setRet(r || null);
+    } catch (e) {
+      setReturnMsg((e as Error)?.message || 'Failed to request return');
+    } finally {
+      setReturnBusy(false);
+    }
+  }
 
   return (
     <main className="min-h-[50vh] px-4 py-6 pb-12">
@@ -173,11 +214,46 @@ export default function OrderDetailPage() {
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Delivered on {formatDateShort(orderDate)}
+              Delivered on {formatDateShort(deliveredAtDate || orderDate)}
             </p>
           )}
           {order.status === 'pending_payment' && (
             <p className="mt-1 text-sm text-amber-700">Complete payment to confirm your order.</p>
+          )}
+        </div>
+
+        {/* Returns */}
+        <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4">
+          <h2 className="font-medium text-charcoal mb-2">Returns</h2>
+          {ret ? (
+            <p className="text-sm text-stone-700">
+              Status: <span className="font-semibold">{ret.status}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-stone-600">No return requested for this order.</p>
+          )}
+          {isDelivered && !withinReturnWindow && (
+            <p className="mt-2 text-sm text-stone-500">Return window closed (7 days from delivery).</p>
+          )}
+          {canRequestReturn && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-charcoal">Reason (optional)</label>
+              <textarea
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                rows={3}
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-charcoal"
+                placeholder="Eg: Size issue / Changed mind / Defect"
+              />
+              <button
+                onClick={() => void submitReturn()}
+                disabled={returnBusy}
+                className="mt-3 rounded bg-charcoal px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
+              >
+                {returnBusy ? 'Submitting…' : 'Request return'}
+              </button>
+              {returnMsg && <p className="mt-2 text-sm text-stone-600">{returnMsg}</p>}
+            </div>
           )}
         </div>
 

@@ -97,7 +97,7 @@ exports.adminList = async (req, res) => {
   try {
     const list = await Return.find()
       .sort({ createdAt: -1 })
-      .populate('order', 'status subtotal deliveredAt createdAt')
+      .populate('order', 'status subtotal totalAmount deliveredAt createdAt isRefunded razorpayRefundId refundedAt')
       .populate('user', 'name email');
     return res.json(list);
   } catch (err) {
@@ -109,7 +109,7 @@ exports.adminList = async (req, res) => {
 exports.adminGetOne = async (req, res) => {
   try {
     const ret = await Return.findById(req.params.id)
-      .populate('order', 'status subtotal deliveredAt createdAt')
+      .populate('order', 'status subtotal totalAmount deliveredAt createdAt isRefunded razorpayRefundId refundedAt')
       .populate('user', 'name email');
     if (!ret) return res.status(404).json({ error: 'Return not found' });
     return res.json(ret);

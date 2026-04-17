@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { apiGet, apiPatch } from '@/lib/api';
+import { apiGet, apiPatch, apiPost } from '@/lib/api';
 
 type ReturnRow = {
   _id: string;
@@ -13,8 +13,12 @@ type ReturnRow = {
     _id: string;
     status?: string;
     subtotal?: number;
+    totalAmount?: number;
     deliveredAt?: string | null;
     createdAt?: string;
+    isRefunded?: boolean;
+    razorpayRefundId?: string;
+    refundedAt?: string | null;
   } | null;
   user?: { name?: string; email?: string } | null;
 };
@@ -33,9 +37,11 @@ export default function AdminReturnsPage() {
   const [q, setQ] = useState('');
   const [err, setErr] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [ok, setOk] = useState<string>('');
 
   async function refresh() {
     setErr('');
+    setOk('');
     setLoading(true);
     try {
       const list = await apiGet<ReturnRow[]>('/api/admin/returns', true);
@@ -72,12 +78,28 @@ export default function AdminReturnsPage() {
 
   async function setStatus(id: string, status: 'approved' | 'rejected') {
     setErr('');
+    setOk('');
     setBusyId(id);
     try {
       await apiPatch(`/api/admin/returns/${encodeURIComponent(id)}`, { status }, true);
       await refresh();
     } catch (e) {
       setErr((e as Error)?.message || 'Failed to update return');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function refundOrder(returnId: string, orderId: string) {
+    setErr('');
+    setOk('');
+    setBusyId(returnId);
+    try {
+      await apiPost(`/api/admin/orders/${encodeURIComponent(orderId)}/refund`, undefined, true);
+      setOk('Refund triggered successfully.');
+      await refresh();
+    } catch (e) {
+      setErr((e as Error)?.message || 'Refund failed');
     } finally {
       setBusyId(null);
     }
@@ -113,6 +135,11 @@ export default function AdminReturnsPage() {
       {err && (
         <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
           {err}
+        </div>
+      )}
+      {ok && (
+        <div className="mt-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+          {ok}
         </div>
       )}
 
@@ -153,9 +180,11 @@ export default function AdminReturnsPage() {
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-stone-500">
                   Order status: {r.order?.status ? r.order.status.replace(/_/g, ' ') : '—'}
-                  {typeof r.order?.subtotal === 'number' && (
+                  {typeof r.order?.totalAmount === 'number' && r.order.totalAmount > 0 ? (
+                    <span> · ₹{Number(r.order.totalAmount).toFixed(2)}</span>
+                  ) : typeof r.order?.subtotal === 'number' ? (
                     <span> · ₹{Number(r.order.subtotal).toFixed(2)}</span>
-                  )}
+                  ) : null}
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -172,6 +201,21 @@ export default function AdminReturnsPage() {
                     className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                   >
                     Reject
+                  </button>
+                  <button
+                    onClick={() => r.order?._id && void refundOrder(r._id, r.order._id)}
+                    disabled={
+                      busyId === r._id ||
+                      r.status !== 'approved' ||
+                      !r.order?._id ||
+                      r.order.isRefunded === true ||
+                      r.order.status === 'refunded' ||
+                      Boolean(String(r.order.razorpayRefundId || '').trim())
+                    }
+                    className="rounded bg-charcoal px-3 py-1.5 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-60"
+                    title={r.status !== 'approved' ? 'Approve return first' : 'Trigger Razorpay refund'}
+                  >
+                    Refund
                   </button>
                 </div>
               </div>

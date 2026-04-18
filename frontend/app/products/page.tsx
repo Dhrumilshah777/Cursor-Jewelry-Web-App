@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiGet, assetUrl, addToWishlist, removeFromWishlist, getWishlist } from '@/lib/api';
@@ -12,7 +12,48 @@ type Product = {
   category: string;
   price: string;
   image: string;
+  colors?: string[];
 };
+
+/** Mirrors backend `categoryToSlug` so filters match URL query params. */
+function categoryToSlug(cat: string) {
+  return String(cat || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '') || '';
+}
+
+function numPrice(p: Product) {
+  return parseFloat(p.price || '0') || 0;
+}
+
+/** Same rules as `productController.list` — catalog is fetched once, filtered here. */
+function filterProducts(products: Product[], params: URLSearchParams): Product[] {
+  const categorySlug = (params.get('category') || '').toString().trim().toLowerCase();
+  const minPrice = parseFloat(params.get('minPrice') || '');
+  const maxPrice = parseFloat(params.get('maxPrice') || '');
+  const colorParam = (params.get('color') || '').toString().trim();
+  const colorsFilter = colorParam ? colorParam.split(',').map((c) => c.trim()).filter(Boolean) : [];
+
+  let filtered = products;
+  if (categorySlug) {
+    filtered = filtered.filter((p) => categoryToSlug(p.category) === categorySlug);
+  }
+  if (Number.isFinite(minPrice) && minPrice > 0) {
+    filtered = filtered.filter((p) => numPrice(p) >= minPrice);
+  }
+  if (Number.isFinite(maxPrice) && maxPrice > 0) {
+    filtered = filtered.filter((p) => numPrice(p) <= maxPrice);
+  }
+  if (colorsFilter.length > 0) {
+    filtered = filtered.filter((p) => {
+      const productColors = (p.colors || []).map((c) => String(c).trim().toLowerCase());
+      return colorsFilter.some((c) => productColors.includes(c.toLowerCase()));
+    });
+  }
+  return filtered;
+}
 
 type ProductsResponse = { products: Product[]; facets: Facets };
 
@@ -30,42 +71,109 @@ const defaultFacets: Facets = {
   colors: [],
 };
 
+const SKELETON_CARD_COUNT = 6;
+
+function ProductsLoadingSkeleton() {
+  return (
+    <main className="min-h-[50vh] px-4 py-12" aria-busy="true" aria-label="Loading products">
+      <div className="mx-auto max-w-6xl animate-pulse">
+        <div className="h-8 w-40 rounded-md bg-stone-200 sm:w-56" />
+        <div className="mt-2 h-4 w-28 rounded bg-stone-100" />
+
+        <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
+          <div className="h-10 w-28 rounded-full bg-stone-200" />
+          <div className="h-4 w-14 rounded bg-stone-100" />
+        </div>
+
+        <div className="mt-8 flex flex-col gap-8 lg:flex-row">
+          <div className="hidden lg:block lg:w-64 lg:flex-shrink-0">
+            <div className="rounded border border-stone-200 bg-white p-5">
+              <div className="h-4 w-16 rounded bg-stone-200" />
+              <div className="mt-4 space-y-3 border-t border-stone-100 pt-4">
+                <div className="h-4 w-full rounded bg-stone-100" />
+                <div className="h-4 w-5/6 rounded bg-stone-100" />
+                <div className="h-4 w-4/5 rounded bg-stone-100" />
+                <div className="h-4 w-full rounded bg-stone-100" />
+                <div className="h-4 w-3/4 rounded bg-stone-100" />
+              </div>
+              <div className="mt-6 space-y-3 border-t border-stone-100 pt-4">
+                <div className="h-4 w-24 rounded bg-stone-200" />
+                <div className="h-4 w-full rounded bg-stone-100" />
+                <div className="h-4 w-11/12 rounded bg-stone-100" />
+              </div>
+            </div>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
+              {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
+                <li key={i}>
+                  <div className="aspect-square w-full rounded-2xl bg-stone-200" />
+                  <div className="min-h-[4.5rem] pt-3">
+                    <div className="h-4 w-full rounded bg-stone-200" />
+                    <div className="mt-2 h-3 w-2/3 rounded bg-stone-100" />
+                    <div className="mt-3 h-4 w-20 rounded bg-stone-200" />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function ProductsContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category') || '';
+  const filterQueryKey = searchParams.toString();
 
   const [data, setData] = useState<ProductsResponse>({ products: [], facets: defaultFacets });
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
 
-  const queryString = searchParams.toString();
-  const apiUrl = queryString ? `/api/products?${queryString}` : '/api/products';
-
   useEffect(() => {
-    setLoading(true);
-    apiGet<ProductsResponse>(apiUrl)
+    let cancelled = false;
+    apiGet<ProductsResponse>('/api/products')
       .then((res) => {
+        if (cancelled) return;
         const products = Array.isArray((res as { products?: Product[] }).products)
           ? (res as ProductsResponse).products
           : Array.isArray(res) ? (res as unknown as Product[]) : [];
         const facets = (res as ProductsResponse).facets || defaultFacets;
         setData({
-          products: products.map((p) => ({
-            _id: String((p as { _id?: string })._id ?? ''),
-            name: p.name,
-            category: p.category,
-            price: p.price,
-            image: p.image,
-          })),
+          products: products.map((p) => {
+            const raw = p as { _id?: string; colors?: string[] };
+            return {
+              _id: String(raw._id ?? ''),
+              name: p.name,
+              category: p.category,
+              price: p.price,
+              image: p.image,
+              colors: Array.isArray(raw.colors) ? raw.colors : [],
+            };
+          }),
           facets,
         });
       })
-      .catch(() => setData({ products: [], facets: defaultFacets }))
-      .finally(() => setLoading(false));
-  }, [apiUrl]);
+      .catch(() => {
+        if (!cancelled) setData({ products: [], facets: defaultFacets });
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const { products: filteredProducts, facets } = data;
+  const { products: allProducts, facets } = data;
+  const filteredProducts = useMemo(() => {
+    const params = new URLSearchParams(filterQueryKey);
+    return filterProducts(allProducts, params);
+  }, [allProducts, filterQueryKey]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -83,13 +191,7 @@ function ProductsContent() {
     : null;
 
   if (loading) {
-    return (
-      <main className="min-h-[50vh] px-4 py-12">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-stone-500">Loading products…</p>
-        </div>
-      </main>
-    );
+    return <ProductsLoadingSkeleton />;
   }
 
   return (
@@ -271,15 +373,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="min-h-[50vh] px-4 py-12">
-          <div className="mx-auto max-w-6xl">
-            <p className="text-stone-500">Loading…</p>
-          </div>
-        </main>
-      }
-    >
+    <Suspense fallback={<ProductsLoadingSkeleton />}>
       <ProductsContent />
     </Suspense>
   );

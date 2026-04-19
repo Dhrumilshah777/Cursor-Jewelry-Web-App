@@ -589,4 +589,169 @@ async function checkServiceability(deliveryPincode, pickupPincode = null) {
   };
 }
 
-module.exports = { getToken, createShipment, retryAssignAwb, checkServiceability };
+function warehouseForReturns() {
+  const name = (process.env.SHIPROCKET_RETURN_SHIPPING_NAME || '').trim();
+  const address = (process.env.SHIPROCKET_RETURN_SHIPPING_ADDRESS || '').trim();
+  const city = (process.env.SHIPROCKET_RETURN_SHIPPING_CITY || '').trim();
+  const state = (process.env.SHIPROCKET_RETURN_SHIPPING_STATE || '').trim();
+  const pinRaw = (process.env.SHIPROCKET_RETURN_SHIPPING_PINCODE || '').trim();
+  const phone = (process.env.SHIPROCKET_RETURN_SHIPPING_PHONE || '').trim();
+  if (!name || !address || !city || !state || !pinRaw || !phone) {
+    throw new Error(
+      'Set SHIPROCKET_RETURN_SHIPPING_NAME, SHIPROCKET_RETURN_SHIPPING_ADDRESS, SHIPROCKET_RETURN_SHIPPING_CITY, SHIPROCKET_RETURN_SHIPPING_STATE, SHIPROCKET_RETURN_SHIPPING_PINCODE, SHIPROCKET_RETURN_SHIPPING_PHONE for return pickup destination (warehouse).'
+    );
+  }
+  const email = (
+    process.env.SHIPROCKET_RETURN_SHIPPING_EMAIL ||
+    process.env.SHIPROCKET_EMAIL ||
+    'noreply@example.com'
+  ).trim();
+  return {
+    name,
+    address,
+    city,
+    state,
+    country: 'India',
+    pincode: toPincodeInt(pinRaw),
+    phone: toTenDigitPhone(phone),
+    email: email.slice(0, 100),
+  };
+}
+
+/**
+ * Reverse pickup: customer → warehouse. Warehouse env vars required.
+ * If SHIPROCKET_CHANNEL_ID is set, it is sent; if omitted, the return API may still work (like adhoc) — if Shiprocket errors, add channel id from dashboard → Channels.
+ * @returns {Promise<{ shipment_id: string, awb_code: string, courier_name: string, ship_order_id: string }>}
+ */
+async function createReturnShipment(order, returnDoc, pickupEmail) {
+  const channelRaw = process.env.SHIPROCKET_CHANNEL_ID || '';
+  const channelId = parseInt(String(channelRaw).replace(/\D/g, ''), 10);
+  const channelIdValid = !Number.isNaN(channelId) && channelId > 0;
+
+  const token = await getToken();
+  const addr = order.shippingAddress || {};
+  const wh = warehouseForReturns();
+  const retId = returnDoc._id.toString();
+  const orderDate = new Date(returnDoc.createdAt || Date.now()).toISOString().split('T')[0];
+  const numericOrderId = String((Date.now() % 1e11) + (parseInt(retId.slice(-6), 16) % 1e6)).replace(/\D/g, '').slice(0, 50);
+
+  const billingAddress1 = truncate(addr.line1 || 'Address', 95);
+  const billingAddress2 = truncate(addr.line2 || '', 95);
+  const billingPincode = toPincodeInt(addr.pincode);
+  const billingPhone = toTenDigitPhone(addr.phone);
+  const email = String(pickupEmail || order.user?.email || 'customer@example.com').slice(0, 100);
+
+  const items = (order.items || []).map((item, i) => {
+    const rupees = Math.max(
+      1,
+      Math.round(parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) || 0)
+    );
+    return {
+      name: truncate(item.name || 'Product', 100),
+      sku: String(item.productId || `item-${i + 1}`).slice(0, 50),
+      units: Math.max(1, parseInt(item.quantity, 10) || 1),
+      selling_price: rupees,
+    };
+  });
+  const subTotal = Math.max(
+    1,
+    Math.round(Number(order.subtotal) || items.reduce((s, it) => s + it.selling_price * it.units, 0))
+  );
+
+  const len = parseFloat(process.env.SHIPROCKET_RETURN_LENGTH || '15') || 15;
+  const breadth = parseFloat(process.env.SHIPROCKET_RETURN_BREADTH || '15') || 15;
+  const height = parseFloat(process.env.SHIPROCKET_RETURN_HEIGHT || '5') || 5;
+  const weight = parseFloat(process.env.SHIPROCKET_RETURN_WEIGHT || '0.5') || 0.5;
+
+  const payload = {
+    order_id: numericOrderId,
+    order_date: orderDate,
+    pickup_customer_name: truncate(addr.name || 'Customer', 50),
+    pickup_last_name: '',
+    pickup_address: billingAddress1,
+    pickup_address_2: billingAddress2,
+    pickup_city: truncate(addr.city || 'City', 50),
+    pickup_state: truncate(addr.state || 'State', 50),
+    pickup_country: 'India',
+    pickup_pincode: billingPincode,
+    pickup_email: email,
+    pickup_phone: billingPhone,
+    shipping_customer_name: truncate(wh.name, 50),
+    shipping_last_name: '',
+    shipping_address: truncate(wh.address, 95),
+    shipping_address_2: '',
+    shipping_city: truncate(wh.city, 50),
+    shipping_state: truncate(wh.state, 50),
+    shipping_country: wh.country,
+    shipping_pincode: wh.pincode,
+    shipping_email: wh.email.slice(0, 100),
+    shipping_phone: wh.phone,
+    order_items: items,
+    sub_total: subTotal,
+    payment_method: 'Prepaid',
+    length: len,
+    breadth,
+    height,
+    weight,
+  };
+  if (channelIdValid) {
+    payload.channel_id = channelId;
+  }
+
+  const res = await fetch(`${SHIPROCKET_BASE}/orders/create/return`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const parts = ['Create return order failed: ' + (data.message || data.error || 'Shiprocket')];
+    if (Array.isArray(data.errors)) parts.push(data.errors.join('; '));
+    throw new Error(parts.join(' — '));
+  }
+
+  const raw = data.data || data.order || data;
+  const shipOrderId =
+    raw.order_id ?? raw.id ?? data.order_id ?? data.order?.id ?? data.id ?? '';
+
+  const shipmentIdRaw = extractShipmentIdFromCreateResponse(data);
+  if (shipmentIdRaw == null) {
+    const hint = JSON.stringify(data).slice(0, 400);
+    throw new Error(`Shipment ID missing from Shiprocket return create response. Response (truncated): ${hint}`);
+  }
+
+  const shipmentIdStr = String(shipmentIdRaw);
+  const awbFromCreate = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';
+  const courierFromCreate = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
+  if (awbFromCreate) {
+    return {
+      shipment_id: shipmentIdStr,
+      awb_code: String(awbFromCreate),
+      courier_name: String(courierFromCreate),
+      ship_order_id: String(shipOrderId || ''),
+    };
+  }
+
+  const sid = parseInt(String(shipmentIdRaw), 10);
+  const validSid = !Number.isNaN(sid) && sid > 0 ? sid : null;
+  if (!validSid) {
+    throw new Error(`Invalid shipment_id from Shiprocket return: ${shipmentIdStr}`);
+  }
+
+  await delay(PRE_ASSIGN_AW_DELAY_MS);
+  const oid = shipOrderId != null ? parseInt(String(shipOrderId), 10) : NaN;
+  const validOid = !Number.isNaN(oid) && oid > 0 ? oid : null;
+  const assigned = await assignAwbWithRetries(validSid, shipmentIdStr, validOid);
+  return {
+    shipment_id: shipmentIdStr,
+    awb_code: assigned.awb_code,
+    courier_name: assigned.courier_name,
+    ship_order_id: String(shipOrderId || ''),
+  };
+}
+
+module.exports = { getToken, createShipment, createReturnShipment, retryAssignAwb, checkServiceability };

@@ -1,4 +1,6 @@
 const Order = require('../models/Order');
+const Return = require('../models/Return');
+const { processRefundAfterReturnDelivered } = require('../services/returnRefund');
 
 function extractAwbFromText(text) {
   if (!text || typeof text !== 'string') return '';
@@ -7,79 +9,94 @@ function extractAwbFromText(text) {
 }
 
 function extractAwb(payload) {
+  const p = payload && typeof payload === 'object' ? payload : {};
   const direct =
-    payload?.awb ??
-    payload?.awb_code ??
-    payload?.tracking ??
-    payload?.tracking_number ??
-    payload?.tracking_no ??
-    payload?.courier_awb ??
-    payload?.data?.awb ??
-    payload?.data?.awb_code ??
-    payload?.data?.courier_awb;
+    p.awb ??
+    p.awb_code ??
+    p.tracking ??
+    p.tracking_number ??
+    p.tracking_no ??
+    p.courier_awb ??
+    p.data?.awb ??
+    p.data?.awb_code ??
+    p.data?.courier_awb ??
+    p.Shipment?.awb ??
+    p.shipment?.awb;
 
   const awb = direct != null ? String(direct).trim() : '';
   if (awb) return awb;
 
   const msg =
-    payload?.message ??
-    payload?.error ??
-    payload?.data?.message ??
-    payload?.data?.error ??
+    p.message ??
+    p.error ??
+    p.data?.message ??
+    p.data?.error ??
     '';
   return extractAwbFromText(String(msg));
 }
 
 function extractCourierName(payload) {
+  const p = payload && typeof payload === 'object' ? payload : {};
   const direct =
-    payload?.courier_name ??
-    payload?.courier ??
-    payload?.courier_company_name ??
-    payload?.courier_company ??
-    payload?.courierCompanyName ??
-    payload?.data?.courier_name ??
-    payload?.data?.courier_company_name ??
-    payload?.data?.courier ??
+    p.courier_name ??
+    p.courier ??
+    p.courier_company_name ??
+    p.courier_company ??
+    p.courierCompanyName ??
+    p.data?.courier_name ??
+    p.data?.courier_company_name ??
+    p.data?.courier ??
+    p.Shipment?.courier ??
     '';
   const name = direct != null ? String(direct).trim() : '';
   return name;
 }
 
 function extractShipmentStatus(payload) {
-  return (
-    payload?.shipment_status ??
-    payload?.current_status ??
-    payload?.status ??
-    payload?.status_label ??
-    payload?.data?.shipment_status ??
-    payload?.data?.current_status ??
-    ''
-  );
+  const p = payload && typeof payload === 'object' ? payload : {};
+  const raw =
+    p.shipment_status ??
+    p.current_status ??
+    p.status ??
+    p.status_label ??
+    p.data?.shipment_status ??
+    p.data?.current_status ??
+    p.Shipment?.status ??
+    p.shipment?.shipment_status ??
+    p.shipment?.status ??
+    '';
+  return raw != null ? String(raw).trim() : '';
 }
 
 function extractShipmentId(payload) {
+  const p = payload && typeof payload === 'object' ? payload : {};
   const raw =
-    payload?.shipment_id ??
-    payload?.shipmentId ??
-    payload?.shipment?.shipment_id ??
-    payload?.shipment?.id ??
-    payload?.data?.shipment_id ??
-    payload?.data?.shipmentId ??
+    p.shipment_id ??
+    p.shipmentId ??
+    p.shipment?.shipment_id ??
+    p.shipment?.id ??
+    p.data?.shipment_id ??
+    p.data?.shipmentId ??
+    p.Shipment?.id ??
+    p.Shipment?.shipment_id ??
     '';
   const sid = raw != null ? String(raw).trim() : '';
   return sid;
 }
 
+/** Shiprocket may resend the same event — treat "delivered" (to warehouse on reverse) as terminal for refund. */
+function isReturnDeliveredToWarehouseStatus(statusRaw) {
+  const s = String(statusRaw || '').trim().toLowerCase();
+  if (!s) return false;
+  if (s === 'delivered') return true;
+  if (s === 'received' || s.includes('received at')) return true;
+  if (s.includes('delivered') && !s.includes('undelivered')) return true;
+  return false;
+}
+
 /**
- * Shiprocket webhook for AWB assignment / shipment updates.
- *
- * POST /api/webhooks/shiprocket
- *
- * Behavior:
- * - Extract AWB + shipment status from payload
- * - Find Order by shiprocketShipmentId OR by tracking(AWB)
- * - If order.tracking is empty, set it to AWB (never overwrite existing tracking)
- * - Idempotent: safe to call multiple times
+ * Shiprocket webhook — forward orders + return reverse pickups.
+ * Idempotent: duplicate AWB/status webhooks are safe; refund runs once (Return.returnRefundInitiatedAt + Order guards).
  */
 exports.handleShiprocketWebhook = async (req, res) => {
   try {
@@ -94,9 +111,67 @@ exports.handleShiprocketWebhook = async (req, res) => {
       console.log('Webhook AWB received:', awb);
     }
 
-    // Must have at least one identifier to find the order
     if (!shipmentId && !awb) {
       return res.status(200).json({ ok: true, ignored: true });
+    }
+
+    let ret = null;
+    if (shipmentId) ret = await Return.findOne({ shiprocketReturnShipmentId: shipmentId });
+    if (!ret && awb) ret = await Return.findOne({ returnAwb: awb });
+
+    if (ret) {
+      const incoming = String(shipmentStatus || '').trim();
+      const stored = String(ret.returnShipmentStatus || '').trim();
+      const awbFillNeeded = Boolean(awb && !String(ret.returnAwb || '').trim());
+      const courierFillNeeded = Boolean(courierName && !String(ret.returnCourier || '').trim());
+      const statusDuplicate = Boolean(incoming && stored && incoming === stored);
+
+      let retChanged = false;
+      if (incoming && !statusDuplicate) {
+        ret.returnShipmentStatus = incoming;
+        retChanged = true;
+      }
+      if (awbFillNeeded) {
+        ret.returnAwb = awb;
+        retChanged = true;
+      }
+      if (courierFillNeeded) {
+        ret.returnCourier = courierName;
+        retChanged = true;
+      }
+      if (retChanged) await ret.save();
+
+      if (isReturnDeliveredToWarehouseStatus(shipmentStatus)) {
+        await Return.updateOne(
+          { _id: ret._id, returnDeliveredAt: null },
+          { $set: { returnDeliveredAt: new Date() } }
+        );
+
+        const claimed = await Return.findOneAndUpdate(
+          {
+            _id: ret._id,
+            returnRefundInitiatedAt: null,
+            status: { $nin: ['refunded', 'rejected'] },
+          },
+          { $set: { returnRefundInitiatedAt: new Date() } },
+          { new: true }
+        );
+
+        if (claimed) {
+          const result = await processRefundAfterReturnDelivered(ret.order, ret._id);
+
+          if (!result.ok && !result.skipped) {
+            await Return.updateOne({ _id: ret._id }, { $unset: { returnRefundInitiatedAt: 1 } });
+          } else if (
+            result.skipped &&
+            (result.reason === 'already_refunded_or_pending' || result.reason === 'race_order_already_updated')
+          ) {
+            await Return.updateOne({ _id: ret._id }, { $unset: { returnRefundInitiatedAt: 1 } });
+          }
+        }
+      }
+
+      return res.status(200).json({ ok: true, returnShipment: true, shipment_status: shipmentStatus || undefined });
     }
 
     let order = null;
@@ -104,7 +179,6 @@ exports.handleShiprocketWebhook = async (req, res) => {
     if (!order && awb) order = await Order.findOne({ tracking: awb });
 
     if (!order) {
-      // Ack so Shiprocket doesn't keep retrying
       return res.status(200).json({ ok: true, notFound: true });
     }
 
@@ -122,8 +196,6 @@ exports.handleShiprocketWebhook = async (req, res) => {
     return res.status(200).json({ ok: true, shipment_status: shipmentStatus || undefined });
   } catch (err) {
     console.error('Shiprocket webhook error:', err?.message || err);
-    // Ack to prevent repeated retries; logs will show the error
     return res.status(200).json({ ok: false });
   }
 };
-

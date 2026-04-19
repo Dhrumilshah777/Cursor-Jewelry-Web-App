@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
+const Return = require('../models/Return');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { razorpayInstance } = require('../services/razorpay');
@@ -124,6 +125,14 @@ async function handleRefundProcessedPayload(payload) {
   await Order.updateOne(
     { _id: order._id },
     { $set: { refundStatus: 'processed' } }
+  );
+
+  await Return.updateMany(
+    {
+      order: order._id,
+      returnRefundStatus: 'initiated',
+    },
+    { $set: { returnRefundStatus: 'processed' } }
   );
 
   if (order.refundSettlementWhatsAppSentAt) {

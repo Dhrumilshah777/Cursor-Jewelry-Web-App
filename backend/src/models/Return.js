@@ -11,11 +11,38 @@ const returnSchema = new mongoose.Schema(
       default: 'requested',
     },
     reason: { type: String, default: '' },
+    /** Shiprocket reverse pickup (created when admin approves). */
+    shiprocketReturnShipmentId: { type: String, default: '' },
+    shiprocketReturnOrderId: { type: String, default: '' },
+    returnAwb: { type: String, default: '' },
+    returnCourier: { type: String, default: '' },
+    /** Last shipment_status from Shiprocket webhook (return leg). */
+    returnShipmentStatus: { type: String, default: '' },
+    shiprocketReturnError: { type: String, default: '' },
+    /** First time Shiprocket reports return delivered to warehouse (idempotent). */
+    returnDeliveredAt: { type: Date, default: null },
+    /**
+     * Set when we start Razorpay refund after deliver webhook — stops duplicate refunds
+     * if Shiprocket retries the same event.
+     */
+    returnRefundInitiatedAt: { type: Date, default: null },
+    /**
+     * Razorpay lifecycle for this return refund (distinct from Order.refundStatus wording).
+     * initiated = API refund created; processed = settlement (refund.processed webhook);
+     * failed = Razorpay refund API error.
+     */
+    returnRefundStatus: {
+      type: String,
+      enum: ['', 'initiated', 'processed', 'failed'],
+      default: '',
+    },
   },
   { timestamps: true }
 );
 
 returnSchema.index({ order: 1, createdAt: -1 });
+returnSchema.index({ shiprocketReturnShipmentId: 1 }, { sparse: true });
+returnSchema.index({ returnAwb: 1 }, { sparse: true });
 
 module.exports = mongoose.models.Return || mongoose.model('Return', returnSchema);
 

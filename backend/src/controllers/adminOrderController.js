@@ -188,6 +188,7 @@ exports.refundOrder = async (req, res) => {
     const ret = await Return.findOne({ order: order._id });
     if (ret) {
       ret.status = 'refunded';
+      ret.returnRefundStatus = 'initiated';
       await ret.save();
     }
 

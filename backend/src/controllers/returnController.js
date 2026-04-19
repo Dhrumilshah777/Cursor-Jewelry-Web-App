@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Return = require('../models/Return');
+const { createReturnShipment } = require('../services/shiprocket');
 
 function daysSince(date) {
   const ms = Date.now() - new Date(date).getTime();
@@ -82,6 +83,32 @@ exports.adminUpdateStatus = async (req, res) => {
     if (!ret) return res.status(404).json({ error: 'Return not found' });
 
     ret.status = status;
+
+    if (status === 'approved' && !String(ret.shiprocketReturnShipmentId || '').trim()) {
+      const order = await Order.findById(ret.order).populate('user', 'email name');
+      if (!order) {
+        return res.status(400).json({ error: 'Order missing for this return' });
+      }
+      ret.shiprocketReturnError = '';
+      try {
+        const pickupEmail = order.user?.email || '';
+        const shipment = await createReturnShipment(order, ret, pickupEmail);
+        ret.shiprocketReturnShipmentId = String(shipment.shipment_id);
+        ret.shiprocketReturnOrderId = String(shipment.ship_order_id || '');
+        ret.returnAwb = String(shipment.awb_code || '').trim();
+        ret.returnCourier = String(shipment.courier_name || '').trim();
+      } catch (err) {
+        const msg = err?.message || String(err);
+        ret.shiprocketReturnError = msg.slice(0, 500);
+        console.error('[return] shiprocket return shipment failed', { returnId: String(ret._id), message: msg });
+        console.warn('[return.alert] shiprocket_return_error', {
+          returnId: String(ret._id),
+          orderId: String(ret.order),
+          shiprocketReturnError: ret.shiprocketReturnError,
+        });
+      }
+    }
+
     await ret.save();
     console.log('[return] admin.update', { returnId: String(ret._id), status: ret.status });
 
@@ -101,6 +128,60 @@ exports.adminList = async (req, res) => {
       .populate('user', 'name email');
     return res.json(list);
   } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+/** POST /api/admin/returns/:id/retry-shipment — rebuild Shiprocket return pickup after a failed approve (no need to toggle status). */
+exports.retryShipment = async (req, res) => {
+  try {
+    const ret = await Return.findById(req.params.id);
+    if (!ret) return res.status(404).json({ error: 'Return not found' });
+    if (ret.status !== 'approved') {
+      return res.status(400).json({ error: 'Return must be approved' });
+    }
+
+    const force = req.body?.force === true;
+    if (String(ret.shiprocketReturnShipmentId || '').trim() && !force) {
+      return res.status(409).json({
+        error: 'Return shipment already exists. Send { "force": true } to clear and recreate (use with care).',
+      });
+    }
+
+    if (force) {
+      ret.shiprocketReturnShipmentId = '';
+      ret.shiprocketReturnOrderId = '';
+      ret.returnAwb = '';
+      ret.returnCourier = '';
+      ret.returnShipmentStatus = '';
+    }
+
+    const order = await Order.findById(ret.order).populate('user', 'email name');
+    if (!order) return res.status(400).json({ error: 'Order missing for this return' });
+
+    ret.shiprocketReturnError = '';
+    try {
+      const pickupEmail = order.user?.email || '';
+      const shipment = await createReturnShipment(order, ret, pickupEmail);
+      ret.shiprocketReturnShipmentId = String(shipment.shipment_id);
+      ret.shiprocketReturnOrderId = String(shipment.ship_order_id || '');
+      ret.returnAwb = String(shipment.awb_code || '').trim();
+      ret.returnCourier = String(shipment.courier_name || '').trim();
+    } catch (err) {
+      const msg = err?.message || String(err);
+      ret.shiprocketReturnError = msg.slice(0, 500);
+      console.error('[return] retry shipment failed', { returnId: String(ret._id), message: msg });
+      console.warn('[return.alert] shiprocket_return_error', {
+        returnId: String(ret._id),
+        orderId: String(ret.order),
+        shiprocketReturnError: ret.shiprocketReturnError,
+      });
+    }
+
+    await ret.save();
+    return res.json(ret);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Return not found' });
     return res.status(500).json({ error: err.message });
   }
 };

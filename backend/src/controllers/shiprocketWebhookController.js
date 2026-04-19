@@ -84,6 +84,17 @@ function extractShipmentId(payload) {
   return sid;
 }
 
+/** Customer POD: messy Shiprocket strings — match delivered, exclude RTO / undelivered / OFD-only. */
+function isForwardOrderDeliveredToCustomer(statusRaw) {
+  const s = String(statusRaw || '').trim().toLowerCase();
+  if (!s) return false;
+  if (s.includes('undelivered') || s.includes('not delivered')) return false;
+  if ((s.includes('out for delivery') || s === 'ofd') && !s.includes('delivered')) return false;
+  if (s.includes('rto')) return false;
+  if (s.includes('delivered')) return true;
+  return false;
+}
+
 /** Shiprocket may resend the same event — treat "delivered" (to warehouse on reverse) as terminal for refund. */
 function isReturnDeliveredToWarehouseStatus(statusRaw) {
   const s = String(statusRaw || '').trim().toLowerCase();
@@ -192,6 +203,18 @@ exports.handleShiprocketWebhook = async (req, res) => {
       changed = true;
     }
     if (changed) await order.save();
+
+    if (isForwardOrderDeliveredToCustomer(shipmentStatus)) {
+      const now = new Date();
+      await Order.updateOne(
+        { _id: order._id, status: { $in: ['shipped', 'out_for_delivery', 'packed', 'processing'] } },
+        { $set: { status: 'delivered', deliveredAt: now } }
+      );
+      await Order.updateOne(
+        { _id: order._id, status: 'delivered', deliveredAt: null },
+        { $set: { deliveredAt: now } }
+      );
+    }
 
     return res.status(200).json({ ok: true, shipment_status: shipmentStatus || undefined });
   } catch (err) {

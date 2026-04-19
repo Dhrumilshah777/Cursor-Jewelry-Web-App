@@ -36,6 +36,10 @@ const returnSchema = new mongoose.Schema(
       enum: ['', 'initiated', 'processed', 'failed'],
       default: '',
     },
+    /** True after Shiprocket pickup API succeeds for reverse return shipment. */
+    returnPickupScheduled: { type: Boolean, default: false },
+    returnPickupScheduleError: { type: String, default: '' },
+    returnPickupScheduledAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

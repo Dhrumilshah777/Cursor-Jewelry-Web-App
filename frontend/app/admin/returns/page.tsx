@@ -9,6 +9,12 @@ type ReturnRow = {
   status: 'requested' | 'approved' | 'rejected' | 'refunded';
   reason?: string;
   createdAt: string;
+  shiprocketReturnError?: string;
+  shiprocketReturnShipmentId?: string;
+  returnAwb?: string;
+  returnPickupScheduled?: boolean;
+  returnPickupScheduleError?: string;
+  returnPickupScheduledAt?: string | null;
   order?: {
     _id: string;
     status?: string;
@@ -37,6 +43,7 @@ export default function AdminReturnsPage() {
   const [q, setQ] = useState('');
   const [err, setErr] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pickupBusyId, setPickupBusyId] = useState<string | null>(null);
   const [ok, setOk] = useState<string>('');
 
   async function refresh() {
@@ -87,6 +94,21 @@ export default function AdminReturnsPage() {
       setErr((e as Error)?.message || 'Failed to update return');
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function retryReturnPickup(returnId: string) {
+    setErr('');
+    setOk('');
+    setPickupBusyId(returnId);
+    try {
+      await apiPost(`/api/admin/returns/${encodeURIComponent(returnId)}/retry-pickup`, {}, true);
+      setOk('Return pickup request sent again.');
+      await refresh();
+    } catch (e) {
+      setErr((e as Error)?.message || 'Retry pickup failed');
+    } finally {
+      setPickupBusyId(null);
     }
   }
 
@@ -171,6 +193,45 @@ export default function AdminReturnsPage() {
                     {r.user?.email || r.user?.name || '—'} · {new Date(r.createdAt).toLocaleString()}
                   </p>
                   {r.reason && <p className="mt-1 text-sm text-stone-600">Reason: {r.reason}</p>}
+                  {r.shiprocketReturnError && (
+                    <p className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-800">
+                      Shiprocket return: {r.shiprocketReturnError}
+                    </p>
+                  )}
+                  {r.status === 'approved' && (r.shiprocketReturnShipmentId || r.returnAwb) && (
+                    <div
+                      className={`mt-2 rounded border px-2 py-1.5 text-xs ${
+                        r.returnPickupScheduled && !r.returnPickupScheduleError
+                          ? 'border-green-200 bg-green-50 text-green-900'
+                          : 'border-amber-200 bg-amber-50 text-amber-900'
+                      }`}
+                    >
+                      <span className="font-medium text-charcoal">
+                        Return pickup:{' '}
+                        {r.returnPickupScheduled && !r.returnPickupScheduleError
+                          ? 'Scheduled ✓'
+                          : r.returnPickupScheduleError
+                            ? 'Failed ⚠️'
+                            : 'Pending'}
+                      </span>
+                      {r.returnPickupScheduleError && (
+                        <span className="mt-1 block break-words text-red-800">{r.returnPickupScheduleError}</span>
+                      )}
+                      {r.returnPickupScheduledAt && (
+                        <span className="mt-1 block text-stone-600">
+                          Recorded: {new Date(r.returnPickupScheduledAt).toLocaleString()}
+                        </span>
+                      )}
+                      {r.returnPickupScheduled &&
+                        r.returnPickupScheduledAt &&
+                        ['approved'].includes(r.status) &&
+                        (Date.now() - new Date(r.returnPickupScheduledAt).getTime()) / 3600000 >= 24 && (
+                          <span className="mt-1 block font-medium text-amber-900">
+                            No movement 24h+ after scheduled pickup — retry or check Shiprocket.
+                          </span>
+                        )}
+                    </div>
+                  )}
                 </div>
                 <span className={`rounded px-2 py-0.5 text-xs font-medium ${badgeClass(r.status)}`}>
                   {r.status}
@@ -187,7 +248,16 @@ export default function AdminReturnsPage() {
                   ) : null}
                 </p>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {r.status === 'approved' && r.shiprocketReturnShipmentId && r.returnAwb && (
+                    <button
+                      onClick={() => void retryReturnPickup(r._id)}
+                      disabled={pickupBusyId === r._id}
+                      className="rounded border border-stone-400 bg-white px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-stone-50 disabled:opacity-60"
+                    >
+                      {pickupBusyId === r._id ? '…' : 'Retry return pickup'}
+                    </button>
+                  )}
                   <button
                     onClick={() => void setStatus(r._id, 'approved')}
                     disabled={busyId === r._id || r.status === 'approved' || r.status === 'refunded'}

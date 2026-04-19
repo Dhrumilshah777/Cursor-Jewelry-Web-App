@@ -54,6 +54,10 @@ const orderSchema = new mongoose.Schema(
     tracking: { type: String, default: '' },
     courier: { type: String, default: '' },
     shiprocketShipmentId: { type: String, default: '' },
+    /** True after Shiprocket `courier/generate/pickup` succeeds for forward shipment (avoids duplicate calls). */
+    pickupScheduled: { type: Boolean, default: false },
+    pickupScheduleError: { type: String, default: '' },
+    pickupScheduledAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

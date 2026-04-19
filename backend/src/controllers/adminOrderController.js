@@ -1,6 +1,6 @@
 const Order = require('../models/Order');
 const Return = require('../models/Return');
-const { createShipment, retryAssignAwb } = require('../services/shiprocket');
+const { createShipment, retryAssignAwb, trySchedulePickup, schedulePickupDetails } = require('../services/shiprocket');
 const { razorpayInstance } = require('../services/razorpay');
 const { sendWhatsAppMessage } = require('../services/whatsappService');
 
@@ -26,7 +26,8 @@ exports.getOne = async (req, res) => {
   }
 };
 
-const ALLOWED_STATUSES = ['pending_payment', 'payment_cancelled', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+/** `delivered` is set from Shiprocket webhook when the carrier reports delivery — not via this PATCH. */
+const ALLOWED_STATUSES = ['pending_payment', 'payment_cancelled', 'paid', 'processing', 'packed', 'shipped', 'out_for_delivery', 'cancelled'];
 
 exports.updateStatus = async (req, res) => {
   try {
@@ -49,6 +50,9 @@ exports.updateStatus = async (req, res) => {
             order.shiprocketShipmentId = String(shipment.shipment_id);
             order.tracking = shipment.awb_code || order.tracking;
             order.courier = shipment.courier_name || order.courier;
+            order.pickupScheduled = Boolean(shipment.pickupScheduled);
+            order.pickupScheduleError = String(shipment.pickupScheduleError || '').slice(0, 500);
+            order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
             order.status = 'shipped';
             if (!String(order.tracking || '').trim()) {
               console.warn(
@@ -66,6 +70,12 @@ exports.updateStatus = async (req, res) => {
             const assigned = await retryAssignAwb(order.shiprocketShipmentId);
             order.tracking = assigned.awb_code || order.tracking;
             order.courier = assigned.courier_name || order.courier;
+            if (String(order.tracking || '').trim() && !order.pickupScheduled) {
+              const pickup = await schedulePickupDetails(order.shiprocketShipmentId);
+              order.pickupScheduled = pickup.pickupScheduled;
+              order.pickupScheduleError = String(pickup.pickupScheduleError || '').slice(0, 500);
+              order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
+            }
             order.status = 'shipped';
             if (!String(order.tracking || '').trim()) {
               console.warn(
@@ -83,9 +93,6 @@ exports.updateStatus = async (req, res) => {
         }
       } else {
         order.status = status;
-        if (status === 'delivered' && !order.deliveredAt) {
-          order.deliveredAt = new Date();
-        }
       }
     }
     // Non-empty tracking/courier from the request always apply (after Shiprocket paths) so pasted AWB is never dropped.
@@ -96,6 +103,16 @@ exports.updateStatus = async (req, res) => {
     if (courier !== undefined) {
       order.courier = String(courier).trim();
     }
+    if (
+      order.shiprocketShipmentId &&
+      String(order.tracking || '').trim() &&
+      !order.pickupScheduled
+    ) {
+      const pickup = await schedulePickupDetails(order.shiprocketShipmentId);
+      order.pickupScheduled = pickup.pickupScheduled;
+      order.pickupScheduleError = String(pickup.pickupScheduleError || '').slice(0, 500);
+      order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
+    }
     await order.save();
     res.json(order);
   } catch (err) {
@@ -103,7 +120,30 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// PATCH /api/admin/orders/:id/deliver (manual testing flow)
+/** POST /api/admin/orders/:id/retry-pickup — call Shiprocket generate/pickup again (forward). */
+exports.retryForwardPickup = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (!String(order.shiprocketShipmentId || '').trim()) {
+      return res.status(400).json({ error: 'No Shiprocket shipment id' });
+    }
+    if (!String(order.tracking || '').trim()) {
+      return res.status(400).json({ error: 'AWB / tracking required before pickup' });
+    }
+    const pickup = await schedulePickupDetails(order.shiprocketShipmentId);
+    order.pickupScheduled = pickup.pickupScheduled;
+    order.pickupScheduleError = String(pickup.pickupScheduleError || '').slice(0, 500);
+    order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
+    await order.save();
+    return res.json(order);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// PATCH /api/admin/orders/:id/deliver — break-glass if Shiprocket webhook did not set delivered.
 exports.markDelivered = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('user', 'name');

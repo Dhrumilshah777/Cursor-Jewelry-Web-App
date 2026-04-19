@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { apiGet, apiPatch, assetUrl } from '@/lib/api';
+import { apiGet, apiPatch, apiPost, assetUrl } from '@/lib/api';
 
 type OrderItem = { productId: string; name: string; price: string; image?: string; quantity: number };
 type Address = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
@@ -17,6 +17,10 @@ type Order = {
   tracking?: string;
   courier?: string;
   shiprocketShipmentId?: string;
+  pickupScheduled?: boolean;
+  pickupScheduleError?: string;
+  pickupScheduledAt?: string | null;
+  deliveredAt?: string | null;
   createdAt: string;
 };
 
@@ -38,6 +42,8 @@ export default function AdminOrderDetailPage() {
   const [courier, setCourier] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
+  const [overrideBusy, setOverrideBusy] = useState(false);
+  const [pickupRetryBusy, setPickupRetryBusy] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -76,6 +82,48 @@ export default function AdminOrderDetailPage() {
     setSaving(false);
   };
 
+  const handleMarkDeliveredOverride = async () => {
+    if (!id) return;
+    if (!window.confirm('Mark this order as delivered? Use only if Shiprocket webhook failed or for support override.')) return;
+    setOverrideBusy(true);
+    setSaveError(null);
+    try {
+      const updated = await apiPatch<Order>(`/api/admin/orders/${id}/deliver`, {}, true);
+      setOrder(updated);
+      setStatus(updated.status);
+      setTracking(updated.tracking || '');
+      setCourier(updated.courier || '');
+    } catch (err) {
+      const ex = err as Error;
+      setSaveError(ex instanceof Error ? ex.message : 'Failed to mark delivered');
+    }
+    setOverrideBusy(false);
+  };
+
+  const handleRetryForwardPickup = async () => {
+    if (!id) return;
+    setPickupRetryBusy(true);
+    setSaveError(null);
+    try {
+      const updated = await apiPost<Order>(`/api/admin/orders/${id}/retry-pickup`, {}, true);
+      setOrder(updated);
+    } catch (err) {
+      const ex = err as Error;
+      setSaveError(ex instanceof Error ? ex.message : 'Retry pickup failed');
+    }
+    setPickupRetryBusy(false);
+  };
+
+  const pickupStallHours =
+    order?.pickupScheduled && order.pickupScheduledAt
+      ? (Date.now() - new Date(order.pickupScheduledAt).getTime()) / 3600000
+      : 0;
+  const showPickupStallWarning =
+    Boolean(order?.pickupScheduled) &&
+    Boolean(order?.pickupScheduledAt) &&
+    ['shipped', 'out_for_delivery', 'packed', 'processing'].includes(order?.status || '') &&
+    pickupStallHours >= 24;
+
   if (loading) return <p className="text-stone-500">Loading order…</p>;
   if (!order) return <p className="text-stone-500">Order not found.</p>;
 
@@ -85,6 +133,47 @@ export default function AdminOrderDetailPage() {
       <p className="mt-1 text-sm text-stone-500">
         {new Date(order.createdAt).toLocaleString()} · {order.user?.email || order.user?.name || '—'}
       </p>
+
+      {order.shiprocketShipmentId && String(order.tracking || '').trim() && (
+        <div
+          className={`mt-6 rounded-lg border px-4 py-3 text-sm ${
+            order.pickupScheduled && !order.pickupScheduleError
+              ? 'border-green-200 bg-green-50 text-green-900'
+              : 'border-amber-200 bg-amber-50 text-amber-900'
+          }`}
+        >
+          <p className="font-medium text-charcoal">
+            Pickup:{' '}
+            {order.pickupScheduled && !order.pickupScheduleError
+              ? 'Scheduled ✓'
+              : order.pickupScheduleError
+                ? 'Failed ⚠️'
+                : 'Not confirmed'}
+          </p>
+          {order.pickupScheduledAt && (
+            <p className="mt-1 text-xs text-stone-600">
+              API recorded: {new Date(order.pickupScheduledAt).toLocaleString()}
+            </p>
+          )}
+          {order.pickupScheduleError ? (
+            <p className="mt-2 break-words text-xs text-red-800">{order.pickupScheduleError}</p>
+          ) : null}
+          {showPickupStallWarning && (
+            <p className="mt-2 text-xs font-medium text-amber-900">
+              Scheduled over 24h ago but order is not delivered yet — courier may not have picked up. You can retry pickup
+              or use Shiprocket’s panel.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => void handleRetryForwardPickup()}
+            disabled={pickupRetryBusy}
+            className="mt-3 rounded border border-stone-400 bg-white px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-stone-50 disabled:opacity-50"
+          >
+            {pickupRetryBusy ? 'Retrying…' : 'Retry pickup'}
+          </button>
+        </div>
+      )}
 
       <div className="mt-8 grid gap-8 md:grid-cols-2">
         <div>
@@ -141,7 +230,6 @@ export default function AdminOrderDetailPage() {
               <option value="packed">Packed</option>
               <option value="shipped">Shipped</option>
               <option value="out_for_delivery">Out for delivery</option>
-              <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
@@ -169,8 +257,12 @@ export default function AdminOrderDetailPage() {
             {order.shiprocketShipmentId && !tracking && (
               <p className="mt-1 text-sm text-amber-600">Order is in Shiprocket. Assign AWB from Shiprocket dashboard (Orders) and paste the tracking number here, then Save.</p>
             )}
+            <p className="text-xs text-stone-500">
+              Delivered is set when Shiprocket reports delivery to the customer. After AWB, pickup is requested via API
+              {order.pickupScheduled ? ' (recorded as scheduled).' : ' (or use Schedule Pickup in Shiprocket if that step failed).'}
+            </p>
           </div>
-          <div className="flex items-end">
+          <div className="flex flex-col items-end gap-2">
             <button
               type="submit"
               disabled={saving}
@@ -178,6 +270,16 @@ export default function AdminOrderDetailPage() {
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
+            {order.status !== 'delivered' && (
+              <button
+                type="button"
+                onClick={handleMarkDeliveredOverride}
+                disabled={overrideBusy}
+                className="rounded border border-stone-300 bg-white px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+              >
+                {overrideBusy ? '…' : 'Mark delivered (override)'}
+              </button>
+            )}
           </div>
         </div>
       </form>

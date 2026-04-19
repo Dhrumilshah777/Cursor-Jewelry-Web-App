@@ -1,6 +1,6 @@
 const Order = require('../models/Order');
 const Return = require('../models/Return');
-const { createReturnShipment } = require('../services/shiprocket');
+const { createReturnShipment, schedulePickupDetails } = require('../services/shiprocket');
 
 function daysSince(date) {
   const ms = Date.now() - new Date(date).getTime();
@@ -97,6 +97,9 @@ exports.adminUpdateStatus = async (req, res) => {
         ret.shiprocketReturnOrderId = String(shipment.ship_order_id || '');
         ret.returnAwb = String(shipment.awb_code || '').trim();
         ret.returnCourier = String(shipment.courier_name || '').trim();
+        ret.returnPickupScheduled = Boolean(shipment.returnPickupScheduled);
+        ret.returnPickupScheduleError = String(shipment.returnPickupScheduleError || '').slice(0, 500);
+        ret.returnPickupScheduledAt = ret.returnPickupScheduled ? new Date() : null;
       } catch (err) {
         const msg = err?.message || String(err);
         ret.shiprocketReturnError = msg.slice(0, 500);
@@ -154,6 +157,9 @@ exports.retryShipment = async (req, res) => {
       ret.returnAwb = '';
       ret.returnCourier = '';
       ret.returnShipmentStatus = '';
+      ret.returnPickupScheduled = false;
+      ret.returnPickupScheduleError = '';
+      ret.returnPickupScheduledAt = null;
     }
 
     const order = await Order.findById(ret.order).populate('user', 'email name');
@@ -167,6 +173,9 @@ exports.retryShipment = async (req, res) => {
       ret.shiprocketReturnOrderId = String(shipment.ship_order_id || '');
       ret.returnAwb = String(shipment.awb_code || '').trim();
       ret.returnCourier = String(shipment.courier_name || '').trim();
+      ret.returnPickupScheduled = Boolean(shipment.returnPickupScheduled);
+      ret.returnPickupScheduleError = String(shipment.returnPickupScheduleError || '').slice(0, 500);
+      ret.returnPickupScheduledAt = ret.returnPickupScheduled ? new Date() : null;
     } catch (err) {
       const msg = err?.message || String(err);
       ret.shiprocketReturnError = msg.slice(0, 500);
@@ -178,6 +187,29 @@ exports.retryShipment = async (req, res) => {
       });
     }
 
+    await ret.save();
+    return res.json(ret);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Return not found' });
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+/** POST /api/admin/returns/:id/retry-pickup — retry Shiprocket generate/pickup for reverse shipment. */
+exports.retryReturnPickup = async (req, res) => {
+  try {
+    const ret = await Return.findById(req.params.id);
+    if (!ret) return res.status(404).json({ error: 'Return not found' });
+    if (ret.status !== 'approved') {
+      return res.status(400).json({ error: 'Return must be approved' });
+    }
+    if (!String(ret.shiprocketReturnShipmentId || '').trim() || !String(ret.returnAwb || '').trim()) {
+      return res.status(400).json({ error: 'Return shipment id and AWB required' });
+    }
+    const pickup = await schedulePickupDetails(ret.shiprocketReturnShipmentId);
+    ret.returnPickupScheduled = pickup.pickupScheduled;
+    ret.returnPickupScheduleError = String(pickup.pickupScheduleError || '').slice(0, 500);
+    ret.returnPickupScheduledAt = ret.returnPickupScheduled ? new Date() : null;
     await ret.save();
     return res.json(ret);
   } catch (err) {

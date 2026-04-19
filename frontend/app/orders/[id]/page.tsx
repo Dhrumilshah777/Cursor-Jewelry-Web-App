@@ -234,7 +234,7 @@ export default function OrderDetailPage() {
           )}
           {isDelivered && !deliveredAtDate && (
             <p className="mt-2 text-sm text-amber-700">
-              Delivery date is missing for this order. Please contact support (or re-mark delivered in admin) to enable returns.
+              Delivery date is missing for this order. Please contact support — admin can use “Mark delivered (override)” if the carrier webhook did not record it.
             </p>
           )}
           {isDelivered && deliveredAtDate && !withinReturnWindow && (

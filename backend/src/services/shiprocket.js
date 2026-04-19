@@ -269,6 +269,54 @@ async function assignAwbWithRetries(validSid, shipmentIdStr, orderIdForLog = nul
   return { awb_code: '', courier_name: '' };
 }
 
+/**
+ * POST /courier/generate/pickup — AWB must exist. Does not throw (use Shiprocket panel if this fails).
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+async function trySchedulePickup(shipmentIdRaw) {
+  const shipmentIdStr = String(shipmentIdRaw ?? '').trim();
+  const sid = parseInt(shipmentIdStr, 10);
+  if (!shipmentIdStr || Number.isNaN(sid) || sid <= 0) {
+    return { ok: false, message: 'invalid_shipment_id' };
+  }
+  const token = await getToken();
+  const res = await fetch(`${SHIPROCKET_BASE}/courier/generate/pickup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ shipment_id: sid }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data.message || data.error || `http_${res.status}`;
+    srWarn('pickup.generate.failed', { shipment_id: shipmentIdStr, message: String(msg).slice(0, 240) });
+    return { ok: false, message: String(msg) };
+  }
+  const sc = data.status_code ?? data.status;
+  if (sc === 1 || sc === true || data.pickup_scheduled_date || data.pickup_token) {
+    srLog('pickup.generate.ok', { shipment_id: shipmentIdStr });
+    return { ok: true };
+  }
+  const msgStr = String(data.message || data.error || '').toLowerCase();
+  if (msgStr.includes('already') || msgStr.includes('scheduled')) {
+    return { ok: true };
+  }
+  srWarn('pickup.generate.ambiguous', { shipment_id: shipmentIdStr, snippet: JSON.stringify(data).slice(0, 280) });
+  const hint = String(data.message || data.error || 'ambiguous_response').slice(0, 300);
+  return { ok: false, message: hint };
+}
+
+/** AWB must exist. Returns flags for persisting on Order / Return. */
+async function schedulePickupDetails(shipmentIdStr) {
+  const pr = await trySchedulePickup(shipmentIdStr);
+  return {
+    pickupScheduled: pr.ok,
+    pickupScheduleError: pr.ok ? '' : String(pr.message || 'pickup_failed').slice(0, 500),
+  };
+}
+
 /** Re-run AWB assign for an existing Shiprocket shipment (e.g. first assign returned empty). */
 async function retryAssignAwb(shipmentIdRaw) {
   const shipmentIdStr = String(shipmentIdRaw ?? '').trim();
@@ -369,10 +417,14 @@ async function createShipment(order) {
   const awbFromCreate = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';
   const courierFromCreate = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
   if (awbFromCreate) {
+    const awbStr = String(awbFromCreate);
+    const pickup = await schedulePickupDetails(shipmentIdStr);
     return {
       shipment_id: shipmentIdStr,
-      awb_code: String(awbFromCreate),
+      awb_code: awbStr,
       courier_name: String(courierFromCreate),
+      pickupScheduled: pickup.pickupScheduled,
+      pickupScheduleError: pickup.pickupScheduleError,
     };
   }
 
@@ -387,10 +439,21 @@ async function createShipment(order) {
 
   await delay(PRE_ASSIGN_AW_DELAY_MS);
   const assigned = await assignAwbWithRetries(validSid, shipmentIdStr, validOid);
+  let pickupScheduled = false;
+  let pickupScheduleError = '';
+  if (String(assigned.awb_code || '').trim()) {
+    const pickup = await schedulePickupDetails(shipmentIdStr);
+    pickupScheduled = pickup.pickupScheduled;
+    pickupScheduleError = pickup.pickupScheduleError;
+  } else {
+    pickupScheduleError = 'no_awb_for_pickup';
+  }
   return {
     shipment_id: shipmentIdStr,
     awb_code: assigned.awb_code,
     courier_name: assigned.courier_name,
+    pickupScheduled,
+    pickupScheduleError,
   };
 }
 
@@ -621,7 +684,7 @@ function warehouseForReturns() {
 /**
  * Reverse pickup: customer → warehouse. Warehouse env vars required.
  * If SHIPROCKET_CHANNEL_ID is set, it is sent; if omitted, the return API may still work (like adhoc) — if Shiprocket errors, add channel id from dashboard → Channels.
- * @returns {Promise<{ shipment_id: string, awb_code: string, courier_name: string, ship_order_id: string }>}
+ * @returns {Promise<{ shipment_id: string, awb_code: string, courier_name: string, ship_order_id: string, returnPickupScheduled: boolean }>}
  */
 async function createReturnShipment(order, returnDoc, pickupEmail) {
   const channelRaw = process.env.SHIPROCKET_CHANNEL_ID || '';
@@ -728,11 +791,15 @@ async function createReturnShipment(order, returnDoc, pickupEmail) {
   const awbFromCreate = data.order?.awb_code ?? data.awb_code ?? data.courier_awb ?? '';
   const courierFromCreate = data.order?.courier_name ?? data.courier_name ?? data.courier ?? '';
   if (awbFromCreate) {
+    const awbStr = String(awbFromCreate);
+    const pickup = await schedulePickupDetails(shipmentIdStr);
     return {
       shipment_id: shipmentIdStr,
-      awb_code: String(awbFromCreate),
+      awb_code: awbStr,
       courier_name: String(courierFromCreate),
       ship_order_id: String(shipOrderId || ''),
+      returnPickupScheduled: pickup.pickupScheduled,
+      returnPickupScheduleError: pickup.pickupScheduleError,
     };
   }
 
@@ -746,12 +813,31 @@ async function createReturnShipment(order, returnDoc, pickupEmail) {
   const oid = shipOrderId != null ? parseInt(String(shipOrderId), 10) : NaN;
   const validOid = !Number.isNaN(oid) && oid > 0 ? oid : null;
   const assigned = await assignAwbWithRetries(validSid, shipmentIdStr, validOid);
+  let returnPickupScheduled = false;
+  let returnPickupScheduleError = '';
+  if (String(assigned.awb_code || '').trim()) {
+    const pickup = await schedulePickupDetails(shipmentIdStr);
+    returnPickupScheduled = pickup.pickupScheduled;
+    returnPickupScheduleError = pickup.pickupScheduleError;
+  } else {
+    returnPickupScheduleError = 'no_awb_for_pickup';
+  }
   return {
     shipment_id: shipmentIdStr,
     awb_code: assigned.awb_code,
     courier_name: assigned.courier_name,
     ship_order_id: String(shipOrderId || ''),
+    returnPickupScheduled,
+    returnPickupScheduleError,
   };
 }
 
-module.exports = { getToken, createShipment, createReturnShipment, retryAssignAwb, checkServiceability };
+module.exports = {
+  getToken,
+  createShipment,
+  createReturnShipment,
+  retryAssignAwb,
+  trySchedulePickup,
+  schedulePickupDetails,
+  checkServiceability,
+};

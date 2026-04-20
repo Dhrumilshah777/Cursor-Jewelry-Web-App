@@ -13,6 +13,10 @@ const config: Config = {
         gold: '#B8860B',
         'gold-light': '#D4AF37',
         stone: '#78716C',
+        /** Login / accent (SMS OTP flow) */
+        'brand-purple': '#7056FF',
+        'brand-coral': '#FF6B4A',
+        'brand-mint': '#E8F4FC',
       },
       fontFamily: {
         serif: ['var(--font-cormorant)', 'Georgia', 'serif'],

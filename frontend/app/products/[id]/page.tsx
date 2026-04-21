@@ -6,13 +6,26 @@ import { useParams } from 'next/navigation';
 import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart, getCart } from '@/lib/api';
 
 type PriceBreakup = {
-  goldValue: number;
-  makingCharge: number;
-  gst: number;
-  totalPrice: number;
+  // New paise-based breakup (backend source of truth)
+  goldValuePaise?: number;
+  makingChargePaise?: number;
+  gstPaise?: number;
+  totalPricePaise?: number;
+  subtotalPaise?: number;
+  pricePerGramPaise?: number;
+  gstPercent?: number;
+  makingChargeType?: string;
+  makingChargeValue?: number;
+
+  // Legacy fields (older backend responses)
+  goldValue?: number;
+  makingCharge?: number;
+  gst?: number;
+  totalPrice?: number;
   goldPurity?: string;
   netWeight?: number;
   pricePerGram?: number;
+  fixedPricePaise?: number;
 };
 
 type Product = {
@@ -704,21 +717,45 @@ export default function ProductDetailPage() {
                   )}
                   <tr className="border-b border-stone-200">
                     <td className="px-4 py-3">
-                      Gold price{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}
+                      Gold value{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}
                     </td>
-                    <td className="px-4 py-3 font-medium">₹{Number(product.priceBreakup.goldValue).toFixed(2)}</td>
+                    <td className="px-4 py-3 font-medium">
+                      ₹{(
+                        (typeof product.priceBreakup.goldValuePaise === 'number'
+                          ? product.priceBreakup.goldValuePaise / 100
+                          : Number(product.priceBreakup.goldValue)) || 0
+                      ).toFixed(2)}
+                    </td>
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="px-4 py-3">Making charge</td>
-                    <td className="px-4 py-3 font-medium">₹{Number(product.priceBreakup.makingCharge).toFixed(2)}</td>
+                    <td className="px-4 py-3 font-medium">
+                      ₹{(
+                        (typeof product.priceBreakup.makingChargePaise === 'number'
+                          ? product.priceBreakup.makingChargePaise / 100
+                          : Number(product.priceBreakup.makingCharge)) || 0
+                      ).toFixed(2)}
+                    </td>
                   </tr>
                   <tr className="border-b border-stone-200">
-                    <td className="px-4 py-3">GST charge (3%)</td>
-                    <td className="px-4 py-3 font-medium">₹{Number(product.priceBreakup.gst).toFixed(2)}</td>
+                    <td className="px-4 py-3">GST charge ({product.priceBreakup.gstPercent ?? 3}%)</td>
+                    <td className="px-4 py-3 font-medium">
+                      ₹{(
+                        (typeof product.priceBreakup.gstPaise === 'number'
+                          ? product.priceBreakup.gstPaise / 100
+                          : Number(product.priceBreakup.gst)) || 0
+                      ).toFixed(2)}
+                    </td>
                   </tr>
                   <tr className="bg-stone-50 font-semibold text-charcoal">
                     <td className="px-4 py-3">Total</td>
-                    <td className="px-4 py-3">₹{Number(product.priceBreakup.totalPrice).toFixed(2)}</td>
+                    <td className="px-4 py-3">
+                      ₹{(
+                        (typeof product.priceBreakup.totalPricePaise === 'number'
+                          ? product.priceBreakup.totalPricePaise / 100
+                          : Number(product.priceBreakup.totalPrice)) || 0
+                      ).toFixed(2)}
+                    </td>
                   </tr>
                 </tbody>
               </table>

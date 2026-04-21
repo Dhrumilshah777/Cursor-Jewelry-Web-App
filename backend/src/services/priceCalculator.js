@@ -24,18 +24,6 @@ function toInrFromPaise(paise) {
  */
 async function getProductPrice(product, goldRatesMap = null) {
   const p = product.toObject ? product.toObject() : product;
-  const fixedPricePaise = Number.isFinite(p.fixedPricePaise) ? Math.round(p.fixedPricePaise) : 0;
-  const legacyFixed = parseFloat(p.price);
-  const legacyFixedPaise = Number.isFinite(legacyFixed) && legacyFixed > 0 ? toPaiseFromInrNumber(legacyFixed) : 0;
-  const hasFixed = fixedPricePaise > 0 || legacyFixedPaise > 0;
-  if (hasFixed) {
-    const unitPaise = fixedPricePaise > 0 ? fixedPricePaise : legacyFixedPaise;
-    return {
-      pricePaise: unitPaise,
-      price: toInrFromPaise(unitPaise),
-      breakup: { fixedPricePaise: unitPaise, subtotalPaise: unitPaise, totalPricePaise: unitPaise, gstPercent: 0, gstPaise: 0 },
-    };
-  }
   const purity = (p.goldPurity || '').toString().toUpperCase().replace(/\s/g, '');
   const netWeight = parseFloat(p.netWeight);
   const hasGold = purity && (purity === '14K' || purity === '18K' || purity === '22K' || purity === '24K') && Number.isFinite(netWeight) && netWeight > 0;

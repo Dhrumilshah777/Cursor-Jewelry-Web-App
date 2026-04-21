@@ -44,10 +44,7 @@ exports.create = async (req, res) => {
       const unitSubtotalPaise = breakup?.subtotalPaise ?? pricePaise;
       const unitGstPaise = breakup?.gstPaise ?? 0;
       const unitTotalPaise = breakup?.totalPricePaise ?? pricePaise;
-      const pricingSource =
-        (breakup?.fixedPricePaise ?? 0) > 0 ? 'fixed'
-          : (breakup?.pricePerGramPaise ?? 0) > 0 ? 'gold_dynamic'
-            : 'unknown';
+      const pricingSource = (breakup?.pricePerGramPaise ?? 0) > 0 ? 'gold_dynamic' : 'unknown';
       validated.push({
         productId: String(product._id),
         name: product.name,
@@ -58,7 +55,7 @@ exports.create = async (req, res) => {
         pricing: {
           pricingSource,
           pricingVersion: 1,
-          fixedPricePaise: breakup?.fixedPricePaise ?? 0,
+          fixedPricePaise: 0,
           goldRatePerGramPaise: breakup?.pricePerGramPaise ?? 0,
           netWeightGrams: breakup?.netWeight ?? 0,
           goldValuePaise: breakup?.goldValuePaise ?? 0,

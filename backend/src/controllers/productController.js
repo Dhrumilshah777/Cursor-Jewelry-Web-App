@@ -137,25 +137,13 @@ function hasValidGoldPricing(body) {
   return ['14K', '18K', '22K', '24K'].includes(p) && Number.isFinite(w) && w > 0;
 }
 
-function hasValidFixedPrice(body) {
-  const n = parseFloat(body.price);
-  return Number.isFinite(n) && n > 0;
-}
-
-function fixedPricePaiseFromBody(body) {
-  const n = parseFloat(body.price);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  return Math.round(n * 100);
-}
-
 exports.create = async (req, res) => {
   try {
     const body = { ...req.body };
     const hasGold = hasValidGoldPricing(body);
-    const hasFixed = hasValidFixedPrice(body);
-    if (!hasGold && !hasFixed) {
+    if (!hasGold) {
       return res.status(400).json({
-        error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+        error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
     }
 
@@ -168,23 +156,17 @@ exports.create = async (req, res) => {
 
     let sku;
     try {
-      // For fixed-price products, allow providing a custom SKU; otherwise generate a SKU based on purity.
-      if (hasFixed && body.sku && String(body.sku).trim()) {
-        sku = String(body.sku).trim();
-      } else {
-        const purityCheck = validatePurity(body.goldPurity);
-        if (!purityCheck.valid) {
-          return res.status(400).json({ error: purityCheck.error });
-        }
-        sku = await generateSKU(categoryCode, body.goldPurity);
+      const purityCheck = validatePurity(body.goldPurity);
+      if (!purityCheck.valid) {
+        return res.status(400).json({ error: purityCheck.error });
       }
+      sku = await generateSKU(categoryCode, body.goldPurity);
     } catch (skuErr) {
       return res.status(400).json({ error: skuErr.message });
     }
     body.sku = sku;
-    if (hasFixed) {
-      body.fixedPricePaise = fixedPricePaiseFromBody(body);
-    }
+    body.fixedPricePaise = 0;
+    body.price = '';
 
     try {
       const product = await Product.create(body);
@@ -254,12 +236,11 @@ exports.bulkCreate = async (req, res) => {
     const body = { ...row, sku };
 
     const hasGold = hasValidGoldPricing(body);
-    const hasFixed = hasValidFixedPrice(body);
-    if (!hasGold && !hasFixed) {
+    if (!hasGold) {
       failures.push({
         index: i,
         sku,
-        error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+        error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
       continue;
     }
@@ -281,16 +262,13 @@ exports.bulkCreate = async (req, res) => {
       }
     }
 
-    if (!hasFixed) {
-      const purityCheck = validatePurity(body.goldPurity);
-      if (!purityCheck.valid) {
-        failures.push({ index: i, sku, error: purityCheck.error });
-        continue;
-      }
+    const purityCheck = validatePurity(body.goldPurity);
+    if (!purityCheck.valid) {
+      failures.push({ index: i, sku, error: purityCheck.error });
+      continue;
     }
-    if (hasFixed) {
-      body.fixedPricePaise = fixedPricePaiseFromBody(body);
-    }
+    body.fixedPricePaise = 0;
+    body.price = '';
 
     try {
       const p = await Product.create(body);
@@ -342,17 +320,13 @@ exports.update = async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Product not found' });
     const merged = { ...existing.toObject(), ...body };
     const hasGold = hasValidGoldPricing(merged);
-    const hasFixed = hasValidFixedPrice(merged);
-    if (!hasGold && !hasFixed) {
+    if (!hasGold) {
       return res.status(400).json({
-        error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
+        error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
     }
-    if (hasFixed) {
-      body.fixedPricePaise = fixedPricePaiseFromBody(merged);
-    } else if (hasGold) {
-      body.fixedPricePaise = 0;
-    }
+    body.fixedPricePaise = 0;
+    if ('price' in body) body.price = '';
     const product = await Product.findByIdAndUpdate(req.params.id, body, { new: true });
     res.json(product);
   } catch (err) {

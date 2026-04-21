@@ -8,7 +8,24 @@ exports.get = async (req, res) => {
     if (!cart) {
       cart = await Cart.create({ user: req.userId, items: [] });
     }
-    res.json(cart.items || []);
+    // Keep API contract: return enriched items (name/price/image) for frontend.
+    const raw = cart.items || [];
+    const enriched = [];
+    for (const it of raw) {
+      const product = await Product.findById(it.productId);
+      if (!product || product.active !== true) continue;
+      const qty = Math.min(it.quantity, product.stock);
+      if (qty < 1) continue;
+      const { price } = await getProductPrice(product);
+      enriched.push({
+        productId: String(product._id),
+        name: product.name,
+        price: String(price || 0),
+        image: product.image || '',
+        quantity: qty,
+      });
+    }
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -39,7 +56,8 @@ exports.getValidated = async (req, res) => {
       });
       subtotal += price * qty;
     }
-    cart.items = validated;
+    // Persist simplified cart (productId + quantity). Pricing is always recalculated.
+    cart.items = validated.map((i) => ({ productId: i.productId, quantity: i.quantity }));
     await cart.save();
     res.json({ items: validated, subtotal: Math.round(subtotal * 100) / 100 });
   } catch (err) {
@@ -50,12 +68,29 @@ exports.getValidated = async (req, res) => {
 exports.set = async (req, res) => {
   try {
     const items = Array.isArray(req.body.items) ? req.body.items : [];
+    // Accept both legacy full items and the new minimal format.
+    const minimal = items
+      .map((i) => ({
+        productId: String(i.productId || i.id || ''),
+        quantity: Math.max(1, parseInt(i.quantity, 10) || 1),
+      }))
+      .filter((i) => i.productId);
     const cart = await Cart.findOneAndUpdate(
       { user: req.userId },
-      { $set: { items } },
+      { $set: { items: minimal } },
       { new: true, upsert: true }
     );
-    res.json(cart.items || []);
+    // Return enriched items for frontend.
+    const out = [];
+    for (const it of cart.items || []) {
+      const product = await Product.findById(it.productId);
+      if (!product || product.active !== true) continue;
+      const qty = Math.min(it.quantity, product.stock);
+      if (qty < 1) continue;
+      const { price } = await getProductPrice(product);
+      out.push({ productId: String(product._id), name: product.name, price: String(price || 0), image: product.image || '', quantity: qty });
+    }
+    res.json(out);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -64,7 +99,7 @@ exports.set = async (req, res) => {
 /** Add one item (or increase quantity). Body: { productId, name?, price?, image?, quantity? }. Validates product exists, active, stock; uses DB price. */
 exports.addItem = async (req, res) => {
   try {
-    const { productId, name, price, image, quantity } = req.body;
+    const { productId, quantity } = req.body;
     if (!productId) {
       return res.status(400).json({ error: 'productId required' });
     }
@@ -82,28 +117,30 @@ exports.addItem = async (req, res) => {
     let cart = await Cart.findOne({ user: req.userId });
     if (!cart) cart = await Cart.create({ user: req.userId, items: [] });
     const existing = (cart.items || []).find((i) => String(i.productId) === String(productId));
-    const { price: productPrice } = await getProductPrice(product);
-    const priceStr = String(productPrice);
     if (existing) {
       const newQty = existing.quantity + qty;
       if (product.stock < newQty) {
         return res.status(400).json({ error: `Only ${product.stock} in stock` });
       }
       existing.quantity = newQty;
-      existing.price = priceStr;
-      existing.name = product.name;
-      if (product.image) existing.image = product.image;
     } else {
       cart.items.push({
         productId: String(product._id),
-        name: product.name,
-        price: priceStr,
-        image: product.image || '',
         quantity: qty,
       });
     }
     await cart.save();
-    res.json(cart.items);
+    // Return enriched items for frontend.
+    const out = [];
+    for (const it of cart.items || []) {
+      const p = await Product.findById(it.productId);
+      if (!p || p.active !== true) continue;
+      const q = Math.min(it.quantity, p.stock);
+      if (q < 1) continue;
+      const { price } = await getProductPrice(p);
+      out.push({ productId: String(p._id), name: p.name, price: String(price || 0), image: p.image || '', quantity: q });
+    }
+    res.json(out);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -118,7 +155,7 @@ exports.merge = async (req, res) => {
       cart = await Cart.create({ user: req.userId, items: [] });
     }
     const existing = cart.items || [];
-    const map = new Map(existing.map((i) => [String(i.productId), { ...(i.toObject ? i.toObject() : i) }]));
+    const map = new Map(existing.map((i) => [String(i.productId), { productId: String(i.productId), quantity: i.quantity }]));
     for (const g of guestItems) {
       const id = g.id || g.productId;
       if (!id) continue;
@@ -129,18 +166,24 @@ exports.merge = async (req, res) => {
       const current = map.get(key);
       const newQty = current ? current.quantity + qty : qty;
       if (product.stock < newQty) continue;
-      const { price } = await getProductPrice(product);
       map.set(key, {
         productId: key,
-        name: product.name,
-        price: String(price),
-        image: product.image || '',
         quantity: newQty,
       });
     }
     cart.items = Array.from(map.values());
     await cart.save();
-    res.json(cart.items);
+    // Return enriched items for frontend.
+    const out = [];
+    for (const it of cart.items || []) {
+      const p = await Product.findById(it.productId);
+      if (!p || p.active !== true) continue;
+      const q = Math.min(it.quantity, p.stock);
+      if (q < 1) continue;
+      const { price } = await getProductPrice(p);
+      out.push({ productId: String(p._id), name: p.name, price: String(price || 0), image: p.image || '', quantity: q });
+    }
+    res.json(out);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

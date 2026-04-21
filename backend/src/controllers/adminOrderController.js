@@ -3,6 +3,7 @@ const Return = require('../models/Return');
 const { createShipment, retryAssignAwb, trySchedulePickup, schedulePickupDetails } = require('../services/shiprocket');
 const { razorpayInstance } = require('../services/razorpay');
 const { sendWhatsAppMessage } = require('../services/whatsappService');
+const { auditFromReq } = require('../services/auditLog');
 
 exports.list = async (req, res) => {
   try {
@@ -35,6 +36,14 @@ exports.updateStatus = async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
+    const before = {
+      status: String(order.status || ''),
+      tracking: String(order.tracking || ''),
+      courier: String(order.courier || ''),
+      shiprocketShipmentId: String(order.shiprocketShipmentId || ''),
+      pickupScheduled: Boolean(order.pickupScheduled),
+    };
+
     if (status && ALLOWED_STATUSES.includes(status)) {
       if (status === 'shipped') {
         const hasTracking = Boolean(order.tracking && String(order.tracking).trim());
@@ -54,6 +63,20 @@ exports.updateStatus = async (req, res) => {
             order.pickupScheduleError = String(shipment.pickupScheduleError || '').slice(0, 500);
             order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
             order.status = 'shipped';
+            void auditFromReq(req, 'shipment.created', {
+              entityType: 'order',
+              entityId: String(order._id),
+              meta: {
+                before,
+                after: {
+                  status: String(order.status || ''),
+                  tracking: String(order.tracking || ''),
+                  courier: String(order.courier || ''),
+                  shiprocketShipmentId: String(order.shiprocketShipmentId || ''),
+                  pickupScheduled: Boolean(order.pickupScheduled),
+                },
+              },
+            });
             if (!String(order.tracking || '').trim()) {
               console.warn(
                 '[order] Marked shipped but no AWB yet. Check server logs for [shiprocket] awb.assign.failed. ' +
@@ -77,6 +100,20 @@ exports.updateStatus = async (req, res) => {
               order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
             }
             order.status = 'shipped';
+            void auditFromReq(req, 'shipment.awb_assigned', {
+              entityType: 'order',
+              entityId: String(order._id),
+              meta: {
+                before,
+                after: {
+                  status: String(order.status || ''),
+                  tracking: String(order.tracking || ''),
+                  courier: String(order.courier || ''),
+                  shiprocketShipmentId: String(order.shiprocketShipmentId || ''),
+                  pickupScheduled: Boolean(order.pickupScheduled),
+                },
+              },
+            });
             if (!String(order.tracking || '').trim()) {
               console.warn(
                 '[order] Retry AWB still empty after assign. Check [shiprocket] logs. ' +
@@ -112,8 +149,25 @@ exports.updateStatus = async (req, res) => {
       order.pickupScheduled = pickup.pickupScheduled;
       order.pickupScheduleError = String(pickup.pickupScheduleError || '').slice(0, 500);
       order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
+      void auditFromReq(req, pickup.pickupScheduled ? 'shipment.pickup_scheduled' : 'shipment.pickup_failed', {
+        entityType: 'order',
+        entityId: String(order._id),
+        meta: {
+          extra: {
+            shiprocketShipmentId: String(order.shiprocketShipmentId || ''),
+            pickupScheduleError: String(order.pickupScheduleError || ''),
+          },
+        },
+      });
     }
     await order.save();
+    if (String(order.status || '') && String(order.status || '') !== before.status) {
+      void auditFromReq(req, `order.${String(order.status)}`, {
+        entityType: 'order',
+        entityId: String(order._id),
+        meta: { before: before.status, after: String(order.status) },
+      });
+    }
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -136,6 +190,17 @@ exports.retryForwardPickup = async (req, res) => {
     order.pickupScheduleError = String(pickup.pickupScheduleError || '').slice(0, 500);
     order.pickupScheduledAt = order.pickupScheduled ? new Date() : null;
     await order.save();
+    void auditFromReq(req, pickup.pickupScheduled ? 'shipment.pickup_scheduled' : 'shipment.pickup_failed', {
+      entityType: 'order',
+      entityId: String(order._id),
+      meta: {
+        extra: {
+          shiprocketShipmentId: String(order.shiprocketShipmentId || ''),
+          pickupScheduleError: String(order.pickupScheduleError || ''),
+          via: 'admin_retry',
+        },
+      },
+    });
     return res.json(order);
   } catch (err) {
     if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
@@ -158,6 +223,11 @@ exports.markDelivered = async (req, res) => {
     await order.save();
 
     console.log('[order] delivered (manual)', { orderId: String(order._id) });
+    void auditFromReq(req, 'order.delivered', {
+      entityType: 'order',
+      entityId: String(order._id),
+      meta: { extra: { via: 'admin_manual' } },
+    });
 
     // Non-blocking WhatsApp
     try {
@@ -203,6 +273,11 @@ exports.refundOrder = async (req, res) => {
     }
 
     console.log('[refund] requested', { orderId: String(order._id), paymentId, amountPaise });
+    void auditFromReq(req, 'refund.initiated', {
+      entityType: 'order',
+      entityId: String(order._id),
+      meta: { extra: { amountPaise, paymentId: paymentId.slice(0, 10) + '…' } },
+    });
 
     let refund;
     try {
@@ -212,6 +287,11 @@ exports.refundOrder = async (req, res) => {
         orderId: String(order._id),
         paymentId,
         message: refundErr?.message || String(refundErr),
+      });
+      void auditFromReq(req, 'refund.failed', {
+        entityType: 'order',
+        entityId: String(order._id),
+        meta: { extra: { amountPaise, paymentId: paymentId.slice(0, 10) + '…', message: String(refundErr?.message || '').slice(0, 200) } },
       });
       const desc = refundErr?.error?.description ? String(refundErr.error.description) : '';
       return res.status(502).json({ error: desc || 'Refund failed' });
@@ -224,6 +304,11 @@ exports.refundOrder = async (req, res) => {
     order.razorpayRefundId = refundId;
     order.refundStatus = 'requested';
     await order.save();
+    void auditFromReq(req, 'refund.requested', {
+      entityType: 'order',
+      entityId: String(order._id),
+      meta: { extra: { refundId, amountPaise } },
+    });
 
     const ret = await Return.findOne({ order: order._id });
     if (ret) {

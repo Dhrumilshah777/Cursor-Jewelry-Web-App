@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Return = require('../models/Return');
 const { processRefundAfterReturnDelivered } = require('../services/returnRefund');
+const { audit } = require('../services/auditLog');
 
 function extractAwbFromText(text) {
   if (!text || typeof text !== 'string') return '';
@@ -153,6 +154,12 @@ exports.handleShiprocketWebhook = async (req, res) => {
       if (retChanged) await ret.save();
 
       if (isReturnDeliveredToWarehouseStatus(shipmentStatus)) {
+        void audit('return.delivered', {
+          entityType: 'return',
+          entityId: String(ret._id),
+          actor: { type: 'system', id: '' },
+          meta: { extra: { shipmentId, awb, shipmentStatus } },
+        });
         await Return.updateOne(
           { _id: ret._id, returnDeliveredAt: null },
           { $set: { returnDeliveredAt: new Date() } }
@@ -206,6 +213,12 @@ exports.handleShiprocketWebhook = async (req, res) => {
 
     if (isForwardOrderDeliveredToCustomer(shipmentStatus)) {
       const now = new Date();
+      void audit('order.delivered', {
+        entityType: 'order',
+        entityId: String(order._id),
+        actor: { type: 'system', id: '' },
+        meta: { extra: { shipmentId, awb, shipmentStatus } },
+      });
       await Order.updateOne(
         { _id: order._id, status: { $in: ['shipped', 'out_for_delivery', 'packed', 'processing'] } },
         { $set: { status: 'delivered', deliveredAt: now } }

@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Return = require('../models/Return');
 const { createReturnShipment, schedulePickupDetails } = require('../services/shiprocket');
+const { auditFromReq } = require('../services/auditLog');
 
 function daysSince(date) {
   const ms = Date.now() - new Date(date).getTime();
@@ -63,6 +64,11 @@ exports.create = async (req, res) => {
       status: 'requested',
       reason: typeof reason === 'string' ? reason.trim() : '',
     });
+    void auditFromReq(req, 'return.requested', {
+      entityType: 'return',
+      entityId: String(created._id),
+      meta: { extra: { orderId: String(order._id) } },
+    });
 
     return res.status(201).json(created);
   } catch (err) {
@@ -82,7 +88,13 @@ exports.adminUpdateStatus = async (req, res) => {
     const ret = await Return.findById(req.params.id);
     if (!ret) return res.status(404).json({ error: 'Return not found' });
 
+    const before = String(ret.status || '');
     ret.status = status;
+    void auditFromReq(req, `return.${status}`, {
+      entityType: 'return',
+      entityId: String(ret._id),
+      meta: { before, after: status, extra: { orderId: String(ret.order) } },
+    });
 
     if (status === 'approved' && !String(ret.shiprocketReturnShipmentId || '').trim()) {
       const order = await Order.findById(ret.order).populate('user', 'email name');
@@ -100,10 +112,27 @@ exports.adminUpdateStatus = async (req, res) => {
         ret.returnPickupScheduled = Boolean(shipment.returnPickupScheduled);
         ret.returnPickupScheduleError = String(shipment.returnPickupScheduleError || '').slice(0, 500);
         ret.returnPickupScheduledAt = ret.returnPickupScheduled ? new Date() : null;
+        void auditFromReq(req, 'return.pickup_created', {
+          entityType: 'return',
+          entityId: String(ret._id),
+          meta: {
+            extra: {
+              shiprocketReturnShipmentId: String(ret.shiprocketReturnShipmentId || ''),
+              returnAwb: String(ret.returnAwb || ''),
+              returnCourier: String(ret.returnCourier || ''),
+              returnPickupScheduled: Boolean(ret.returnPickupScheduled),
+            },
+          },
+        });
       } catch (err) {
         const msg = err?.message || String(err);
         ret.shiprocketReturnError = msg.slice(0, 500);
         console.error('[return] shiprocket return shipment failed', { returnId: String(ret._id), message: msg });
+        void auditFromReq(req, 'return.pickup_failed', {
+          entityType: 'return',
+          entityId: String(ret._id),
+          meta: { extra: { message: String(msg).slice(0, 200) } },
+        });
         console.warn('[return.alert] shiprocket_return_error', {
           returnId: String(ret._id),
           orderId: String(ret.order),

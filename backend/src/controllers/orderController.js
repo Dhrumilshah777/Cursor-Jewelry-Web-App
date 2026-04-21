@@ -1,7 +1,7 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
-const { getProductPrice } = require('../services/priceCalculator');
+const { getProductPrice, toInrFromPaise } = require('../services/priceCalculator');
 const { razorpayInstance, razorpayKeyId, razorpayKeySecret } = require('../services/razorpay');
 
 /** Create order (pending_payment). Requires idempotencyKey + shippingAddress. Items and total come from DB cart; duplicate key returns existing order. */
@@ -32,29 +32,70 @@ exports.create = async (req, res) => {
     if (!cart) cart = { items: [] };
     const raw = cart.items || [];
     const validated = [];
-    let subtotal = 0;
+    let subtotalPaise = 0;
+    let gstAmountPaise = 0;
+    let itemsTotalPaise = 0;
     for (const it of raw) {
       const product = await Product.findById(it.productId);
       if (!product || product.active !== true) continue;
       const qty = Math.min(it.quantity, product.stock);
       if (qty < 1) continue;
-      const { price } = await getProductPrice(product);
+      const { price, pricePaise, breakup } = await getProductPrice(product);
+      const unitSubtotalPaise = breakup?.subtotalPaise ?? pricePaise;
+      const unitGstPaise = breakup?.gstPaise ?? 0;
+      const unitTotalPaise = breakup?.totalPricePaise ?? pricePaise;
+      const pricingSource =
+        (breakup?.fixedPricePaise ?? 0) > 0 ? 'fixed'
+          : (breakup?.pricePerGramPaise ?? 0) > 0 ? 'gold_dynamic'
+            : 'unknown';
       validated.push({
         productId: String(product._id),
         name: product.name,
         price: String(price),
+        unitPricePaise: pricePaise,
         image: product.image || '',
         quantity: qty,
+        pricing: {
+          pricingSource,
+          pricingVersion: 1,
+          fixedPricePaise: breakup?.fixedPricePaise ?? 0,
+          goldRatePerGramPaise: breakup?.pricePerGramPaise ?? 0,
+          netWeightGrams: breakup?.netWeight ?? 0,
+          goldValuePaise: breakup?.goldValuePaise ?? 0,
+          makingChargeType: breakup?.makingChargeType ?? '',
+          makingChargeValue: breakup?.makingChargeValue ?? 0,
+          makingChargePaise: breakup?.makingChargePaise ?? 0,
+          subtotalPaise: unitSubtotalPaise,
+          gstPercent: breakup?.gstPercent ?? 0,
+          gstPaise: unitGstPaise,
+          totalPaise: unitTotalPaise,
+          goldPurity: breakup?.goldPurity ?? '',
+        },
       });
-      subtotal += price * qty;
+      subtotalPaise += unitSubtotalPaise * qty;
+      gstAmountPaise += unitGstPaise * qty;
+      itemsTotalPaise += unitTotalPaise * qty;
     }
-    const total = Math.round(subtotal * 100) / 100;
-    if (validated.length === 0 || total <= 0) {
+    const totalAmountPaise = subtotalPaise + gstAmountPaise;
+    const discountPaise = 0;
+    const shippingPaise = 0;
+    const finalAmountPaise = totalAmountPaise + shippingPaise - discountPaise;
+    const total = toInrFromPaise(totalAmountPaise);
+    const subtotalInr = toInrFromPaise(subtotalPaise);
+    if (validated.length === 0) {
       return res.status(400).json({ error: 'Cart is empty or invalid' });
+    }
+    if (!Number.isFinite(finalAmountPaise) || finalAmountPaise < 0) {
+      return res.status(400).json({ error: 'Invalid final amount' });
+    }
+    // Ensure totals match line items snapshot.
+    if (itemsTotalPaise !== totalAmountPaise) {
+      return res.status(400).json({ error: 'Price mismatch. Please refresh cart and try again.' });
     }
 
     const order = await Order.create({
       user: req.userId,
+      currency: 'INR',
       idempotencyKey: key,
       items: validated,
       shippingAddress: {
@@ -66,7 +107,13 @@ exports.create = async (req, res) => {
         state: shippingAddress.state,
         pincode: shippingAddress.pincode,
       },
-      subtotal: total,
+      subtotalPaise,
+      gstAmountPaise,
+      discountPaise,
+      shippingPaise,
+      totalAmountPaise,
+      finalAmountPaise,
+      subtotal: subtotalInr,
       totalAmount: total,
       status: 'pending_payment',
     });
@@ -78,7 +125,7 @@ exports.create = async (req, res) => {
     }
     if (razorpayInstance) {
       try {
-        const amountPaise = Math.round(total * 100);
+        const amountPaise = Math.round(finalAmountPaise);
         const rzOrder = await razorpayInstance.orders.create({
           amount: amountPaise,
           currency: 'INR',

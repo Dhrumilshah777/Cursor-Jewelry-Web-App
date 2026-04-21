@@ -108,7 +108,7 @@ function ProductsLoadingSkeleton() {
             <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
               {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
                 <li key={i}>
-                  <div className="aspect-square w-full rounded-2xl bg-stone-200" />
+                  <div className="aspect-square w-full rounded-none bg-stone-200" />
                   <div className="min-h-[4.5rem] pt-3">
                     <div className="h-4 w-full rounded bg-stone-200" />
                     <div className="mt-2 h-3 w-2/3 rounded bg-stone-100" />
@@ -260,7 +260,7 @@ function ProductsContent() {
                 {filteredProducts.map((product) => (
                   <li key={product._id} className="group">
                     <Link href={`/products/${product._id}`} className="block">
-                      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-stone-100">
+                      <div className="relative aspect-square w-full overflow-hidden rounded-none bg-stone-100">
                         <img
                           src={productImageSrc(product.image)}
                           alt={product.name}

@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Return = require('../models/Return');
 const Product = require('../models/Product');
 const { razorpayInstance } = require('./razorpay');
+const { audit } = require('./auditLog');
 
 /** Full-order refund only; partial / per-line amounts can extend this later. */
 
@@ -33,9 +34,10 @@ async function processRefundAfterReturnDelivered(orderId, returnMongoId) {
   const paymentId = String(order.razorpayPaymentId || '').trim();
   if (!paymentId) return { ok: false, reason: 'missing_razorpay_payment_id' };
 
-  const paidInr =
-    typeof order.totalAmount === 'number' && order.totalAmount > 0 ? order.totalAmount : order.subtotal;
-  const amountPaise = Math.round((paidInr || 0) * 100);
+  const amountPaise =
+    typeof order.totalAmountPaise === 'number' && order.totalAmountPaise > 0
+      ? Math.round(order.totalAmountPaise)
+      : Math.round(((typeof order.totalAmount === 'number' && order.totalAmount > 0 ? order.totalAmount : order.subtotal) || 0) * 100);
   if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
     return { ok: false, reason: 'invalid_refund_amount' };
   }
@@ -52,6 +54,12 @@ async function processRefundAfterReturnDelivered(orderId, returnMongoId) {
       { _id: returnMongoId },
       { $set: { returnRefundStatus: 'failed' } }
     );
+    void audit('refund.failed', {
+      entityType: 'order',
+      entityId: String(order._id),
+      actor: { type: 'system', id: '' },
+      meta: { extra: { amountPaise, message: String(refundErr?.message || '').slice(0, 200) } },
+    });
     return { ok: false, reason: 'razorpay_refund_failed', error: refundErr?.message || String(refundErr) };
   }
 
@@ -89,8 +97,14 @@ async function processRefundAfterReturnDelivered(orderId, returnMongoId) {
 
   await Return.findOneAndUpdate(
     { _id: returnMongoId },
-    { $set: { status: 'refunded', returnRefundStatus: 'initiated' } }
+    { $set: { status: 'refunded', returnRefundStatus: 'initiated', refundAmountPaise: amountPaise } }
   );
+  void audit('refund.requested', {
+    entityType: 'order',
+    entityId: String(order._id),
+    actor: { type: 'system', id: '' },
+    meta: { extra: { amountPaise, refundId } },
+  });
 
   return { ok: true, refundId };
 }

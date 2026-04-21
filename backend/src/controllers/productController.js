@@ -142,6 +142,12 @@ function hasValidFixedPrice(body) {
   return Number.isFinite(n) && n > 0;
 }
 
+function fixedPricePaiseFromBody(body) {
+  const n = parseFloat(body.price);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100);
+}
+
 exports.create = async (req, res) => {
   try {
     const body = { ...req.body };
@@ -176,6 +182,9 @@ exports.create = async (req, res) => {
       return res.status(400).json({ error: skuErr.message });
     }
     body.sku = sku;
+    if (hasFixed) {
+      body.fixedPricePaise = fixedPricePaiseFromBody(body);
+    }
 
     try {
       const product = await Product.create(body);
@@ -279,6 +288,9 @@ exports.bulkCreate = async (req, res) => {
         continue;
       }
     }
+    if (hasFixed) {
+      body.fixedPricePaise = fixedPricePaiseFromBody(body);
+    }
 
     try {
       const p = await Product.create(body);
@@ -335,6 +347,11 @@ exports.update = async (req, res) => {
       return res.status(400).json({
         error: 'Either fixed price or gold-based pricing is required. Set price (₹) OR set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
+    }
+    if (hasFixed) {
+      body.fixedPricePaise = fixedPricePaiseFromBody(merged);
+    } else if (hasGold) {
+      body.fixedPricePaise = 0;
     }
     const product = await Product.findByIdAndUpdate(req.params.id, body, { new: true });
     res.json(product);

@@ -1,6 +1,7 @@
 const GoldRate = require('../models/GoldRate');
 
 const PURITIES = ['14K', '18K', '22K', '24K'];
+const toPaise = (n) => Math.round((parseFloat(n) || 0) * 100);
 
 exports.list = async (req, res) => {
   try {
@@ -30,7 +31,7 @@ exports.update = async (req, res) => {
     }
     const rate = await GoldRate.findOneAndUpdate(
       { purity: p },
-      { purity: p, pricePerGram: value },
+      { purity: p, pricePerGram: value, pricePerGramPaise: toPaise(value) },
       { new: true, upsert: true }
     );
     res.json(rate);
@@ -50,7 +51,7 @@ exports.updateBulk = async (req, res) => {
       if (!Number.isFinite(value) || value < 0) continue;
       const doc = await GoldRate.findOneAndUpdate(
         { purity: p },
-        { purity: p, pricePerGram: value },
+        { purity: p, pricePerGram: value, pricePerGramPaise: toPaise(value) },
         { new: true, upsert: true }
       );
       results.push(doc);

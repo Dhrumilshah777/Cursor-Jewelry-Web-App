@@ -7,6 +7,7 @@ const Product = require('../models/Product');
 const { razorpayInstance } = require('../services/razorpay');
 const { sendOrderSMS, sendOrderWhatsApp } = require('../services/twilioSms');
 const { sendWhatsAppMessage } = require('../services/whatsappService');
+const { audit } = require('../services/auditLog');
 
 const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -66,9 +67,21 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
             refundId = String(refund?.id || '');
             refundStatus = 'requested';
             console.log(`Refund requested for stock_failed payment ${razorpayPaymentId} (refund ${refundId}) for order ${orderId}`);
+            void audit('refund.requested', {
+              entityType: 'order',
+              entityId: String(orderId),
+              actor: { type: 'system', id: '' },
+              meta: { extra: { refundId, reason: 'stock_failed' } },
+            });
           } catch (refundErr) {
             refundStatus = 'failed';
             console.error(`Failed to automatically refund payment ${razorpayPaymentId}:`, refundErr?.message || refundErr);
+            void audit('refund.failed', {
+              entityType: 'order',
+              entityId: String(orderId),
+              actor: { type: 'system', id: '' },
+              meta: { extra: { reason: 'stock_failed', message: String(refundErr?.message || '').slice(0, 200) } },
+            });
           }
         }
 
@@ -86,6 +99,12 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
     order.status = 'paid';
     order.razorpayPaymentId = razorpayPaymentId;
     await order.save({ session });
+    void audit('payment.success', {
+      entityType: 'payment',
+      entityId: String(razorpayPaymentId),
+      actor: { type: 'system', id: '' },
+      meta: { extra: { orderId: String(order._id) } },
+    });
 
     await Cart.findOneAndUpdate({ user: order.user }, { $set: { items: [] } }, { session });
 
@@ -126,6 +145,12 @@ async function handleRefundProcessedPayload(payload) {
     { _id: order._id },
     { $set: { refundStatus: 'processed' } }
   );
+  void audit('refund.processed', {
+    entityType: 'order',
+    entityId: String(order._id),
+    actor: { type: 'system', id: '' },
+    meta: { extra: { paymentId: paymentId.slice(0, 10) + '…' } },
+  });
 
   await Return.updateMany(
     {

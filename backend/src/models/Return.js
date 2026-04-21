@@ -40,11 +40,15 @@ const returnSchema = new mongoose.Schema(
     returnPickupScheduled: { type: Boolean, default: false },
     returnPickupScheduleError: { type: String, default: '' },
     returnPickupScheduledAt: { type: Date, default: null },
+    /** Refund amount in paise (snapshot). */
+    refundAmountPaise: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
 returnSchema.index({ order: 1, createdAt: -1 });
+returnSchema.index({ createdAt: -1 });
+returnSchema.index({ status: 1, createdAt: -1 });
 returnSchema.index({ shiprocketReturnShipmentId: 1 }, { sparse: true });
 returnSchema.index({ returnAwb: 1 }, { sparse: true });
 

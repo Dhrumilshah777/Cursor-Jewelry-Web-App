@@ -17,6 +17,7 @@ type Product = {
   category: string;
   price: string;
   image: string;
+  stock?: number;
 };
 
 const MOCK_PRODUCTS: Product[] = [
@@ -66,7 +67,7 @@ function ProductCard({ product }: { product: Product }) {
         <div className="rounded-sm bg-stone-100 shadow-md transition-all hover:shadow-xl">
 
           {/* 🔥 Bigger Responsive Image */}
-          <div className="w-full h-[240px] sm:h-[260px] md:h-[320px] overflow-hidden">
+          <div className="relative w-full h-[240px] sm:h-[260px] md:h-[320px] overflow-hidden">
             {!imageError ? (
               <img
                 src={
@@ -83,6 +84,11 @@ function ProductCard({ product }: { product: Product }) {
             ) : (
               <div className="flex h-full items-center justify-center bg-stone-200 text-stone-400">
                 Image not available
+              </div>
+            )}
+            {(product.stock ?? 1) <= 0 && (
+              <div className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                Out of stock
               </div>
             )}
           </div>
@@ -104,8 +110,10 @@ function ProductCard({ product }: { product: Product }) {
               type="button"
               onClick={(e) => {
                 e.preventDefault();
+                if ((product.stock ?? 1) <= 0) return;
                 addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
               }}
+              disabled={(product.stock ?? 1) <= 0}
               className="flex h-8 w-8 items-center justify-center rounded border border-stone-300 text-stone-600 transition-colors hover:border-charcoal hover:text-charcoal"
               aria-label="Add to cart"
             >
@@ -191,6 +199,7 @@ export default function LatestBeautySection() {
           category: p.category,
           price: p.price,
           image: p.image,
+          stock: typeof p.stock === 'number' ? p.stock : undefined,
         }));
 
         setProducts([...mapped, ...MOCK_PRODUCTS]);

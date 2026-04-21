@@ -46,6 +46,7 @@ type Product = {
   sku?: string;
   goldPurity?: string;
   goldType?: string;
+  stock?: number;
 };
 
 const RECENTLY_VIEWED_KEY = 'recently_viewed_products';
@@ -163,6 +164,8 @@ export default function ProductDetailPage() {
     setImageError(false);
     setSelectedImageIndex(0);
   }, [id]);
+
+  const outOfStock = (product?.stock ?? 1) <= 0;
 
   useEffect(() => {
     if (product?.ringSize) setRingSizeInput(product.ringSize);
@@ -473,6 +476,11 @@ export default function ProductDetailPage() {
             <h1 className="mt-4 font-sans text-2xl font-bold text-charcoal sm:text-3xl">
               {product.name}
             </h1>
+            {outOfStock && (
+              <div className="mt-2 inline-flex w-fit items-center rounded bg-black px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                Out of stock
+              </div>
+            )}
             <p className="mt-1 text-stone-600">
               {product.description?.split('\n')[0] || `This ${product.name} shines with elegant craftsmanship.`}
             </p>
@@ -542,21 +550,27 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() => {
+                  if (outOfStock) return;
                   if (alreadyInCart) return;
                   addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image, quantity: purchaseQty });
                   setAddedToCart(true);
                   setAlreadyInCart(true);
                   setTimeout(() => setAddedToCart(false), 2500);
                 }}
-                disabled={alreadyInCart}
+                disabled={alreadyInCart || outOfStock}
                 className={`w-full py-3 font-sans text-sm font-semibold uppercase tracking-wide transition-colors ${
-                  alreadyInCart
+                  alreadyInCart || outOfStock
                     ? 'cursor-not-allowed bg-stone-300 text-stone-600'
                     : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
                 }`}
               >
-                {alreadyInCart ? 'Already in cart' : 'Add to cart'}
+                {outOfStock ? 'Out of stock' : alreadyInCart ? 'Already in cart' : 'Add to cart'}
               </button>
+              {outOfStock && (
+                <p className="text-xs text-stone-600">
+                  This item is currently out of stock. You can still view details, but purchasing is disabled.
+                </p>
+              )}
               <Link
                 href="/products"
                 className="flex w-full items-center justify-center border border-black bg-black py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-stone-900"
@@ -835,15 +849,16 @@ export default function ProductDetailPage() {
             <button
               type="button"
               onClick={() => {
+                if (outOfStock) return;
                 if (alreadyInCart) return;
                 addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image, quantity: purchaseQty });
                 setAddedToCart(true);
                 setAlreadyInCart(true);
                 setTimeout(() => setAddedToCart(false), 2500);
               }}
-              disabled={alreadyInCart}
+              disabled={alreadyInCart || outOfStock}
               className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                alreadyInCart
+                alreadyInCart || outOfStock
                   ? 'cursor-not-allowed bg-stone-300 text-stone-600'
                   : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
               }`}
@@ -851,7 +866,7 @@ export default function ProductDetailPage() {
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
               </svg>
-              {alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
+              {outOfStock ? 'Out of stock' : alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
             </button>
           </div>
         </div>

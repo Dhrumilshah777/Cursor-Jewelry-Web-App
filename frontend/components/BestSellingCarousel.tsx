@@ -10,6 +10,7 @@ type Product = {
   category: string;
   price: string;
   image: string;
+  stock?: number;
 };
 
 function productImageSrc(image: string): string {
@@ -62,6 +63,11 @@ function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
+          {(product.stock ?? 1) <= 0 && (
+            <div className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+              Out of stock
+            </div>
+          )}
 
           <button
             type="button"

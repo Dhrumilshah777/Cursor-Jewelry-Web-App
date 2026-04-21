@@ -13,6 +13,7 @@ type Product = {
   price: string;
   image: string;
   colors?: string[];
+  stock?: number;
 };
 
 /** Mirrors backend `categoryToSlug` so filters match URL query params. */
@@ -145,7 +146,7 @@ function ProductsContent() {
         const facets = (res as ProductsResponse).facets || defaultFacets;
         setData({
           products: products.map((p) => {
-            const raw = p as { _id?: string; colors?: string[] };
+            const raw = p as { _id?: string; colors?: string[]; stock?: number };
             return {
               _id: String(raw._id ?? ''),
               name: p.name,
@@ -153,6 +154,7 @@ function ProductsContent() {
               price: p.price,
               image: p.image,
               colors: Array.isArray(raw.colors) ? raw.colors : [],
+              stock: typeof raw.stock === 'number' ? raw.stock : undefined,
             };
           }),
           facets,
@@ -266,6 +268,11 @@ function ProductsContent() {
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+                        {(product.stock ?? 1) <= 0 && (
+                          <div className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                            Out of stock
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {

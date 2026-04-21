@@ -13,7 +13,11 @@ type Order = {
   items: OrderItem[];
   shippingAddress: Address;
   subtotal: number;
+  totalAmount?: number;
   status: string;
+  refundStatus?: string;
+  razorpayPaymentId?: string;
+  razorpayRefundId?: string;
   tracking?: string;
   courier?: string;
   shiprocketShipmentId?: string;
@@ -44,6 +48,7 @@ export default function AdminOrderDetailPage() {
   const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
   const [overrideBusy, setOverrideBusy] = useState(false);
   const [pickupRetryBusy, setPickupRetryBusy] = useState(false);
+  const [refundBusy, setRefundBusy] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -112,6 +117,22 @@ export default function AdminOrderDetailPage() {
       setSaveError(ex instanceof Error ? ex.message : 'Retry pickup failed');
     }
     setPickupRetryBusy(false);
+  };
+
+  const handleRetryRefund = async () => {
+    if (!id) return;
+    if (!window.confirm('Retry refund for this order?')) return;
+    setRefundBusy(true);
+    setSaveError(null);
+    try {
+      const updated = await apiPost<Order>(`/api/admin/orders/${id}/refund`, {}, true);
+      setOrder(updated);
+      setStatus(updated.status);
+    } catch (err) {
+      const ex = err as Error;
+      setSaveError(ex instanceof Error ? ex.message : 'Refund retry failed');
+    }
+    setRefundBusy(false);
   };
 
   const pickupStallHours =
@@ -189,7 +210,24 @@ export default function AdminOrderDetailPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 font-semibold text-charcoal">Subtotal: ₹{Number(order.subtotal).toFixed(2)}</p>
+          <p className="mt-4 font-semibold text-charcoal">Subtotal (excl. GST): ₹{Number(order.subtotal).toFixed(2)}</p>
+          <p className="mt-1 font-semibold text-charcoal">
+            Total (incl. GST): ₹{Number(order.totalAmount ?? order.subtotal).toFixed(2)}
+          </p>
+          {order.refundStatus === 'failed' && (
+            <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              <p className="font-medium">Refund failed</p>
+              <p className="mt-1 text-xs text-red-700">You can retry the refund (Razorpay payment id must exist).</p>
+              <button
+                type="button"
+                onClick={() => void handleRetryRefund()}
+                disabled={refundBusy}
+                className="mt-3 rounded bg-charcoal px-4 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
+              >
+                {refundBusy ? 'Retrying…' : 'Retry refund'}
+              </button>
+            </div>
+          )}
         </div>
         <div>
           <h2 className="font-medium text-charcoal">Shipping address</h2>

@@ -130,6 +130,15 @@ async function start() {
   } catch (err) {
     console.error('Failed to ensure ₹1 product:', err?.message || err);
   }
+
+  const { expireStalePendingPayments } = require('./controllers/orderController');
+  const paymentExpireIntervalMs = 5 * 60 * 1000;
+  const runExpireStalePayments = () => {
+    expireStalePendingPayments().catch((e) => console.error('expireStalePendingPayments:', e?.message || e));
+  };
+  runExpireStalePayments();
+  setInterval(runExpireStalePayments, paymentExpireIntervalMs);
+
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

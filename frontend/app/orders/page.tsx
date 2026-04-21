@@ -144,6 +144,8 @@ export default function MyOrdersPage() {
                         ? 'bg-green-100 text-green-800'
                         : order.status === 'pending_payment'
                         ? 'bg-amber-100 text-amber-800'
+                        : order.status === 'payment_cancelled'
+                        ? 'bg-stone-200 text-stone-800'
                         : order.status === 'cancelled'
                         ? 'bg-red-100 text-red-800'
                         : 'bg-stone-100 text-stone-700'
@@ -155,6 +157,12 @@ export default function MyOrdersPage() {
                 <p className="mt-1 text-sm text-stone-500">
                   {new Date(order.createdAt).toLocaleDateString()} · ₹{Number(order.subtotal).toFixed(2)}
                 </p>
+                {order.status === 'pending_payment' && (
+                  <p className="mt-1 text-xs text-amber-800">Payment not completed — open details to pay.</p>
+                )}
+                {order.status === 'payment_cancelled' && (
+                  <p className="mt-1 text-xs text-stone-600">Checkout expired — place a new order from cart.</p>
+                )}
                 <Link
                   href={`/orders/${order._id}`}
                   className="mt-2 inline-block text-sm font-medium text-charcoal underline hover:no-underline"

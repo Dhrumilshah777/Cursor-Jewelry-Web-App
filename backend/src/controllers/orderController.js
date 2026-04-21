@@ -4,9 +4,58 @@ const Product = require('../models/Product');
 const { getProductPrice, toInrFromPaise } = require('../services/priceCalculator');
 const { razorpayInstance, razorpayKeyId, razorpayKeySecret } = require('../services/razorpay');
 
+function getPendingPaymentTtlMs() {
+  const m = parseInt(process.env.PAYMENT_PENDING_TIMEOUT_MINUTES, 10);
+  const minutes = Number.isFinite(m) && m > 0 ? Math.min(m, 24 * 60) : 30;
+  return minutes * 60 * 1000;
+}
+
+/** Marks stale pending_payment orders as payment_cancelled (indexed query). */
+async function expireStalePendingPayments() {
+  const ttl = getPendingPaymentTtlMs();
+  const cutoff = new Date(Date.now() - ttl);
+  await Order.updateMany(
+    { status: 'pending_payment', createdAt: { $lt: cutoff } },
+    { $set: { status: 'payment_cancelled', failureReason: 'payment_expired' } }
+  );
+}
+
+async function evaluateStockForOrder(order) {
+  const outOfStockItems = [];
+  for (const it of order.items || []) {
+    const qty = it.quantity || 0;
+    if (qty < 1) continue;
+    const product = await Product.findById(it.productId);
+    const available = product && product.active === true ? product.stock ?? 0 : 0;
+    if (!product || product.active !== true || available < qty) {
+      outOfStockItems.push({
+        productId: String(it.productId),
+        name: it.name || 'Item',
+        needed: qty,
+        available,
+      });
+    }
+  }
+  return { stockOk: outOfStockItems.length === 0, outOfStockItems };
+}
+
+function enrichOrder(orderDoc) {
+  const o = orderDoc.toObject ? orderDoc.toObject() : { ...orderDoc };
+  if (o.status === 'pending_payment' && o.createdAt) {
+    const created = new Date(o.createdAt);
+    o.paymentExpiresAt = new Date(created.getTime() + getPendingPaymentTtlMs()).toISOString();
+    o.canRetryPayment = true;
+  } else {
+    o.paymentExpiresAt = null;
+    o.canRetryPayment = false;
+  }
+  return o;
+}
+
 /** Create order (pending_payment). Requires idempotencyKey + shippingAddress. Items and total come from DB cart; duplicate key returns existing order. */
 exports.create = async (req, res) => {
   try {
+    await expireStalePendingPayments();
     const { shippingAddress, idempotencyKey } = req.body;
     if (!idempotencyKey || typeof idempotencyKey !== 'string' || !idempotencyKey.trim()) {
       return res.status(400).json({ error: 'idempotencyKey required' });
@@ -18,12 +67,22 @@ exports.create = async (req, res) => {
 
     const existing = await Order.findOne({ user: req.userId, idempotencyKey: key });
     if (existing) {
-      if (!existing.razorpayOrderId) {
+      const fresh = await Order.findById(existing._id);
+      if (!fresh) {
+        return res.status(500).json({ error: 'Order not found. Please try again.' });
+      }
+      if (fresh.status !== 'pending_payment') {
+        return res.status(409).json({
+          error: 'This checkout has expired or was cancelled. Please place the order again.',
+          order: enrichOrder(fresh),
+        });
+      }
+      if (!fresh.razorpayOrderId) {
         return res.status(500).json({ error: 'Payment service unavailable. Please try again.' });
       }
       return res.status(200).json({
-        order: existing.toObject ? existing.toObject() : existing,
-        razorpayOrderId: existing.razorpayOrderId || null,
+        order: enrichOrder(fresh),
+        razorpayOrderId: fresh.razorpayOrderId || null,
         razorpayKeyId: razorpayKeyId || null,
       });
     }
@@ -140,7 +199,7 @@ exports.create = async (req, res) => {
     }
 
     res.status(201).json({
-      order: order.toObject ? order.toObject() : order,
+      order: enrichOrder(order),
       razorpayOrderId,
       razorpayKeyId: razorpayKeyId || null,
     });
@@ -158,16 +217,33 @@ exports.verifyPayment = async (req, res) => {
     if (!orderId || !razorpayPaymentId || !razorpaySignature) {
       return res.status(400).json({ error: 'Missing payment details' });
     }
+    await expireStalePendingPayments();
     const order = await Order.findOne({ _id: orderId, user: req.userId });
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (order.status === 'paid') {
-      return res.json({ order: order.toObject ? order.toObject() : order, verified: true });
+      return res.json({ order: enrichOrder(order), verified: true });
+    }
+    if (order.status !== 'pending_payment') {
+      return res.status(409).json({ error: 'This checkout is no longer valid. Please start again from checkout.' });
     }
 
     const crypto = require('crypto');
     const body = order.razorpayOrderId + '|' + razorpayPaymentId;
     const expected = crypto.createHmac('sha256', razorpayKeySecret || '').update(body).digest('hex');
     if (expected !== razorpaySignature) {
+      // Payment verification failed (frontend callback)
+      await Order.updateOne(
+        { _id: order._id, status: 'pending_payment' },
+        { $set: { failureReason: 'signature_invalid' } }
+      ).catch(() => {});
+      const { auditFromReq } = require('../services/auditLog');
+      void auditFromReq(req, 'payment.failed', {
+        entityType: 'order',
+        entityId: String(order._id),
+        correlationId: String(order._id),
+        dedupeKey: `payment.failed:order:${String(order._id)}:${String(razorpayPaymentId || '')}`,
+        meta: { extra: { reason: 'signature_mismatch', razorpayPaymentId: String(razorpayPaymentId || '') } },
+      });
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
@@ -176,11 +252,16 @@ exports.verifyPayment = async (req, res) => {
       if (result.reason === 'insufficient_stock') {
         return res.status(400).json({ error: 'Item out of stock during payment completion. A refund has been automatically issued to your original payment method.' });
       }
+      if (result.reason === 'invalid_status') {
+        return res.status(409).json({
+          error: 'This checkout is no longer valid. If money was debited, a refund will be processed automatically.',
+        });
+      }
       return res.status(500).json({ error: 'Could not complete order' });
     }
 
     const updated = await Order.findById(order._id);
-    res.json({ order: updated?.toObject ? updated.toObject() : updated, verified: true });
+    res.json({ order: updated ? enrichOrder(updated) : null, verified: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -188,8 +269,9 @@ exports.verifyPayment = async (req, res) => {
 
 exports.myOrders = async (req, res) => {
   try {
+    await expireStalePendingPayments();
     const orders = await Order.find({ user: req.userId }).sort({ createdAt: -1 });
-    res.json(orders);
+    res.json(orders.map((o) => enrichOrder(o)));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -197,17 +279,113 @@ exports.myOrders = async (req, res) => {
 
 exports.getOne = async (req, res) => {
   try {
+    await expireStalePendingPayments();
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (order.user.toString() !== req.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    res.json(order);
+    res.json(enrichOrder(order));
   } catch (err) {
     if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
     res.status(500).json({ error: err.message });
   }
 };
+
+/** GET /api/orders/payment-stock?orderId= — pre-check before opening Razorpay on retry. */
+exports.checkPaymentStock = async (req, res) => {
+  try {
+    const orderId = req.query.orderId;
+    if (!orderId || typeof orderId !== 'string') {
+      return res.status(400).json({ error: 'orderId query parameter required' });
+    }
+    await expireStalePendingPayments();
+    const order = await Order.findOne({ _id: orderId.trim(), user: req.userId });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    if (order.status !== 'pending_payment') {
+      const reason =
+        order.status === 'payment_cancelled' ? 'payment_expired' : 'not_pending';
+      return res.json({
+        ok: true,
+        stockOk: false,
+        canRetry: false,
+        status: order.status,
+        reason,
+      });
+    }
+
+    const { stockOk, outOfStockItems } = await evaluateStockForOrder(order);
+    return res.json({
+      ok: true,
+      stockOk,
+      outOfStockItems: stockOk ? [] : outOfStockItems,
+      canRetry: true,
+      status: order.status,
+      paymentExpiresAt: new Date(order.createdAt.getTime() + getPendingPaymentTtlMs()).toISOString(),
+    });
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/** POST /api/orders/:id/retry-payment — same DB order, new Razorpay order id. */
+exports.retryPayment = async (req, res) => {
+  try {
+    await expireStalePendingPayments();
+    const order = await Order.findOne({ _id: req.params.id, user: req.userId });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    if (order.status !== 'pending_payment') {
+      if (order.status === 'payment_cancelled') {
+        return res.status(410).json({
+          error: 'Payment window expired. Please place a new order.',
+          code: 'payment_expired',
+        });
+      }
+      return res.status(409).json({ error: 'This order cannot be paid.' });
+    }
+
+    const { stockOk, outOfStockItems } = await evaluateStockForOrder(order);
+    if (!stockOk) {
+      return res.status(400).json({
+        error: 'One or more items are now out of stock.',
+        code: 'out_of_stock',
+        outOfStockItems,
+      });
+    }
+
+    if (!razorpayInstance) {
+      return res.status(500).json({ error: 'Payment service unavailable. Please try again.' });
+    }
+
+    const amountPaise = Math.round(order.finalAmountPaise || 0);
+    if (!Number.isFinite(amountPaise) || amountPaise < 1) {
+      return res.status(400).json({ error: 'Invalid order amount' });
+    }
+
+    const rzOrder = await razorpayInstance.orders.create({
+      amount: amountPaise,
+      currency: 'INR',
+      receipt: order._id.toString(),
+    });
+    order.razorpayOrderId = rzOrder.id;
+    await order.save();
+
+    res.json({
+      order: enrichOrder(order),
+      razorpayOrderId: rzOrder.id,
+      razorpayKeyId: razorpayKeyId || null,
+    });
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    console.error('retryPayment:', err?.message || err);
+    res.status(502).json({ error: 'Payment gateway error. Please try again.' });
+  }
+};
+
+exports.expireStalePendingPayments = expireStalePendingPayments;
 
 /** Mark a pending_payment order as payment_cancelled (user exited Razorpay). */
 exports.cancelPayment = async (req, res) => {
@@ -217,7 +395,16 @@ exports.cancelPayment = async (req, res) => {
     if (order.status === 'paid') return res.status(409).json({ error: 'Order is already paid' });
     if (order.status === 'pending_payment') {
       order.status = 'payment_cancelled';
+      order.failureReason = 'payment_expired';
       await order.save();
+      const { auditFromReq } = require('../services/auditLog');
+      void auditFromReq(req, 'payment.failed', {
+        entityType: 'order',
+        entityId: String(order._id),
+        correlationId: String(order._id),
+        dedupeKey: `payment.failed:order:${String(order._id)}:cancelled`,
+        meta: { extra: { reason: 'user_cancelled' } },
+      });
     }
     return res.json({ ok: true, status: order.status });
   } catch (err) {

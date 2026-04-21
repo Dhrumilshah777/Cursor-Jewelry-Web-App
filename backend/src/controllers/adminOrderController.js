@@ -82,6 +82,13 @@ exports.updateStatus = async (req, res) => {
                 '[order] Marked shipped but no AWB yet. Check server logs for [shiprocket] awb.assign.failed. ' +
                   `orderId=${order._id} shiprocketShipmentId=${order.shiprocketShipmentId}`
               );
+              void auditFromReq(req, 'shipment.awb_failed', {
+                entityType: 'order',
+                entityId: String(order._id),
+                correlationId: String(order._id),
+                dedupeKey: `shipment.awb_failed:order:${String(order._id)}:${String(order.shiprocketShipmentId || '')}`,
+                meta: { extra: { shiprocketShipmentId: String(order.shiprocketShipmentId || '') } },
+              });
             }
           } catch (shipErr) {
             const msg = (shipErr && shipErr.message) ? String(shipErr.message) : 'Shiprocket shipment failed';
@@ -119,6 +126,13 @@ exports.updateStatus = async (req, res) => {
                 '[order] Retry AWB still empty after assign. Check [shiprocket] logs. ' +
                   `orderId=${order._id} shiprocketShipmentId=${order.shiprocketShipmentId}`
               );
+              void auditFromReq(req, 'shipment.awb_failed', {
+                entityType: 'order',
+                entityId: String(order._id),
+                correlationId: String(order._id),
+                dedupeKey: `shipment.awb_failed:order:${String(order._id)}:${String(order.shiprocketShipmentId || '')}:retry`,
+                meta: { extra: { shiprocketShipmentId: String(order.shiprocketShipmentId || ''), via: 'retry' } },
+              });
             }
           } catch (shipErr) {
             const msg = (shipErr && shipErr.message) ? String(shipErr.message) : 'Shiprocket AWB retry failed';

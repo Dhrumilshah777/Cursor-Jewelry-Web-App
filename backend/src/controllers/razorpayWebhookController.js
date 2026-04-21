@@ -49,6 +49,78 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
       return { ok: true, alreadyPaid: true };
     }
 
+    if (order.status !== 'pending_payment') {
+      await session.abortTransaction();
+      // Late capture safety:
+      // - Never move non-pending orders to 'paid'
+      // - Auto-refund ONLY for expired checkouts (payment_cancelled)
+      // - Ensure refund is idempotent for duplicate webhook deliveries
+      const incomingPaymentId = String(razorpayPaymentId || '').trim();
+      const alreadyRecordedPaymentId = String(order.razorpayPaymentId || '').trim();
+      const refundAlreadyRequested =
+        (String(order.refundStatus || '') === 'requested' || String(order.refundStatus || '') === 'processed') &&
+        Boolean(String(order.razorpayRefundId || '').trim());
+
+      if (order.status !== 'payment_cancelled') {
+        return { ok: false, reason: 'invalid_status' };
+      }
+
+      // If we already attempted/refunded this exact payment, don't do it again.
+      if (incomingPaymentId && alreadyRecordedPaymentId === incomingPaymentId && refundAlreadyRequested) {
+        return { ok: false, reason: 'invalid_status' };
+      }
+
+      // If a different payment id is already recorded, avoid refunding twice for different payments.
+      if (incomingPaymentId && alreadyRecordedPaymentId && alreadyRecordedPaymentId !== incomingPaymentId) {
+        console.error('[rz] late capture has different paymentId than recorded — skipping auto-refund', {
+          orderId: String(orderId),
+          status: String(order.status),
+          recorded: alreadyRecordedPaymentId,
+          incoming: incomingPaymentId,
+        });
+        return { ok: false, reason: 'invalid_status' };
+      }
+
+      let refundId = '';
+      let refundStatus = '';
+      if (razorpayInstance && incomingPaymentId) {
+        try {
+          const refund = await razorpayInstance.payments.refund(incomingPaymentId);
+          refundId = String(refund?.id || '');
+          refundStatus = 'requested';
+          console.log(`Refund for late capture ${incomingPaymentId} (order ${orderId} status=${order.status}) refund ${refundId}`);
+          void audit('refund.requested', {
+            entityType: 'order',
+            entityId: String(orderId),
+            correlationId: String(orderId),
+            dedupeKey: `refund.requested:order:${String(orderId)}:${refundId || incomingPaymentId}`,
+            actor: { type: 'system', id: '' },
+            meta: { extra: { refundId, reason: 'late_capture_after_expiry' } },
+          });
+        } catch (refundErr) {
+          refundStatus = 'failed';
+          console.error(`Refund failed for late capture ${incomingPaymentId}:`, refundErr?.message || refundErr);
+          void audit('refund.failed', {
+            entityType: 'order',
+            entityId: String(orderId),
+            actor: { type: 'system', id: '' },
+            meta: { extra: { reason: 'late_capture_after_expiry', message: String(refundErr?.message || '').slice(0, 200) } },
+          });
+        }
+      }
+
+      await Order.findByIdAndUpdate(orderId, {
+        $set: {
+          latePaymentCapturedAt: new Date(),
+          failureReason: 'payment_expired',
+          razorpayPaymentId: incomingPaymentId || order.razorpayPaymentId,
+          razorpayRefundId: refundId || order.razorpayRefundId,
+          refundStatus: refundStatus || order.refundStatus,
+        },
+      }).catch(() => {});
+      return { ok: false, reason: 'invalid_status' };
+    }
+
     for (const it of order.items || []) {
       const qty = it.quantity || 0;
       if (qty < 1) continue;
@@ -89,6 +161,7 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
 
         await Order.findByIdAndUpdate(orderId, {
           status: 'stock_failed',
+          failureReason: 'stock_unavailable',
           razorpayPaymentId,
           razorpayRefundId: refundId,
           refundStatus,
@@ -153,6 +226,14 @@ async function handleRefundProcessedPayload(payload) {
     entityId: String(order._id),
     actor: { type: 'system', id: '' },
     correlationId: String(order._id),
+    meta: { extra: { paymentId: paymentId.slice(0, 10) + '…' } },
+  });
+  void audit('return.refund_completed', {
+    entityType: 'return',
+    entityId: String(order._id),
+    actor: { type: 'system', id: '' },
+    correlationId: String(order._id),
+    dedupeKey: `return.refund_completed:order:${String(order._id)}:${paymentId}`,
     meta: { extra: { paymentId: paymentId.slice(0, 10) + '…' } },
   });
 
@@ -255,6 +336,13 @@ async function handleRazorpayWebhook(req, res) {
     console.log('[rz.webhook] completePaidOrder result', result);
     if (!result.ok && result.reason === 'insufficient_stock') {
       console.error('Razorpay webhook: order', order._id, 'payment captured but stock update failed');
+    }
+    if (!result.ok && result.reason === 'invalid_status') {
+      console.error(
+        'Razorpay webhook: order',
+        order._id,
+        'payment captured but order was not pending_payment (auto-refund attempted)'
+      );
     }
     // Send SMS only on first-time payment completion (avoid duplicates on webhook retries).
     if (result.ok && !result.alreadyPaid) {

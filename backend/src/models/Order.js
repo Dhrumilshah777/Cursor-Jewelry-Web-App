@@ -71,6 +71,17 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending_payment', 'payment_cancelled', 'paid', 'stock_failed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'refunded', 'cancelled'],
       default: 'pending_payment',
     },
+    /** Why payment failed / order could not be completed (debug + UI). */
+    failureReason: {
+      type: String,
+      enum: ['', 'stock_unavailable', 'payment_expired', 'signature_invalid'],
+      default: '',
+    },
+    /**
+     * Set when a Razorpay payment capture arrives AFTER the order left pending_payment
+     * (typically due to auto-expiry). Helps explain why an auto-refund happened.
+     */
+    latePaymentCapturedAt: { type: Date, default: null },
     deliveredAt: { type: Date, default: null },
     idempotencyKey: { type: String, default: '' },
     razorpayOrderId: { type: String, default: '' },

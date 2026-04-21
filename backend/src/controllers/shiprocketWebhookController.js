@@ -3,6 +3,31 @@ const Return = require('../models/Return');
 const { processRefundAfterReturnDelivered } = require('../services/returnRefund');
 const { audit } = require('../services/auditLog');
 
+function normalizeStatus(s) {
+  return String(s || '').trim().toLowerCase();
+}
+
+function dedupeForShipment(entityType, entityId, shipmentId, status) {
+  const sid = String(shipmentId || '').trim();
+  const st = String(status || '').trim().toLowerCase();
+  return `shiprocket:${entityType}:${entityId}:${sid}:${st}`;
+}
+
+/**
+ * Map Shiprocket carrier strings to coarse shipment events.
+ * Keep mapping conservative to avoid noisy logs.
+ */
+function shipmentEventFromStatus(statusRaw) {
+  const s = normalizeStatus(statusRaw);
+  if (!s) return null;
+  if (s.includes('rto') && s.includes('delivered')) return 'shipment.rto_delivered';
+  if (s.includes('rto')) return 'shipment.rto_initiated';
+  if (s.includes('undelivered') || s.includes('delivery failed') || s.includes('not delivered')) return 'shipment.delivery_failed';
+  if (s.includes('out for delivery') || s === 'ofd') return 'shipment.out_for_delivery';
+  if (s.includes('in transit') || s.includes('intransit') || s.includes('shipped') || s.includes('picked')) return 'shipment.in_transit';
+  return null;
+}
+
 function extractAwbFromText(text) {
   if (!text || typeof text !== 'string') return '';
   const m = text.match(/awb\s*-\s*([A-Za-z0-9]+)/i);
@@ -158,6 +183,7 @@ exports.handleShiprocketWebhook = async (req, res) => {
           entityType: 'return',
           entityId: String(ret._id),
           correlationId: String(ret.order),
+          dedupeKey: dedupeForShipment('return', String(ret._id), shipmentId || awb, `return_delivered:${shipmentStatus}`),
           actor: { type: 'system', id: '' },
           meta: { extra: { shipmentId, awb, shipmentStatus } },
         });
@@ -201,6 +227,18 @@ exports.handleShiprocketWebhook = async (req, res) => {
       return res.status(200).json({ ok: true, notFound: true });
     }
 
+    const shipEvent = shipmentEventFromStatus(shipmentStatus);
+    if (shipEvent) {
+      void audit(shipEvent, {
+        entityType: 'shipment',
+        entityId: String(shipmentId || awb || order.shiprocketShipmentId || order.tracking || ''),
+        correlationId: String(order._id),
+        dedupeKey: dedupeForShipment('order', String(order._id), shipmentId || awb, shipmentStatus),
+        actor: { type: 'system', id: '' },
+        meta: { extra: { shipmentId, awb, shipmentStatus, courierName } },
+      });
+    }
+
     let changed = false;
     if (awb && !String(order.tracking || '').trim()) {
       order.tracking = awb;
@@ -218,6 +256,7 @@ exports.handleShiprocketWebhook = async (req, res) => {
         entityType: 'order',
         entityId: String(order._id),
         correlationId: String(order._id),
+        dedupeKey: dedupeForShipment('order', String(order._id), shipmentId || awb, 'order_delivered'),
         actor: { type: 'system', id: '' },
         meta: { extra: { shipmentId, awb, shipmentStatus } },
       });

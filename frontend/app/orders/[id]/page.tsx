@@ -5,6 +5,18 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { apiGet, apiPost, assetUrl, getApiBase, refreshUserSession } from '@/lib/api';
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: {
+      key: string;
+      order_id: string;
+      prefill?: { name?: string; email?: string; contact?: string };
+      modal?: { ondismiss?: () => void };
+      handler: (res: { razorpay_payment_id: string; razorpay_signature: string }) => void;
+    }) => { open: () => void };
+  }
+}
+
 type OrderItem = { productId: string; name: string; price: string; image?: string; quantity: number };
 type Address = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
 type Order = {
@@ -18,6 +30,18 @@ type Order = {
   courier?: string;
   shiprocketShipmentId?: string;
   createdAt: string;
+  canRetryPayment?: boolean;
+  paymentExpiresAt?: string | null;
+};
+
+type PaymentStockResponse = {
+  ok: boolean;
+  stockOk?: boolean;
+  canRetry?: boolean;
+  status?: string;
+  reason?: string;
+  outOfStockItems?: Array<{ productId: string; name: string; needed: number; available: number }>;
+  paymentExpiresAt?: string;
 };
 
 type ReturnReq = {
@@ -77,6 +101,9 @@ export default function OrderDetailPage() {
   const [returnReason, setReturnReason] = useState('');
   const [returnBusy, setReturnBusy] = useState(false);
   const [returnMsg, setReturnMsg] = useState<string>('');
+  const [paymentBanner, setPaymentBanner] = useState('');
+  const [retryBusy, setRetryBusy] = useState(false);
+  const [showStockLink, setShowStockLink] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -173,6 +200,115 @@ export default function OrderDetailPage() {
   const withinReturnWindow = isDelivered && deliveredAtDate && daysSinceDelivery <= 7;
   const canRequestReturn = Boolean(withinReturnWindow && (!ret || ret.status === 'rejected'));
 
+  const loadRazorpay = (): Promise<void> => {
+    if (typeof window !== 'undefined' && window.Razorpay) return Promise.resolve();
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.body.appendChild(script);
+    });
+  };
+
+  async function handleRetryPayment() {
+    if (!order) return;
+    setPaymentBanner('');
+    setShowStockLink(false);
+    setRetryBusy(true);
+    try {
+      const pre = await apiGet<PaymentStockResponse>(
+        `/api/orders/payment-stock?orderId=${encodeURIComponent(order._id)}`,
+        { user: true }
+      );
+      if (!pre.ok) {
+        setPaymentBanner('Could not verify stock. Please try again.');
+        return;
+      }
+      if (!pre.canRetry) {
+        const refreshed = await apiGet<Order>(`/api/orders/${order._id}`, { user: true });
+        setOrder(refreshed);
+        if (pre.reason === 'payment_expired') {
+          setPaymentBanner('This checkout has expired. Please place a new order from your cart.');
+        } else {
+          setPaymentBanner('This order can no longer be paid online.');
+        }
+        return;
+      }
+      if (!pre.stockOk) {
+        setShowStockLink(true);
+        const names = (pre.outOfStockItems || []).map((x) => x.name).filter(Boolean);
+        setPaymentBanner(
+          names.length
+            ? `These items are now out of stock: ${names.join(', ')}.`
+            : 'This item is now out of stock.'
+        );
+        return;
+      }
+
+      const res = await apiPost<{
+        razorpayOrderId?: string;
+        razorpayKeyId?: string;
+        order?: Order;
+      }>(`/api/orders/${order._id}/retry-payment`, {}, { user: true });
+
+      const rzOrderId = res.razorpayOrderId;
+      const rzKeyId = res.razorpayKeyId;
+      if (res.order) setOrder(res.order);
+
+      if (!rzOrderId || !rzKeyId) {
+        setPaymentBanner('Payment could not be started. Please try again.');
+        return;
+      }
+
+      await loadRazorpay();
+      const Razorpay = typeof window !== 'undefined' ? window.Razorpay : null;
+      if (!Razorpay) {
+        setPaymentBanner('Payment gateway could not be loaded.');
+        return;
+      }
+
+      const phone = String(order.shippingAddress?.phone || '').replace(/\D/g, '').slice(-10);
+      const rz = new Razorpay({
+        key: rzKeyId,
+        order_id: rzOrderId,
+        prefill: {
+          name: order.shippingAddress?.name?.trim() || undefined,
+          contact: phone || undefined,
+        },
+        modal: {
+          ondismiss: () => {
+            /* keep pending_payment for retry until server expiry */
+          },
+        },
+        handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            await apiPost(
+              '/api/orders/verify-payment',
+              {
+                orderId: order._id,
+                razorpayOrderId: rzOrderId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              },
+              { user: true }
+            );
+            if (typeof window !== 'undefined') window.dispatchEvent(new Event('cart-updated'));
+            router.replace(`/orders/success?orderId=${order._id}`);
+          } catch {
+            router.replace(`/orders/success?orderId=${order._id}&verifying=1`);
+          }
+        },
+      });
+      rz.open();
+    } catch (e) {
+      const msg = (e as Error)?.message || 'Could not start payment.';
+      setPaymentBanner(msg);
+    } finally {
+      setRetryBusy(false);
+    }
+  }
+
   async function submitReturn() {
     // Defensive: should never happen because the UI only renders the button when order is loaded.
     if (!order) return;
@@ -221,6 +357,60 @@ export default function OrderDetailPage() {
             <p className="mt-1 text-sm text-amber-700">Complete payment to confirm your order.</p>
           )}
         </div>
+
+        {order.status === 'pending_payment' && order.canRetryPayment && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50/90 p-4">
+            <p className="font-medium text-charcoal">Payment not completed</p>
+            {order.paymentExpiresAt && (
+              <p className="mt-1 text-xs text-stone-600">
+                Pay before{' '}
+                {new Date(order.paymentExpiresAt).toLocaleString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}{' '}
+                or this checkout will expire.
+              </p>
+            )}
+            {paymentBanner && (
+              <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{paymentBanner}</p>
+            )}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void handleRetryPayment()}
+                disabled={retryBusy}
+                className="rounded bg-charcoal px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
+              >
+                {retryBusy ? 'Please wait…' : 'Retry payment'}
+              </button>
+              {showStockLink && (
+                <Link
+                  href="/products"
+                  className="text-sm font-medium text-charcoal underline hover:no-underline"
+                >
+                  Back to products
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {order.status === 'payment_cancelled' && (
+          <div className="mb-6 rounded-lg border border-stone-300 bg-stone-50 p-4">
+            <p className="font-medium text-charcoal">Payment expired</p>
+            <p className="mt-1 text-sm text-stone-600">
+              This checkout is no longer valid. Add items to your cart and place a new order.
+            </p>
+            <Link
+              href="/checkout"
+              className="mt-3 inline-block rounded bg-charcoal px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800"
+            >
+              Place order again
+            </Link>
+          </div>
+        )}
 
         {/* Returns */}
         <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4">

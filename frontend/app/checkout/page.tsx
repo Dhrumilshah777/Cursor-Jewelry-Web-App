@@ -167,11 +167,8 @@ export default function CheckoutPage() {
             contact: contact || undefined,
           },
           modal: {
-            ondismiss: async () => {
-              if (!orderId) return;
-              try {
-                await apiPost(`/api/orders/${orderId}/cancel-payment`, undefined, { user: true });
-              } catch (_) {}
+            ondismiss: () => {
+              // Keep order as pending_payment so the customer can retry from My orders until the payment window expires.
             },
           },
           handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {
@@ -189,7 +186,8 @@ export default function CheckoutPage() {
               if (typeof window !== 'undefined') window.dispatchEvent(new Event('cart-updated'));
               router.replace(`/orders/success?orderId=${orderId}`);
             } catch (err) {
-              setError(err instanceof Error ? err.message : 'Payment verification failed.');
+              // Webhook can be delayed; fall back to polling order status on the success page.
+              router.replace(`/orders/success?orderId=${orderId}&verifying=1`);
             } finally {
               setPlacing(false);
             }

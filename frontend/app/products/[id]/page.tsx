@@ -100,7 +100,6 @@ export default function ProductDetailPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
-  const [quantity, setQuantity] = useState(1);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
   const [accordion, setAccordion] = useState({ ringDetails: true, delivery: false, care: false });
@@ -360,7 +359,10 @@ export default function ProductDetailPage() {
 
   const displayPrice = typeof product.calculatedPrice === 'number' ? product.calculatedPrice : parseFloat(product.price) || 0;
   const compareAtPrice = (product as { compareAtPrice?: number }).compareAtPrice;
-  const colorsList = product.colors && product.colors.length > 0 ? product.colors : ['Yellow Gold', 'Rose Gold', 'Silver'];
+  const colorsList =
+    product.colors && product.colors.length > 0
+      ? product.colors
+      : (product.goldType && String(product.goldType).trim() ? [String(product.goldType).trim()] : []);
   const isRing = /ring/i.test(product.category || '') || /ring/i.test(product.name || '');
   const toggleAccordion = (key: 'ringDetails' | 'delivery' | 'care') => {
     setAccordion((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -481,26 +483,39 @@ export default function ProductDetailPage() {
             </div>
             <p className="mt-1 text-xs text-stone-500">(MRP inclusive of all taxes)</p>
 
-            <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Color: {colorsList[selectedColorIndex] ?? colorsList[0]}</p>
-              <div className="mt-2 flex gap-2">
-                {colorsList.map((c, i) => {
-                  const isSelected = selectedColorIndex === i;
-                  const colorMap: Record<string, string> = { 'yellow gold': '#D4AF37', 'rose gold': '#B76E79', 'silver': '#C0C0C0', 'gold': '#D4AF37', 'platinum': '#E5E4E2' };
-                  const bg = colorMap[c.toLowerCase()] || '#D4AF37';
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setSelectedColorIndex(i)}
-                      className={`h-10 w-10 flex-shrink-0 rounded border-2 transition-all ${isSelected ? 'border-charcoal ring-2 ring-charcoal/20' : 'border-stone-200 hover:border-stone-400'}`}
-                      style={{ backgroundColor: bg }}
-                      aria-label={`Color ${c}`}
-                    />
-                  );
-                })}
+            {colorsList.length > 0 && (
+              <div className="mt-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
+                  Color: {colorsList[selectedColorIndex] ?? colorsList[0]}
+                </p>
+                {colorsList.length > 1 && (
+                  <div className="mt-2 flex gap-2">
+                    {colorsList.map((c, i) => {
+                      const isSelected = selectedColorIndex === i;
+                      const colorMap: Record<string, string> = {
+                        'yellow gold': '#D4AF37',
+                        'rose gold': '#B76E79',
+                        'silver': '#C0C0C0',
+                        'gold': '#D4AF37',
+                        'platinum': '#E5E4E2',
+                        'white gold': '#E5E7EB',
+                      };
+                      const bg = colorMap[c.toLowerCase()] || '#D4AF37';
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setSelectedColorIndex(i)}
+                          className={`h-10 w-10 flex-shrink-0 rounded border-2 transition-all ${isSelected ? 'border-charcoal ring-2 ring-charcoal/20' : 'border-stone-200 hover:border-stone-400'}`}
+                          style={{ backgroundColor: bg }}
+                          aria-label={`Color ${c}`}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {isRing && (
               <div className="mt-6">
@@ -518,23 +533,12 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Select Quantity</p>
-              <div className="mt-2 flex items-center gap-2">
-                <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center border border-stone-300 bg-white text-charcoal hover:bg-stone-50">−</button>
-                <span className="min-w-[2rem] text-center font-medium">{quantity}</span>
-                <button type="button" onClick={() => setQuantity((q) => q + 1)} className="flex h-10 w-10 items-center justify-center border border-stone-300 bg-white text-charcoal hover:bg-stone-50">+</button>
-              </div>
-            </div>
-
             <div className="mt-6 flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => {
                   if (alreadyInCart) return;
-                  for (let i = 0; i < quantity; i++) {
-                    addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
-                  }
+                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
                   setAddedToCart(true);
                   setAlreadyInCart(true);
                   setTimeout(() => setAddedToCart(false), 2500);
@@ -824,9 +828,7 @@ export default function ProductDetailPage() {
               type="button"
               onClick={() => {
                 if (alreadyInCart) return;
-                for (let i = 0; i < quantity; i++) {
-                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
-                }
+                addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
                 setAddedToCart(true);
                 setAlreadyInCart(true);
                 setTimeout(() => setAddedToCart(false), 2500);

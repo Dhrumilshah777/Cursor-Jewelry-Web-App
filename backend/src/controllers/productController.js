@@ -146,6 +146,7 @@ exports.create = async (req, res) => {
         error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
     }
+    body.purchaseQuantity = Math.max(1, parseInt(body.purchaseQuantity, 10) || 1);
 
     const categoryCode = getCategoryCode(body.category);
     if (!categoryCode) {
@@ -244,6 +245,7 @@ exports.bulkCreate = async (req, res) => {
       });
       continue;
     }
+    body.purchaseQuantity = Math.max(1, parseInt(body.purchaseQuantity, 10) || 1);
 
     if (!body.name) {
       failures.push({ index: i, sku, error: 'Missing required field: name' });
@@ -324,6 +326,9 @@ exports.update = async (req, res) => {
       return res.status(400).json({
         error: 'Gold-based pricing is required. Set gold purity (14K, 18K, 22K, or 24K) and net weight (grams).',
       });
+    }
+    if ('purchaseQuantity' in body) {
+      body.purchaseQuantity = Math.max(1, parseInt(body.purchaseQuantity, 10) || 1);
     }
     body.fixedPricePaise = 0;
     if ('price' in body) body.price = '';

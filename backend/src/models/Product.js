@@ -21,6 +21,8 @@ const productSchema = new mongoose.Schema(
     order: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
     stock: { type: Number, default: 1 },
+    /** Quantity to add per "Add to cart" (customer cannot change). */
+    purchaseQuantity: { type: Number, default: 1 },
     // Gold-based pricing (when set, final price is calculated from GoldRate)
     goldPurity: { type: String, default: '' }, // '14K', '18K', '22K', '24K'
     netWeight: { type: Number, default: null }, // grams

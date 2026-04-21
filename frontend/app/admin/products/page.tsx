@@ -27,6 +27,7 @@ type Product = {
   order?: number;
   active?: boolean;
   stock?: number;
+  purchaseQuantity?: number;
   goldPurity?: string;
   netWeight?: number | null;
   makingChargeType?: 'percentage' | 'fixed';
@@ -52,6 +53,7 @@ export default function AdminProductsPage() {
     colors: [],
     active: true,
     stock: 1,
+    purchaseQuantity: 1,
     goldPurity: '',
     netWeight: undefined,
     makingChargeType: 'percentage',
@@ -150,6 +152,7 @@ export default function AdminProductsPage() {
         colors: [],
         active: true,
         stock: 1,
+        purchaseQuantity: 1,
         goldPurity: '',
         netWeight: undefined,
         makingChargeType: 'percentage',
@@ -241,6 +244,17 @@ export default function AdminProductsPage() {
               className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
             />
             <p className="mt-0.5 text-xs text-stone-500">At 0, product is out of stock until you increase it.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700">Purchase quantity (fixed)</label>
+            <input
+              type="number"
+              min={1}
+              value={form.purchaseQuantity ?? 1}
+              onChange={(e) => setForm((f) => ({ ...f, purchaseQuantity: Math.max(1, parseInt(e.target.value, 10) || 1) }))}
+              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
+            />
+            <p className="mt-0.5 text-xs text-stone-500">Customers cannot change quantity; Add to cart always adds this amount.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-stone-700">Gold type</label>
@@ -491,6 +505,7 @@ export default function AdminProductsPage() {
                   colors: [],
                   active: true,
                   stock: 1,
+                  purchaseQuantity: 1,
                   goldPurity: '',
                   netWeight: undefined,
                   makingChargeType: 'percentage',
@@ -546,6 +561,7 @@ export default function AdminProductsPage() {
                     ...p,
                     subImages: p.subImages || [],
                     stock: p.stock ?? 1,
+                    purchaseQuantity: (p as Product).purchaseQuantity ?? 1,
                     active: p.active !== false,
                     goldPurity: (p as Product).goldPurity ?? '',
                     netWeight: (p as Product).netWeight ?? undefined,

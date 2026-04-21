@@ -38,6 +38,7 @@ type Product = {
   weight?: string;
   carat?: string;
   colors?: string[];
+  purchaseQuantity?: number;
   calculatedPrice?: number;
   priceBreakup?: PriceBreakup | null;
   description?: string;
@@ -358,6 +359,7 @@ export default function ProductDetailPage() {
   };
 
   const displayPrice = typeof product.calculatedPrice === 'number' ? product.calculatedPrice : parseFloat(product.price) || 0;
+  const purchaseQty = Math.max(1, Number(product.purchaseQuantity) || 1);
   const compareAtPrice = (product as { compareAtPrice?: number }).compareAtPrice;
   const colorsList =
     product.colors && product.colors.length > 0
@@ -534,11 +536,14 @@ export default function ProductDetailPage() {
             )}
 
             <div className="mt-6 flex flex-col gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
+                Quantity: {purchaseQty}
+              </p>
               <button
                 type="button"
                 onClick={() => {
                   if (alreadyInCart) return;
-                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
+                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image, quantity: purchaseQty });
                   setAddedToCart(true);
                   setAlreadyInCart(true);
                   setTimeout(() => setAddedToCart(false), 2500);
@@ -824,11 +829,14 @@ export default function ProductDetailPage() {
         {/* Sticky Add to cart bar — 768px and below only */}
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white p-3 md:hidden">
           <div className="mx-auto max-w-5xl px-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-700">
+              Quantity: {purchaseQty}
+            </p>
             <button
               type="button"
               onClick={() => {
                 if (alreadyInCart) return;
-                addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image });
+                addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image, quantity: purchaseQty });
                 setAddedToCart(true);
                 setAlreadyInCart(true);
                 setTimeout(() => setAddedToCart(false), 2500);

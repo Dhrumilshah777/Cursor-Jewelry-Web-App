@@ -70,6 +70,8 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
             void audit('refund.requested', {
               entityType: 'order',
               entityId: String(orderId),
+              correlationId: String(orderId),
+              dedupeKey: `refund.requested:order:${String(orderId)}:${refundId || razorpayPaymentId}`,
               actor: { type: 'system', id: '' },
               meta: { extra: { refundId, reason: 'stock_failed' } },
             });
@@ -103,7 +105,8 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
       entityType: 'payment',
       entityId: String(razorpayPaymentId),
       actor: { type: 'system', id: '' },
-      meta: { extra: { orderId: String(order._id) } },
+      correlationId: String(order._id),
+      meta: { extra: { orderId: String(order._id), razorpayOrderId: String(order.razorpayOrderId || '') } },
     });
 
     await Cart.findOneAndUpdate({ user: order.user }, { $set: { items: [] } }, { session });
@@ -149,6 +152,7 @@ async function handleRefundProcessedPayload(payload) {
     entityType: 'order',
     entityId: String(order._id),
     actor: { type: 'system', id: '' },
+    correlationId: String(order._id),
     meta: { extra: { paymentId: paymentId.slice(0, 10) + '…' } },
   });
 

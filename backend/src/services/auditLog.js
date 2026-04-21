@@ -26,15 +26,19 @@ async function audit(action, opts = {}) {
     const {
       entityType = 'other',
       entityId = '',
+      correlationId = '',
       actor = { type: 'system', id: '' },
+      dedupeKey = '',
       ip = '',
       userAgent = '',
       meta = {},
     } = opts;
     await AuditLog.create({
       action: safeString(action).slice(0, 120),
+      dedupeKey: safeString(dedupeKey).slice(0, 160),
       entityType,
       entityId: safeString(entityId).slice(0, 80),
+      correlationId: safeString(correlationId).slice(0, 80),
       actor: {
         type: actor?.type || 'system',
         id: safeString(actor?.id || '').slice(0, 80),

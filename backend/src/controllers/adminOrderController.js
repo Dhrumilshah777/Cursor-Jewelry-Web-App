@@ -162,9 +162,10 @@ exports.updateStatus = async (req, res) => {
     }
     await order.save();
     if (String(order.status || '') && String(order.status || '') !== before.status) {
-      void auditFromReq(req, `order.${String(order.status)}`, {
+      void auditFromReq(req, `order.status.${String(order.status)}`, {
         entityType: 'order',
         entityId: String(order._id),
+        correlationId: String(order._id),
         meta: { before: before.status, after: String(order.status) },
       });
     }
@@ -223,9 +224,10 @@ exports.markDelivered = async (req, res) => {
     await order.save();
 
     console.log('[order] delivered (manual)', { orderId: String(order._id) });
-    void auditFromReq(req, 'order.delivered', {
+    void auditFromReq(req, 'order.status.delivered', {
       entityType: 'order',
       entityId: String(order._id),
+      correlationId: String(order._id),
       meta: { extra: { via: 'admin_manual' } },
     });
 
@@ -276,6 +278,7 @@ exports.refundOrder = async (req, res) => {
     void auditFromReq(req, 'refund.initiated', {
       entityType: 'order',
       entityId: String(order._id),
+      correlationId: String(order._id),
       meta: { extra: { amountPaise, paymentId: paymentId.slice(0, 10) + '…' } },
     });
 
@@ -291,6 +294,7 @@ exports.refundOrder = async (req, res) => {
       void auditFromReq(req, 'refund.failed', {
         entityType: 'order',
         entityId: String(order._id),
+        correlationId: String(order._id),
         meta: { extra: { amountPaise, paymentId: paymentId.slice(0, 10) + '…', message: String(refundErr?.message || '').slice(0, 200) } },
       });
       const desc = refundErr?.error?.description ? String(refundErr.error.description) : '';
@@ -307,6 +311,8 @@ exports.refundOrder = async (req, res) => {
     void auditFromReq(req, 'refund.requested', {
       entityType: 'order',
       entityId: String(order._id),
+      correlationId: String(order._id),
+      dedupeKey: `refund.requested:order:${String(order._id)}:${refundId || paymentId}`,
       meta: { extra: { refundId, amountPaise } },
     });
 

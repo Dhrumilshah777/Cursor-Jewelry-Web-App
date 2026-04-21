@@ -64,9 +64,10 @@ exports.create = async (req, res) => {
       status: 'requested',
       reason: typeof reason === 'string' ? reason.trim() : '',
     });
-    void auditFromReq(req, 'return.requested', {
+    void auditFromReq(req, 'return.status.requested', {
       entityType: 'return',
       entityId: String(created._id),
+      correlationId: String(order._id),
       meta: { extra: { orderId: String(order._id) } },
     });
 
@@ -90,9 +91,10 @@ exports.adminUpdateStatus = async (req, res) => {
 
     const before = String(ret.status || '');
     ret.status = status;
-    void auditFromReq(req, `return.${status}`, {
+    void auditFromReq(req, `return.status.${status}`, {
       entityType: 'return',
       entityId: String(ret._id),
+      correlationId: String(ret.order),
       meta: { before, after: status, extra: { orderId: String(ret.order) } },
     });
 
@@ -115,6 +117,7 @@ exports.adminUpdateStatus = async (req, res) => {
         void auditFromReq(req, 'return.pickup_created', {
           entityType: 'return',
           entityId: String(ret._id),
+          correlationId: String(ret.order),
           meta: {
             extra: {
               shiprocketReturnShipmentId: String(ret.shiprocketReturnShipmentId || ''),
@@ -131,6 +134,7 @@ exports.adminUpdateStatus = async (req, res) => {
         void auditFromReq(req, 'return.pickup_failed', {
           entityType: 'return',
           entityId: String(ret._id),
+          correlationId: String(ret.order),
           meta: { extra: { message: String(msg).slice(0, 200) } },
         });
         console.warn('[return.alert] shiprocket_return_error', {

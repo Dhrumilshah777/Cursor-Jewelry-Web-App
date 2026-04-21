@@ -58,6 +58,7 @@ async function processRefundAfterReturnDelivered(orderId, returnMongoId) {
       entityType: 'order',
       entityId: String(order._id),
       actor: { type: 'system', id: '' },
+      correlationId: String(order._id),
       meta: { extra: { amountPaise, message: String(refundErr?.message || '').slice(0, 200) } },
     });
     return { ok: false, reason: 'razorpay_refund_failed', error: refundErr?.message || String(refundErr) };
@@ -103,6 +104,8 @@ async function processRefundAfterReturnDelivered(orderId, returnMongoId) {
     entityType: 'order',
     entityId: String(order._id),
     actor: { type: 'system', id: '' },
+    correlationId: String(order._id),
+    dedupeKey: `refund.requested:order:${String(order._id)}:${refundId || paymentId}`,
     meta: { extra: { amountPaise, refundId } },
   });
 

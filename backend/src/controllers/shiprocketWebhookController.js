@@ -157,6 +157,7 @@ exports.handleShiprocketWebhook = async (req, res) => {
         void audit('return.delivered', {
           entityType: 'return',
           entityId: String(ret._id),
+          correlationId: String(ret.order),
           actor: { type: 'system', id: '' },
           meta: { extra: { shipmentId, awb, shipmentStatus } },
         });
@@ -213,9 +214,10 @@ exports.handleShiprocketWebhook = async (req, res) => {
 
     if (isForwardOrderDeliveredToCustomer(shipmentStatus)) {
       const now = new Date();
-      void audit('order.delivered', {
+      void audit('order.status.delivered', {
         entityType: 'order',
         entityId: String(order._id),
+        correlationId: String(order._id),
         actor: { type: 'system', id: '' },
         meta: { extra: { shipmentId, awb, shipmentStatus } },
       });

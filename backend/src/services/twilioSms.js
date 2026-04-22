@@ -72,6 +72,43 @@ async function sendOrderSMS({ phone, name, orderId, amount }) {
 }
 
 /**
+ * Send a custom SMS via Twilio.
+ * Does NOT throw.
+ * @param {{ phone: string, body: string }} params
+ */
+async function sendSms({ phone, body }) {
+  try {
+    if (!phone) {
+      console.warn('[sms] skipped: no phone number');
+      return { ok: false, skipped: true, reason: 'missing_phone' };
+    }
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const from = process.env.TWILIO_PHONE_NUMBER;
+    if (!accountSid || !authToken || !from) {
+      console.warn('[sms] Twilio env missing; skipping SMS');
+      return { ok: false, skipped: true, reason: 'missing_env' };
+    }
+    const to = normalizeIndianE164(phone);
+    if (!to || to.length !== 13) {
+      console.warn('[sms] Invalid phone; skipping SMS', { phone });
+      return { ok: false, skipped: true, reason: 'invalid_phone' };
+    }
+    const safeBody = String(body || '').trim();
+    if (!safeBody) {
+      console.warn('[sms] skipped: empty body');
+      return { ok: false, skipped: true, reason: 'empty_body' };
+    }
+    const client = twilio(accountSid, authToken);
+    const result = await client.messages.create({ body: safeBody, from, to });
+    return { ok: true, sid: result?.sid || '' };
+  } catch (err) {
+    console.error('[sms] Failed to send Twilio SMS:', err?.message || err);
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+/**
  * Send order confirmation on WhatsApp via Twilio (same Messages API as SMS).
  * Set TWILIO_WHATSAPP_FROM e.g. whatsapp:+14155238886 (sandbox) or your approved live sender.
  * Does NOT throw.
@@ -118,5 +155,5 @@ async function sendOrderWhatsApp({ phone, name, orderId, amount }) {
   }
 }
 
-module.exports = { sendOrderSMS, sendOrderWhatsApp, normalizeIndianE164, normalizeWhatsAppFrom };
+module.exports = { sendOrderSMS, sendSms, sendOrderWhatsApp, normalizeIndianE164, normalizeWhatsAppFrom };
 

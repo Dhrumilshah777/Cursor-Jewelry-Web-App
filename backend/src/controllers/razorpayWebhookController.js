@@ -5,11 +5,42 @@ const Return = require('../models/Return');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { razorpayInstance } = require('../services/razorpay');
-const { sendOrderSMS, sendOrderWhatsApp } = require('../services/twilioSms');
+const { sendOrderSMS, sendSms, sendOrderWhatsApp } = require('../services/twilioSms');
 const { sendWhatsAppMessage } = require('../services/whatsappService');
 const { audit } = require('../services/auditLog');
 
 const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
+
+async function notifyAdminPaidOrderOnce(orderId) {
+  const adminPhone = String(process.env.ADMIN_WHATSAPP_NUMBER || '').trim();
+  if (!adminPhone) return { ok: false, skipped: true, reason: 'missing_env' };
+
+  const order = await Order.findById(orderId).lean();
+  if (!order) return { ok: false, skipped: true, reason: 'order_not_found' };
+  if (order.status !== 'paid') return { ok: false, skipped: true, reason: 'not_paid' };
+  if (order.adminPaidWhatsAppSentAt) return { ok: true, skipped: true, reason: 'already_sent' };
+
+  const shortId = String(order._id).slice(-8).toUpperCase();
+  const amount = typeof order.totalAmount === 'number' && order.totalAmount > 0 ? order.totalAmount : order.subtotal;
+  const itemSummary = Array.isArray(order.items) && order.items.length
+    ? order.items.map((it) => `${it.name} × ${it.quantity}`).slice(0, 6).join(', ')
+    : '—';
+
+  const body =
+    `New paid order received ✅\n` +
+    `Order #${shortId}\n` +
+    `Amount: ₹${Number(amount || 0).toFixed(2)}\n` +
+    `Items: ${itemSummary}`;
+
+  const sendResult = await sendWhatsAppMessage({ phone: adminPhone, body });
+  if (sendResult.ok) {
+    await Order.updateOne(
+      { _id: order._id, adminPaidWhatsAppSentAt: null },
+      { $set: { adminPaidWhatsAppSentAt: new Date() } }
+    );
+  }
+  return sendResult;
+}
 
 function maskPhone(val) {
   const digits = String(val || '').replace(/\D/g, '');
@@ -167,6 +198,44 @@ async function completePaidOrder(orderId, razorpayPaymentId) {
           refundStatus,
         });
 
+        // Notify customer immediately when refund is initiated due to stock failure (idempotent).
+        // We only mark sentAt after Twilio confirms send.
+        try {
+          const fresh = await Order.findById(orderId).populate('user', 'name');
+          const alreadySent = Boolean(fresh?.refundInitiatedSmsSentAt);
+          const shouldSend = fresh && !alreadySent && String(fresh.refundStatus || '') === 'requested';
+          if (shouldSend) {
+            const phone = fresh.shippingAddress?.phone || '';
+            const body = 'Your refund has been initiated and will reflect in your account within 2–5 business days.';
+            const r = await sendSms({ phone, body });
+            if (r.ok) {
+              await Order.updateOne({ _id: fresh._id, refundInitiatedSmsSentAt: null }, { $set: { refundInitiatedSmsSentAt: new Date() } });
+            }
+          }
+        } catch (msgErr) {
+          console.warn('[sms] refund initiated message failed (non-blocking):', msgErr?.message || msgErr);
+        }
+
+        // WhatsApp: refund initiated (idempotent).
+        try {
+          const fresh = await Order.findById(orderId).populate('user', 'name');
+          const alreadySent = Boolean(fresh?.refundInitiatedWhatsAppSentAt);
+          const shouldSend = fresh && !alreadySent && String(fresh.refundStatus || '') === 'requested';
+          if (shouldSend) {
+            const phone = fresh.shippingAddress?.phone || '';
+            const body = 'Your refund has been initiated and will reflect in your account within 2–5 business days.';
+            const sendResult = await sendWhatsAppMessage({ phone, body });
+            if (sendResult.ok) {
+              await Order.updateOne(
+                { _id: fresh._id, refundInitiatedWhatsAppSentAt: null },
+                { $set: { refundInitiatedWhatsAppSentAt: new Date() } }
+              );
+            }
+          }
+        } catch (msgErr) {
+          console.warn('[whatsapp] refund initiated message failed (non-blocking):', msgErr?.message || msgErr);
+        }
+
         return { ok: false, reason: 'insufficient_stock', productId: it.productId };
       }
     }
@@ -245,6 +314,25 @@ async function handleRefundProcessedPayload(payload) {
     { $set: { returnRefundStatus: 'processed' } }
   );
 
+  // Twilio SMS: refund processed confirmation (idempotent on webhook retries).
+  try {
+    const alreadySent = Boolean(order.refundProcessedSmsSentAt);
+    if (!alreadySent) {
+      const phone = order.shippingAddress?.phone || '';
+      const name = order.user?.name || order.shippingAddress?.name || 'Customer';
+      const orderIdStr = String(order._id);
+      const body =
+        `Hi ${name}, your refund for order #${orderIdStr} has been successfully processed by our payment partner. ` +
+        'It may take a short time to reflect in your bank account depending on your payment method.';
+      const r = await sendSms({ phone, body });
+      if (r.ok) {
+        await Order.updateOne({ _id: order._id, refundProcessedSmsSentAt: null }, { $set: { refundProcessedSmsSentAt: new Date() } });
+      }
+    }
+  } catch (msgErr) {
+    console.warn('[sms] refund processed message failed (non-blocking):', msgErr?.message || msgErr);
+  }
+
   if (order.refundSettlementWhatsAppSentAt) {
     console.log('[rz.webhook] refund.processed whatsapp already sent', { orderId: String(order._id) });
     return;
@@ -253,7 +341,8 @@ async function handleRefundProcessedPayload(payload) {
   const phone = order.shippingAddress?.phone || '';
   const name = order.user?.name || order.shippingAddress?.name || 'Customer';
   const body =
-    `Hi ${name}, your refund for order #${order._id} is complete — the amount should show on your original payment method (bank/UPI/card) as per their timing.`;
+    `Hi ${name}, your refund for order #${order._id} has been successfully processed by our payment partner. ` +
+    'It may take a short time to reflect in your bank account depending on your payment method.';
 
   const sendResult = await sendWhatsAppMessage({ phone, body });
   if (sendResult.ok) {
@@ -374,6 +463,13 @@ async function handleRazorpayWebhook(req, res) {
         console.log('[rz.webhook] whatsapp attempt done');
       } catch (smsErr) {
         console.error('[sms] Non-blocking send failed:', smsErr?.message || smsErr);
+      }
+
+      // Admin WhatsApp notification (ONLY for paid orders, idempotent).
+      try {
+        await notifyAdminPaidOrderOnce(order._id.toString());
+      } catch (adminErr) {
+        console.warn('[whatsapp] admin paid notification failed (non-blocking):', adminErr?.message || adminErr);
       }
     } else if (result.ok && result.alreadyPaid) {
       console.log('[rz.webhook] sms skipped: already paid');

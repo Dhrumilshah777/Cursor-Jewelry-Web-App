@@ -96,6 +96,14 @@ const orderSchema = new mongoose.Schema(
     refundedAt: { type: Date, default: null },
     /** Set when Twilio WhatsApp succeeds after Razorpay `refund.processed` (idempotent for webhook retries). */
     refundSettlementWhatsAppSentAt: { type: Date, default: null },
+    /** Set when Twilio WhatsApp succeeds for "refund initiated" (idempotent). */
+    refundInitiatedWhatsAppSentAt: { type: Date, default: null },
+    /** Set when Twilio SMS succeeds for "refund initiated" (idempotent). */
+    refundInitiatedSmsSentAt: { type: Date, default: null },
+    /** Set when Twilio SMS succeeds for "refund processed" (idempotent). */
+    refundProcessedSmsSentAt: { type: Date, default: null },
+    /** Set when admin WhatsApp notification for paid order succeeds (idempotent). */
+    adminPaidWhatsAppSentAt: { type: Date, default: null },
     tracking: { type: String, default: '' },
     courier: { type: String, default: '' },
     shiprocketShipmentId: { type: String, default: '' },

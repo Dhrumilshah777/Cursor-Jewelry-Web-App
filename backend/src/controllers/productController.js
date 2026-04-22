@@ -318,6 +318,10 @@ exports.bulkCreate = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const body = { ...req.body };
+    // Never allow client to attempt to mutate immutable Mongo id fields.
+    if ('_id' in body) delete body._id;
+    if ('id' in body) delete body.id;
+
     const existing = await Product.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Product not found' });
     const merged = { ...existing.toObject(), ...body };
@@ -329,6 +333,9 @@ exports.update = async (req, res) => {
     }
     if ('purchaseQuantity' in body) {
       body.purchaseQuantity = Math.max(1, parseInt(body.purchaseQuantity, 10) || 1);
+    }
+    if ('stock' in body) {
+      body.stock = Math.max(0, parseInt(body.stock, 10) || 0);
     }
     body.fixedPricePaise = 0;
     if ('price' in body) body.price = '';

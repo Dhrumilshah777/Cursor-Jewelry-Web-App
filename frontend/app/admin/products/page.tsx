@@ -137,7 +137,9 @@ export default function AdminProductsPage() {
     setError('');
     try {
       if (editingId) {
-        await apiPut(`/api/admin/products/${editingId}`, form, true);
+        // Never send immutable Mongo fields back in update payload.
+        const { _id, ...payload } = form as Partial<Product> & { _id?: string };
+        await apiPut(`/api/admin/products/${editingId}`, payload, true);
         setEditingId(null);
       } else {
         await apiPost('/api/admin/products', form, true);

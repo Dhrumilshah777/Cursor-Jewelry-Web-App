@@ -278,7 +278,8 @@ export default function OrderDetailPage() {
         },
         modal: {
           ondismiss: () => {
-            /* keep pending_payment for retry until server expiry */
+            // If the user closes Razorpay (common when offline), show our verification screen.
+            router.replace(`/orders/success?orderId=${order._id}&verifying=1`);
           },
         },
         handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {

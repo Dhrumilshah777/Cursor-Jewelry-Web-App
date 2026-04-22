@@ -168,7 +168,9 @@ export default function CheckoutPage() {
           },
           modal: {
             ondismiss: () => {
-              // Keep order as pending_payment so the customer can retry from My orders until the payment window expires.
+              // If the user closes Razorpay (common when offline), move them to our verification UI.
+              // Backend webhook is the source of truth for payment.captured.
+              if (orderId) router.replace(`/orders/success?orderId=${orderId}&verifying=1`);
             },
           },
           handler: async (response: { razorpay_payment_id: string; razorpay_signature: string }) => {

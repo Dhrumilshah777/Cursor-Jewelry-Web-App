@@ -9,6 +9,7 @@ type Order = {
   user?: { name?: string; email?: string };
   items: { name: string; quantity: number; price: string }[];
   subtotal: number;
+  totalAmount?: number;
   status: string;
   createdAt: string;
 };
@@ -64,7 +65,7 @@ export default function AdminOrdersPage() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-stone-500">
-                {order.user?.email || order.user?.name || '—'} · {new Date(order.createdAt).toLocaleString()} · ₹{Number(order.subtotal).toFixed(2)}
+                {order.user?.email || order.user?.name || '—'} · {new Date(order.createdAt).toLocaleString()} · ₹{Number(order.totalAmount ?? order.subtotal).toFixed(2)}
               </p>
             </li>
           ))}

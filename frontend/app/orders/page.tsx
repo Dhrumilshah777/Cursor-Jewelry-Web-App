@@ -10,6 +10,7 @@ type Order = {
   _id: string;
   items: OrderItem[];
   subtotal: number;
+  totalAmount?: number;
   status: string;
   createdAt: string;
   deliveredAt?: string | null;
@@ -155,7 +156,7 @@ export default function MyOrdersPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-stone-500">
-                  {new Date(order.createdAt).toLocaleDateString()} · ₹{Number(order.subtotal).toFixed(2)}
+                  {new Date(order.createdAt).toLocaleDateString()} · ₹{Number(order.totalAmount ?? order.subtotal).toFixed(2)}
                 </p>
                 {order.status === 'pending_payment' && (
                   <p className="mt-1 text-xs text-amber-800">Payment not completed — open details to pay.</p>

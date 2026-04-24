@@ -56,7 +56,11 @@ type Product = {
 const RECENTLY_VIEWED_KEY = 'recently_viewed_products';
 const RECENTLY_VIEWED_MAX = 8;
 
-type RecentlyViewedItem = { id: string; name: string; image: string; price: string };
+type RecentlyViewedItem = { id: string; slug?: string; name: string; image: string; price: string };
+
+function isMongoObjectIdString(s: string): boolean {
+  return /^[a-fA-F0-9]{24}$/.test(String(s || '').trim());
+}
 
 function getRecentlyViewed(): RecentlyViewedItem[] {
   if (typeof window === 'undefined') return [];
@@ -134,7 +138,13 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product || typeof window === 'undefined') return;
     const priceStr = typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : (product.price || '');
-    addToRecentlyViewed({ id: product._id, name: product.name, image: product.image, price: priceStr });
+    addToRecentlyViewed({
+      id: product._id,
+      slug: product.slug,
+      name: product.name,
+      image: product.image,
+      price: priceStr,
+    });
     setRecentlyViewed(getRecentlyViewed().filter((item) => item.id !== product._id));
   }, [product?._id]);
 
@@ -214,6 +224,11 @@ export default function ProductDetailPage() {
         const canon = typeof data.canonicalSlug === 'string' ? data.canonicalSlug.trim() : '';
         if (canon && canon !== routeSlug) {
           router.replace(`/products/${encodeURIComponent(canon)}`);
+          return;
+        }
+        const slugFromApi = typeof data.slug === 'string' ? data.slug.trim() : '';
+        if (slugFromApi && isMongoObjectIdString(routeSlug) && slugFromApi !== routeSlug) {
+          router.replace(`/products/${encodeURIComponent(slugFromApi)}`);
           return;
         }
         const p = { ...data, _id: (data._id || data.id || '') as string };

@@ -1,8 +1,27 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const { getProductPrice, toInrFromPaise } = require('../services/priceCalculator');
 const { razorpayInstance, razorpayKeyId, razorpayKeySecret } = require('../services/razorpay');
+
+function isValidCustomerName(name) {
+  if (typeof name !== 'string') return false;
+  const n = name.trim().replace(/\s+/g, ' ');
+  if (n.length < 2 || n.length > 60) return false;
+  return /^[A-Za-z\s]+$/.test(n);
+}
+
+function normalizeCustomerName(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ');
+}
+
+function normalizeAddressStr(v, maxLen) {
+  if (v === undefined || v === null) return '';
+  const s = String(v).trim().replace(/\s+/g, ' ');
+  if (!s) return '';
+  return maxLen ? s.slice(0, maxLen) : s;
+}
 
 function getPendingPaymentTtlMs() {
   const m = parseInt(process.env.PAYMENT_PENDING_TIMEOUT_MINUTES, 10);
@@ -63,6 +82,9 @@ exports.create = async (req, res) => {
     const key = idempotencyKey.trim();
     if (!shippingAddress || !shippingAddress.name || !shippingAddress.phone || !shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode) {
       return res.status(400).json({ error: 'Valid shipping address required' });
+    }
+    if (!isValidCustomerName(shippingAddress.name)) {
+      return res.status(400).json({ error: 'Enter a valid name' });
     }
 
     const existing = await Order.findOne({ user: req.userId, idempotencyKey: key });
@@ -155,13 +177,13 @@ exports.create = async (req, res) => {
       idempotencyKey: key,
       items: validated,
       shippingAddress: {
-        name: shippingAddress.name,
-        phone: shippingAddress.phone,
-        line1: shippingAddress.line1,
-        line2: shippingAddress.line2 || '',
-        city: shippingAddress.city,
-        state: shippingAddress.state,
-        pincode: shippingAddress.pincode,
+        name: normalizeCustomerName(shippingAddress.name),
+        phone: normalizeAddressStr(shippingAddress.phone, 30),
+        line1: normalizeAddressStr(shippingAddress.line1, 120),
+        line2: normalizeAddressStr(shippingAddress.line2 || '', 120),
+        city: normalizeAddressStr(shippingAddress.city, 60),
+        state: normalizeAddressStr(shippingAddress.state, 60),
+        pincode: normalizeAddressStr(shippingAddress.pincode, 12),
       },
       subtotalPaise,
       gstAmountPaise,
@@ -173,6 +195,44 @@ exports.create = async (req, res) => {
       totalAmount: total,
       status: 'pending_payment',
     });
+
+    // Progressive profiling: save details for faster future checkouts (best-effort).
+    try {
+      const addr = order.shippingAddress || {};
+      const user = await User.findById(req.userId);
+      if (user) {
+        if ((!user.name || !user.name.trim()) && addr.name) {
+          user.name = addr.name;
+        }
+
+        const addresses = Array.isArray(user.addresses) ? user.addresses : [];
+        const isDup = (a) =>
+          String(a?.line1 || '').trim().toLowerCase() === String(addr.line1 || '').trim().toLowerCase() &&
+          String(a?.pincode || '').trim() === String(addr.pincode || '').trim() &&
+          String(a?.phone || '').trim() === String(addr.phone || '').trim();
+        const already = addresses.some(isDup);
+
+        if (!already) {
+          const hasDefault = addresses.some((a) => a && a.isDefault === true);
+          addresses.push({
+            label: '',
+            name: addr.name || '',
+            phone: addr.phone || '',
+            line1: addr.line1 || '',
+            line2: addr.line2 || '',
+            landmark: '',
+            city: addr.city || '',
+            state: addr.state || '',
+            pincode: addr.pincode || '',
+            isDefault: !hasDefault,
+          });
+          user.addresses = addresses;
+        }
+        await user.save();
+      }
+    } catch (e) {
+      console.warn('[orders] failed to persist user profile/address:', e?.message || e);
+    }
 
     let razorpayOrderId = null;
     if (!razorpayInstance) {

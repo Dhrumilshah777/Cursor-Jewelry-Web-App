@@ -88,8 +88,11 @@ app.use('/api/auth', require('./routes/auth'));
 // Public API (no auth)
 app.use('/api/products', require('./routes/products'));
 app.use('/api/site', require('./routes/site'));
+app.use('/api/gold-rate', require('./routes/goldRate'));
 const deliveryCheckController = require('./controllers/deliveryCheckController');
 app.get('/api/delivery-check', deliveryCheckController.check);
+const pincodeLookupController = require('./controllers/pincodeLookupController');
+app.get('/api/pincode-lookup', pincodeLookupController.pincodeLimiter, pincodeLookupController.lookup);
 
 // User API (requires user auth)
 app.use('/api/cart', require('./routes/cart'));

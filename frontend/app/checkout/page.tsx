@@ -7,6 +7,7 @@ import {
   isUserLoggedIn,
   getValidatedCartFromApi,
   assetUrl,
+  apiGet,
   apiPost,
   type CartItem,
 } from '@/lib/api';
@@ -77,6 +78,10 @@ export default function CheckoutPage() {
   const [subtotal, setSubtotal] = useState(0);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinHint, setPinHint] = useState('');
+  const [cityTouched, setCityTouched] = useState(false);
+  const [stateTouched, setStateTouched] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -100,6 +105,51 @@ export default function CheckoutPage() {
         .finally(() => setLoading(false));
     })();
   }, [mounted, router]);
+
+  // Auto-fill city/state from pincode (India) with debounce.
+  useEffect(() => {
+    if (!mounted) return;
+    const digits = String(address.pincode || '').replace(/\D/g, '').slice(0, 6);
+    if (digits.length !== 6) {
+      setPinHint('');
+      setPinLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setPinLoading(true);
+    setPinHint('');
+
+    const t = setTimeout(async () => {
+      try {
+        const data = await apiGet<{
+          ok: boolean;
+          pincode: string;
+          city: string | null;
+          state: string | null;
+          district?: string | null;
+          postOffice?: string | null;
+        }>(`/api/pincode-lookup?pincode=${encodeURIComponent(digits)}`);
+        if (cancelled) return;
+        const nextCity = (data.city || '').trim();
+        const nextState = (data.state || '').trim();
+        if (nextCity && !cityTouched) setAddress((a) => ({ ...a, city: nextCity }));
+        if (nextState && !stateTouched) setAddress((a) => ({ ...a, state: nextState }));
+        if (nextCity || nextState) setPinHint(`Auto-filled from pincode${data.postOffice ? ` (${data.postOffice})` : ''}.`);
+        else setPinHint('');
+      } catch {
+        if (cancelled) return;
+        setPinHint('Could not auto-fill from pincode. Please enter city/state manually.');
+      } finally {
+        if (!cancelled) setPinLoading(false);
+      }
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [address.pincode, cityTouched, mounted, stateTouched]);
 
   const loadRazorpay = (): Promise<void> => {
     if (typeof window !== 'undefined' && window.Razorpay) return Promise.resolve();
@@ -294,7 +344,10 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-medium text-stone-700">City *</label>
                   <input
                     value={address.city}
-                    onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
+                  onChange={(e) => {
+                    setCityTouched(true);
+                    setAddress((a) => ({ ...a, city: e.target.value }));
+                  }}
                     className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
                     required
                   />
@@ -303,7 +356,10 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-medium text-stone-700">State *</label>
                   <input
                     value={address.state}
-                    onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
+                  onChange={(e) => {
+                    setStateTouched(true);
+                    setAddress((a) => ({ ...a, state: e.target.value }));
+                  }}
                     className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
                     required
                   />
@@ -313,10 +369,23 @@ export default function CheckoutPage() {
                 <label className="block text-sm font-medium text-stone-700">Pincode *</label>
                 <input
                   value={address.pincode}
-                  onChange={(e) => setAddress((a) => ({ ...a, pincode: e.target.value }))}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setAddress((a) => ({ ...a, pincode: v }));
+                  // If user is changing pincode, allow auto-fill again for city/state (unless they edit those fields).
+                  if (!String(v || '').replace(/\D/g, '').length) {
+                    setCityTouched(false);
+                    setStateTouched(false);
+                  }
+                }}
                   className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
                   required
                 />
+              {(pinLoading || pinHint) && (
+                <p className="mt-1 text-xs text-stone-500">
+                  {pinLoading ? 'Looking up pincode…' : pinHint}
+                </p>
+              )}
               </div>
             </div>
           </div>

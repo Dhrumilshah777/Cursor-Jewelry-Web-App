@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+const addressSchema = new mongoose.Schema(
+  {
+    label: { type: String, default: '' }, // e.g. Home / Work (optional)
+    name: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    line1: { type: String, default: '' },
+    line2: { type: String, default: '' },
+    landmark: { type: String, default: '' },
+    city: { type: String, default: '' },
+    state: { type: String, default: '' },
+    pincode: { type: String, default: '' },
+    isDefault: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
 const userSchema = new mongoose.Schema(
   {
     // Either Google OAuth or phone-based login can create a user.
@@ -10,6 +26,7 @@ const userSchema = new mongoose.Schema(
     phoneE164: { type: String },
     name: { type: String, default: '' },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    addresses: { type: [addressSchema], default: [] },
     wishlist: [
       {
         productId: { type: String, required: true },

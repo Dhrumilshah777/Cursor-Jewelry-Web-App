@@ -2,9 +2,40 @@ const Product = require('../models/Product');
 const AuditLog = require('../models/AuditLog');
 const { getProductPrice } = require('../services/priceCalculator');
 const { generateSKU, getCategoryCode, validatePurity } = require('../services/skuGenerator');
+const appCache = require('../cache/appCache');
+const { runOnce } = require('../cache/inFlight');
+const { sendJsonWithEtag } = require('../utils/etag');
+
+const PRODUCT_LIST_CACHE_TTL_MS = (() => {
+  const v = parseInt(process.env.PRODUCT_LIST_CACHE_TTL_MS, 10);
+  return Number.isFinite(v) && v > 0 ? v : 45 * 1000;
+})();
+
+const PRODUCT_DETAIL_CACHE_TTL_MS = (() => {
+  const v = parseInt(process.env.PRODUCT_DETAIL_CACHE_TTL_MS, 10);
+  return Number.isFinite(v) && v > 0 ? v : 90 * 1000;
+})();
 
 function categoryToSlug(cat) {
   return String(cat || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
+}
+
+function stableQueryKey(query) {
+  const q = query && typeof query === 'object' ? query : {};
+  const keys = Object.keys(q).sort();
+  const out = {};
+  keys.forEach((k) => {
+    const v = q[k];
+    if (Array.isArray(v)) out[k] = v.map((x) => String(x)).join(',');
+    else if (v === undefined) out[k] = '';
+    else out[k] = String(v);
+  });
+  return JSON.stringify(out);
+}
+
+function invalidateProductCaches() {
+  appCache.delPrefix('products:list:');
+  appCache.delPrefix('products:one:');
 }
 
 function getAllowedImageHosts() {
@@ -44,75 +75,162 @@ function isAllowedImageUrl(urlString, allowedHosts) {
 
 exports.list = async (req, res) => {
   try {
-    const products = await Product.find({ active: { $ne: false } }).sort({ order: 1, createdAt: -1 });
-    const withPrices = [];
-    for (const p of products) {
-      const { price } = await getProductPrice(p);
-      const po = p.toObject ? p.toObject() : p;
-      const numPrice = parseFloat(po.price || price || '0') || 0;
-      withPrices.push({
-        ...po,
-        price: String(po.price || price || '0'),
-        calculatedPrice: price,
-        _numPrice: numPrice,
+    // Admin must never hit cache (always fetch fresh).
+    if (req.admin) {
+      const products = await Product.find({ active: { $ne: false } }).sort({ order: 1, createdAt: -1 });
+      const withPrices = [];
+      for (const p of products) {
+        const { price } = await getProductPrice(p);
+        const po = p.toObject ? p.toObject() : p;
+        const numPrice = parseFloat(po.price || price || '0') || 0;
+        withPrices.push({
+          ...po,
+          price: String(po.price || price || '0'),
+          calculatedPrice: price,
+          _numPrice: numPrice,
+        });
+      }
+
+      const categorySlug = (req.query.category || '').toString().trim().toLowerCase();
+      const minPrice = parseFloat(req.query.minPrice);
+      const maxPrice = parseFloat(req.query.maxPrice);
+      const colorParam = (req.query.color || '').toString().trim();
+      const colorsFilter = colorParam ? colorParam.split(',').map((c) => c.trim()).filter(Boolean) : [];
+
+      let filtered = withPrices;
+      if (categorySlug) {
+        filtered = filtered.filter((p) => categoryToSlug(p.category) === categorySlug);
+      }
+      if (Number.isFinite(minPrice) && minPrice > 0) {
+        filtered = filtered.filter((p) => p._numPrice >= minPrice);
+      }
+      if (Number.isFinite(maxPrice) && maxPrice > 0) {
+        filtered = filtered.filter((p) => p._numPrice <= maxPrice);
+      }
+      if (colorsFilter.length > 0) {
+        filtered = filtered.filter((p) => {
+          const productColors = (p.colors || []).map((c) => String(c).trim().toLowerCase());
+          return colorsFilter.some((c) => productColors.includes(c.toLowerCase()));
+        });
+      }
+
+      const out = filtered.map(({ _numPrice, ...rest }) => rest);
+
+      const prices = withPrices.map((p) => p._numPrice).filter((n) => n > 0);
+      const categoryCounts = {};
+      withPrices.forEach((p) => {
+        const slug = categoryToSlug(p.category);
+        const name = (p.category || 'Uncategorized').trim();
+        if (!slug) return;
+        if (!categoryCounts[slug]) categoryCounts[slug] = { slug, name, count: 0 };
+        categoryCounts[slug].count += 1;
       });
-    }
-
-    const categorySlug = (req.query.category || '').toString().trim().toLowerCase();
-    const minPrice = parseFloat(req.query.minPrice);
-    const maxPrice = parseFloat(req.query.maxPrice);
-    const colorParam = (req.query.color || '').toString().trim();
-    const colorsFilter = colorParam ? colorParam.split(',').map((c) => c.trim()).filter(Boolean) : [];
-
-    let filtered = withPrices;
-    if (categorySlug) {
-      filtered = filtered.filter((p) => categoryToSlug(p.category) === categorySlug);
-    }
-    if (Number.isFinite(minPrice) && minPrice > 0) {
-      filtered = filtered.filter((p) => p._numPrice >= minPrice);
-    }
-    if (Number.isFinite(maxPrice) && maxPrice > 0) {
-      filtered = filtered.filter((p) => p._numPrice <= maxPrice);
-    }
-    if (colorsFilter.length > 0) {
-      filtered = filtered.filter((p) => {
-        const productColors = (p.colors || []).map((c) => String(c).trim().toLowerCase());
-        return colorsFilter.some((c) => productColors.includes(c.toLowerCase()));
+      const colorCounts = {};
+      withPrices.forEach((p) => {
+        (p.colors || []).forEach((c) => {
+          const key = String(c).trim();
+          if (!key) return;
+          if (!colorCounts[key]) colorCounts[key] = { name: key, count: 0 };
+          colorCounts[key].count += 1;
+        });
       });
+
+      const facets = {
+        totalProducts: withPrices.length,
+        categories: Object.values(categoryCounts).sort((a, b) => b.count - a.count),
+        priceRange: {
+          min: prices.length ? Math.min(...prices) : 0,
+          max: prices.length ? Math.max(...prices) : 0,
+        },
+        colors: Object.entries(colorCounts)
+          .map(([name, o]) => ({ name, count: o.count }))
+          .sort((a, b) => b.count - a.count),
+      };
+
+      return res.json({ products: out, facets });
     }
 
-    const out = filtered.map(({ _numPrice, ...rest }) => rest);
+    const cacheKey = `products:list:${stableQueryKey(req.query)}`;
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      return sendJsonWithEtag(req, res, { ...cached, cached: true }, { cacheControl: 'public, max-age=30' });
+    }
 
-    const prices = withPrices.map((p) => p._numPrice).filter((n) => n > 0);
-    const categoryCounts = {};
-    withPrices.forEach((p) => {
-      const slug = categoryToSlug(p.category);
-      const name = (p.category || 'Uncategorized').trim();
-      if (!slug) return;
-      if (!categoryCounts[slug]) categoryCounts[slug] = { slug, name, count: 0 };
-      categoryCounts[slug].count += 1;
+    const payload = await runOnce(cacheKey, async () => {
+      const products = await Product.find({ active: { $ne: false } }).sort({ order: 1, createdAt: -1 });
+      const withPrices = [];
+      for (const p of products) {
+        const { price } = await getProductPrice(p);
+        const po = p.toObject ? p.toObject() : p;
+        const numPrice = parseFloat(po.price || price || '0') || 0;
+        withPrices.push({
+          ...po,
+          price: String(po.price || price || '0'),
+          calculatedPrice: price,
+          _numPrice: numPrice,
+        });
+      }
+
+      const categorySlug = (req.query.category || '').toString().trim().toLowerCase();
+      const minPrice = parseFloat(req.query.minPrice);
+      const maxPrice = parseFloat(req.query.maxPrice);
+      const colorParam = (req.query.color || '').toString().trim();
+      const colorsFilter = colorParam ? colorParam.split(',').map((c) => c.trim()).filter(Boolean) : [];
+
+      let filtered = withPrices;
+      if (categorySlug) {
+        filtered = filtered.filter((p) => categoryToSlug(p.category) === categorySlug);
+      }
+      if (Number.isFinite(minPrice) && minPrice > 0) {
+        filtered = filtered.filter((p) => p._numPrice >= minPrice);
+      }
+      if (Number.isFinite(maxPrice) && maxPrice > 0) {
+        filtered = filtered.filter((p) => p._numPrice <= maxPrice);
+      }
+      if (colorsFilter.length > 0) {
+        filtered = filtered.filter((p) => {
+          const productColors = (p.colors || []).map((c) => String(c).trim().toLowerCase());
+          return colorsFilter.some((c) => productColors.includes(c.toLowerCase()));
+        });
+      }
+
+      const out = filtered.map(({ _numPrice, ...rest }) => rest);
+
+      const prices = withPrices.map((p) => p._numPrice).filter((n) => n > 0);
+      const categoryCounts = {};
+      withPrices.forEach((p) => {
+        const slug = categoryToSlug(p.category);
+        const name = (p.category || 'Uncategorized').trim();
+        if (!slug) return;
+        if (!categoryCounts[slug]) categoryCounts[slug] = { slug, name, count: 0 };
+        categoryCounts[slug].count += 1;
+      });
+      const colorCounts = {};
+      withPrices.forEach((p) => {
+        (p.colors || []).forEach((c) => {
+          const key = String(c).trim();
+          if (!key) return;
+          if (!colorCounts[key]) colorCounts[key] = { name: key, count: 0 };
+          colorCounts[key].count += 1;
+        });
+      });
+
+      const facets = {
+        totalProducts: withPrices.length,
+        categories: Object.values(categoryCounts).sort((a, b) => b.count - a.count),
+        priceRange: {
+          min: prices.length ? Math.min(...prices) : 0,
+          max: prices.length ? Math.max(...prices) : 0,
+        },
+        colors: Object.entries(colorCounts).map(([name, o]) => ({ name, count: o.count })).sort((a, b) => b.count - a.count),
+      };
+
+      const pld = { products: out, facets };
+      appCache.set(cacheKey, pld, PRODUCT_LIST_CACHE_TTL_MS);
+      return pld;
     });
-    const colorCounts = {};
-    withPrices.forEach((p) => {
-      (p.colors || []).forEach((c) => {
-        const key = String(c).trim();
-        if (!key) return;
-        if (!colorCounts[key]) colorCounts[key] = { name: key, count: 0 };
-        colorCounts[key].count += 1;
-      });
-    });
 
-    const facets = {
-      totalProducts: withPrices.length,
-      categories: Object.values(categoryCounts).sort((a, b) => b.count - a.count),
-      priceRange: {
-        min: prices.length ? Math.min(...prices) : 0,
-        max: prices.length ? Math.max(...prices) : 0,
-      },
-      colors: Object.entries(colorCounts).map(([name, o]) => ({ name, count: o.count })).sort((a, b) => b.count - a.count),
-    };
-
-    res.json({ products: out, facets });
+    return sendJsonWithEtag(req, res, { ...payload, cached: false }, { cacheControl: 'public, max-age=30' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -120,11 +238,34 @@ exports.list = async (req, res) => {
 
 exports.getOne = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-    const po = product.toObject ? product.toObject() : product;
-    const { price, breakup } = await getProductPrice(product);
-    res.json({ ...po, price: String(po.price || price), calculatedPrice: price, priceBreakup: breakup });
+    // Admin must never hit cache (always fetch fresh).
+    if (req.admin) {
+      const product = await Product.findById(req.params.id);
+      if (!product) return res.status(404).json({ error: 'Product not found' });
+      const po = product.toObject ? product.toObject() : product;
+      const { price, breakup } = await getProductPrice(product);
+      return res.json({ ...po, price: String(po.price || price), calculatedPrice: price, priceBreakup: breakup });
+    }
+
+    const id = String(req.params.id || '').trim();
+    const cacheKey = `products:one:${id}`;
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      return sendJsonWithEtag(req, res, { ...cached, cached: true }, { cacheControl: 'public, max-age=60' });
+    }
+
+    const payload = await runOnce(cacheKey, async () => {
+      const product = await Product.findById(req.params.id);
+      if (!product) return null;
+      const po = product.toObject ? product.toObject() : product;
+      const { price, breakup } = await getProductPrice(product);
+      const pld = { ...po, price: String(po.price || price), calculatedPrice: price, priceBreakup: breakup };
+      appCache.set(cacheKey, pld, PRODUCT_DETAIL_CACHE_TTL_MS);
+      return pld;
+    });
+
+    if (!payload) return res.status(404).json({ error: 'Product not found' });
+    return sendJsonWithEtag(req, res, { ...payload, cached: false }, { cacheControl: 'public, max-age=60' });
   } catch (err) {
     if (err.name === 'CastError') return res.status(404).json({ error: 'Product not found' });
     res.status(500).json({ error: err.message });
@@ -171,6 +312,7 @@ exports.create = async (req, res) => {
 
     try {
       const product = await Product.create(body);
+      invalidateProductCaches();
       res.status(201).json(product);
     } catch (err) {
       if (err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
@@ -305,6 +447,10 @@ exports.bulkCreate = async (req, res) => {
     // audit should never block the response
   }
 
+  if (created.length > 0) {
+    invalidateProductCaches();
+  }
+
   return res.status(created.length > 0 ? 201 : 200).json({
     ok: failures.length === 0,
     total: input.length,
@@ -340,6 +486,7 @@ exports.update = async (req, res) => {
     body.fixedPricePaise = 0;
     if ('price' in body) body.price = '';
     const product = await Product.findByIdAndUpdate(req.params.id, body, { new: true });
+    invalidateProductCaches();
     res.json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -350,8 +497,11 @@ exports.remove = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
+    invalidateProductCaches();
     res.json({ deleted: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.invalidateProductCaches = invalidateProductCaches;

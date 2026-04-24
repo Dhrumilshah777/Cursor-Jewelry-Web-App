@@ -3,6 +3,17 @@ const GoldRate = require('../models/GoldRate');
 
 const DEFAULT_GST_PERCENT = 3;
 
+const GOLD_RATE_CACHE_TTL_MS = (() => {
+  const v = parseInt(process.env.GOLD_RATE_CACHE_TTL_MS, 10);
+  return Number.isFinite(v) && v > 0 ? v : 2 * 60 * 1000; // default 2 minutes
+})();
+
+let goldRatesCache = {
+  /** @type {Map<string, number> | null} */
+  map: null,
+  expiresAt: 0,
+};
+
 function toPaiseFromInrNumber(valueInr) {
   const n = typeof valueInr === 'number' ? valueInr : parseFloat(valueInr);
   if (!Number.isFinite(n)) return 0;
@@ -34,8 +45,7 @@ async function getProductPrice(product, goldRatesMap = null) {
 
   let rates = goldRatesMap;
   if (!rates || typeof rates.get !== 'function') {
-    const docs = await GoldRate.find().lean();
-    rates = new Map(docs.map((r) => [String(r.purity).toUpperCase().replace(/\s/g, ''), r.pricePerGramPaise || toPaiseFromInrNumber(r.pricePerGram)]));
+    rates = await getGoldRatesMapCached();
   }
   const pricePerGramPaise = rates.get(purity);
   if (pricePerGramPaise == null || !Number.isFinite(pricePerGramPaise)) {
@@ -91,4 +101,32 @@ async function getPriceStringForProduct(product) {
   return String(price || 0);
 }
 
-module.exports = { getProductPrice, getProductPriceById, getPriceStringForProduct, DEFAULT_GST_PERCENT, toPaiseFromInrNumber, toInrFromPaise };
+async function getGoldRatesMapCached() {
+  if (goldRatesCache.map && Date.now() < goldRatesCache.expiresAt) {
+    return goldRatesCache.map;
+  }
+  const docs = await GoldRate.find().lean();
+  const map = new Map(
+    docs.map((r) => [
+      String(r.purity).toUpperCase().replace(/\s/g, ''),
+      r.pricePerGramPaise || toPaiseFromInrNumber(r.pricePerGram),
+    ])
+  );
+  goldRatesCache = { map, expiresAt: Date.now() + GOLD_RATE_CACHE_TTL_MS };
+  return map;
+}
+
+function invalidateGoldRatesCache() {
+  goldRatesCache = { map: null, expiresAt: 0 };
+}
+
+module.exports = {
+  getProductPrice,
+  getProductPriceById,
+  getPriceStringForProduct,
+  getGoldRatesMapCached,
+  invalidateGoldRatesCache,
+  DEFAULT_GST_PERCENT,
+  toPaiseFromInrNumber,
+  toInrFromPaise,
+};

@@ -1,8 +1,18 @@
 const mongoose = require('mongoose');
+const { SLUG_COLLATION } = require('../config/slugCollation');
 
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    /** URL slug — unique (case-insensitive at DB via index collation); never auto-updated from name on edit. */
+    slug: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+    /** Previous slugs for 301 redirects after manual slug changes. */
+    oldSlugs: { type: [{ type: String, lowercase: true, trim: true }], default: [] },
     category: { type: String, default: 'Accessories' },
     /** Yellow Gold / Rose Gold / White Gold (admin “gold type” select) */
     goldType: { type: String, default: '' },
@@ -38,5 +48,9 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Case-insensitive uniqueness at DB (strength 2 = ignore case + diacritics for comparisons).
+// If you previously had a plain `slug_1` unique index, drop it once: db.products.dropIndex("slug_1")
+productSchema.index({ slug: 1 }, { unique: true, name: 'slug_unique_ci', collation: SLUG_COLLATION });
 
 module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);

@@ -7,6 +7,7 @@ const MAX_WISHLIST = 100;
 function toClientItem(w) {
   return {
     id: String(w.productId),
+    slug: w.slug || '',
     name: w.name,
     category: w.category || '',
     price: w.price,
@@ -24,6 +25,7 @@ function normalizeIncoming(items) {
     seen.add(id);
     out.push({
       productId: id,
+      slug: String(it.slug || '').trim().toLowerCase().slice(0, 200),
       name: String(it.name || 'Product').slice(0, 200),
       category: String(it.category || '').slice(0, 100),
       price: String(it.price != null ? it.price : '0'),
@@ -76,6 +78,7 @@ exports.addItem = async (req, res) => {
     const { price } = await getProductPrice(product);
     list.push({
       productId,
+      slug: product.slug || '',
       name: product.name,
       category: product.category || '',
       price: String(price),
@@ -115,6 +118,7 @@ exports.merge = async (req, res) => {
       const id = String(w.productId);
       byId.set(id, {
         productId: id,
+        slug: w.slug || '',
         name: w.name,
         category: w.category || '',
         price: w.price,
@@ -131,6 +135,7 @@ exports.merge = async (req, res) => {
       const { price } = await getProductPrice(product);
       byId.set(id, {
         productId: id,
+        slug: product.slug || '',
         name: product.name,
         category: product.category || '',
         price: String(price),

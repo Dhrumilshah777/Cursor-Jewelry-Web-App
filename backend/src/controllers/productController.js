@@ -2,9 +2,11 @@ const Product = require('../models/Product');
 const AuditLog = require('../models/AuditLog');
 const { getProductPrice } = require('../services/priceCalculator');
 const { generateSKU, getCategoryCode, validatePurity } = require('../services/skuGenerator');
+const { slugify, ensureUniqueSlug, isSlugTaken, isMongoObjectIdString } = require('../services/productSlug');
 const appCache = require('../cache/appCache');
 const { runOnce } = require('../cache/inFlight');
 const { sendJsonWithEtag } = require('../utils/etag');
+const { SLUG_COLLATION } = require('../config/slugCollation');
 
 const PRODUCT_LIST_CACHE_TTL_MS = (() => {
   const v = parseInt(process.env.PRODUCT_LIST_CACHE_TTL_MS, 10);
@@ -241,33 +243,66 @@ exports.getOne = async (req, res) => {
     // Admin must never hit cache (always fetch fresh).
     if (req.admin) {
       const product = await Product.findById(req.params.id);
-      if (!product) return res.status(404).json({ error: 'Product not found' });
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found', message: 'Product not found' });
+      }
       const po = product.toObject ? product.toObject() : product;
       const { price, breakup } = await getProductPrice(product);
       return res.json({ ...po, price: String(po.price || price), calculatedPrice: price, priceBreakup: breakup });
     }
 
-    const id = String(req.params.id || '').trim();
-    const cacheKey = `products:one:${id}`;
+    const param = String(req.params.id || '').trim();
+    if (!param) {
+      return res.status(404).json({ error: 'Product not found', message: 'Product not found' });
+    }
+
+    const cacheKey = `products:one:${param}`;
     const cached = appCache.get(cacheKey);
     if (cached) {
       return sendJsonWithEtag(req, res, { ...cached, cached: true }, { cacheControl: 'public, max-age=60' });
     }
 
     const payload = await runOnce(cacheKey, async () => {
-      const product = await Product.findById(req.params.id);
+      let product = null;
+      if (isMongoObjectIdString(param)) {
+        product = await Product.findById(param);
+      }
+      if (!product) {
+        const slugLower = param.toLowerCase();
+        product = await Product.findOne({ slug: slugLower }).collation(SLUG_COLLATION);
+        if (!product) {
+          product = await Product.findOne({ oldSlugs: slugLower }).collation(SLUG_COLLATION);
+        }
+      }
       if (!product) return null;
       const po = product.toObject ? product.toObject() : product;
       const { price, breakup } = await getProductPrice(product);
-      const pld = { ...po, price: String(po.price || price), calculatedPrice: price, priceBreakup: breakup };
+      const slugLower = param.toLowerCase();
+      const matchedOldSlug =
+        !isMongoObjectIdString(param) &&
+        typeof po.slug === 'string' &&
+        po.slug.toLowerCase() !== slugLower &&
+        Array.isArray(po.oldSlugs) &&
+        po.oldSlugs.some((s) => String(s).toLowerCase() === slugLower);
+      const pld = {
+        ...po,
+        price: String(po.price || price),
+        calculatedPrice: price,
+        priceBreakup: breakup,
+        ...(matchedOldSlug ? { canonicalSlug: po.slug } : {}),
+      };
       appCache.set(cacheKey, pld, PRODUCT_DETAIL_CACHE_TTL_MS);
       return pld;
     });
 
-    if (!payload) return res.status(404).json({ error: 'Product not found' });
+    if (!payload) {
+      return res.status(404).json({ error: 'Product not found', message: 'Product not found' });
+    }
     return sendJsonWithEtag(req, res, { ...payload, cached: false }, { cacheControl: 'public, max-age=60' });
   } catch (err) {
-    if (err.name === 'CastError') return res.status(404).json({ error: 'Product not found' });
+    if (err.name === 'CastError') {
+      return res.status(404).json({ error: 'Product not found', message: 'Product not found' });
+    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -310,16 +345,47 @@ exports.create = async (req, res) => {
     body.fixedPricePaise = 0;
     body.price = '';
 
-    try {
-      const product = await Product.create(body);
-      invalidateProductCaches();
-      res.status(201).json(product);
-    } catch (err) {
-      if (err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
-        return res.status(409).json({ error: 'Duplicate SKU. Please try creating the product again.' });
-      }
-      throw err;
+    const baseSlug =
+      body.slug !== undefined && body.slug !== null && String(body.slug).trim()
+        ? slugify(body.slug)
+        : slugify(body.name);
+    if (!baseSlug) {
+      return res.status(400).json({ error: 'Invalid name or slug for URL' });
     }
+    delete body.oldSlugs;
+
+    let createdProduct = null;
+    let createErr = null;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const baseForSlug =
+        attempt === 0
+          ? baseSlug
+          : slugify(`${String(body.name || 'product')}-${attempt}-${Math.random().toString(36).slice(2, 9)}`);
+      // eslint-disable-next-line no-await-in-loop
+      body.slug = await ensureUniqueSlug(baseForSlug, null);
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        createdProduct = await Product.create(body);
+        createErr = null;
+        break;
+      } catch (err) {
+        createErr = err;
+        if (err.code === 11000 && err.keyPattern && err.keyPattern.slug) {
+          continue;
+        }
+        if (err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
+          return res.status(409).json({ error: 'Duplicate SKU. Please try creating the product again.' });
+        }
+        throw err;
+      }
+    }
+    if (!createdProduct) {
+      return res.status(409).json({
+        error: createErr?.message || 'Could not allocate a unique slug. Please try again.',
+      });
+    }
+    invalidateProductCaches();
+    res.status(201).json(createdProduct);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -336,6 +402,7 @@ exports.bulkCreate = async (req, res) => {
 
   const failures = [];
   const created = [];
+  const localSlugs = new Set();
 
   // Pre-check duplicates within the upload itself
   const seenSkus = new Set();
@@ -414,16 +481,59 @@ exports.bulkCreate = async (req, res) => {
     body.fixedPricePaise = 0;
     body.price = '';
 
-    try {
-      const p = await Product.create(body);
-      created.push(p);
-      existingSet.add(skuKey);
-    } catch (err) {
-      if (err && err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
-        failures.push({ index: i, sku, error: 'Duplicate SKU (row rejected)' });
-      } else {
-        failures.push({ index: i, sku, error: err.message || 'Failed to create product' });
+    delete body.oldSlugs;
+    const baseSlug =
+      body.slug !== undefined && body.slug !== null && String(body.slug).trim()
+        ? slugify(body.slug)
+        : slugify(body.name);
+    if (!baseSlug) {
+      failures.push({ index: i, sku, error: 'Invalid name or slug for URL' });
+      continue;
+    }
+    let createdRow = null;
+    let fatalBulkFailure = null;
+    for (let att = 0; att < 12; att += 1) {
+      const baseForSlug =
+        att === 0 ? baseSlug : slugify(`${String(body.name || 'product')}-${att}-${Math.random().toString(36).slice(2, 9)}`);
+      // eslint-disable-next-line no-await-in-loop
+      let slugCandidate = await ensureUniqueSlug(baseForSlug, null);
+      let guard = 0;
+      // eslint-disable-next-line no-await-in-loop
+      while (localSlugs.has(slugCandidate) && guard < 24) {
+        guard += 1;
+        // eslint-disable-next-line no-await-in-loop
+        slugCandidate = await ensureUniqueSlug(`${baseForSlug}-${guard}-${Math.random().toString(36).slice(2, 7)}`, null);
       }
+      if (localSlugs.has(slugCandidate)) {
+        fatalBulkFailure = { index: i, sku, error: 'Could not reserve unique slug in batch' };
+        break;
+      }
+      localSlugs.add(slugCandidate);
+      body.slug = slugCandidate;
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        createdRow = await Product.create(body);
+        break;
+      } catch (err) {
+        localSlugs.delete(slugCandidate);
+        if (err && err.code === 11000 && err.keyPattern && err.keyPattern.slug) {
+          continue;
+        }
+        if (err && err.code === 11000 && err.keyPattern && err.keyPattern.sku) {
+          fatalBulkFailure = { index: i, sku, error: 'Duplicate SKU (row rejected)' };
+        } else {
+          fatalBulkFailure = { index: i, sku, error: err.message || 'Failed to create product' };
+        }
+        break;
+      }
+    }
+    if (createdRow) {
+      created.push(createdRow);
+      existingSet.add(skuKey);
+    } else if (fatalBulkFailure) {
+      failures.push(fatalBulkFailure);
+    } else {
+      failures.push({ index: i, sku, error: 'Duplicate slug (row rejected after retries)' });
     }
   }
 
@@ -470,6 +580,33 @@ exports.update = async (req, res) => {
 
     const existing = await Product.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Product not found' });
+
+    if (!Object.prototype.hasOwnProperty.call(body, 'slug')) {
+      delete body.oldSlugs;
+    } else {
+      const rawSlug = body.slug;
+      delete body.slug;
+      if (rawSlug !== undefined && rawSlug !== null && String(rawSlug).trim() !== '') {
+        const newSlug = slugify(String(rawSlug));
+        if (!newSlug) {
+          return res.status(400).json({ error: 'Invalid slug' });
+        }
+        if (newSlug !== existing.slug) {
+          // eslint-disable-next-line no-await-in-loop
+          if (await isSlugTaken(newSlug, existing._id)) {
+            return res.status(409).json({ error: 'Slug already in use' });
+          }
+          const prev = existing.slug;
+          const olds = Array.isArray(existing.oldSlugs)
+            ? existing.oldSlugs.map((s) => String(s).toLowerCase().trim()).filter(Boolean)
+            : [];
+          if (prev && !olds.includes(prev)) olds.push(prev);
+          body.slug = newSlug;
+          body.oldSlugs = olds;
+        }
+      }
+    }
+
     const merged = { ...existing.toObject(), ...body };
     const hasGold = hasValidGoldPricing(merged);
     if (!hasGold) {

@@ -1,10 +1,16 @@
 const Product = require('../models/Product');
+const { slugify, ensureUniqueSlug } = require('../services/productSlug');
 
 const ONE_RUPEE_SKU = 'ONE_RUPEE';
 
 async function ensureOneRupeeProduct() {
+  const existing = await Product.findOne({ sku: ONE_RUPEE_SKU }).select('_id slug').lean();
+  const baseSlug = slugify('one-rupee-product');
+  const slug = existing?.slug || (await ensureUniqueSlug(baseSlug, existing?._id || null));
+
   const doc = {
     name: '₹1 Product',
+    slug,
     category: 'Accessories',
     price: '',
     image: 'https://i.pinimg.com/736x/63/c8/84/63c8843ca6bf89c0979967db22e2e3c7.jpg',

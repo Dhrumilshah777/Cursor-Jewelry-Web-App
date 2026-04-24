@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { apiGet, assetUrl } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 
 const POPULAR_SEARCHES = [
   { label: 'Rings', href: '/products?category=rings' },
@@ -13,6 +14,7 @@ const POPULAR_SEARCHES = [
 
 type Product = {
   id: string;
+  slug?: string;
   name: string;
   category: string;
   price: string;
@@ -81,11 +83,15 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
-    apiGet<(Product & { _id?: string })[]>('/api/products')
-      .then((list) => {
-        if (cancelled || !Array.isArray(list)) return;
+    apiGet<{ products?: (Product & { _id?: string; slug?: string })[] } | (Product & { _id?: string; slug?: string })[]>(
+      '/api/products'
+    )
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
         const normalized = list.slice(0, SUGGESTED_COUNT).map((p) => ({
           id: p.id || p._id?.toString?.() || '',
+          slug: typeof p.slug === 'string' ? p.slug : undefined,
           name: p.name || '',
           category: p.category || '',
           price: typeof p.price === 'number' ? String(p.price) : (p.price || ''),
@@ -164,7 +170,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               {suggestedProducts.map((product) => (
                 <li key={product.id}>
                   <Link
-                    href={`/products/${product.id}`}
+                    href={productHref(product)}
                     onClick={onClose}
                     className="flex items-center gap-3 rounded-sm py-2 transition-colors hover:bg-stone-50"
                   >

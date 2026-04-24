@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart, getCart } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 
 type PriceBreakup = {
   // New paise-based breakup (backend source of truth)
@@ -30,6 +31,9 @@ type PriceBreakup = {
 
 type Product = {
   _id: string;
+  slug?: string;
+  /** Present when URL used a retired slug; client should replace the route with this slug. */
+  canonicalSlug?: string;
   name: string;
   category: string;
   price: string;
@@ -86,7 +90,8 @@ const MOCK_PRODUCTS: Array<Pick<Product, '_id' | 'name' | 'category' | 'price' |
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const id = params?.id as string;
+  const router = useRouter();
+  const routeSlug = typeof params?.slug === 'string' ? decodeURIComponent(params.slug) : '';
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -163,7 +168,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     setImageError(false);
     setSelectedImageIndex(0);
-  }, [id]);
+  }, [routeSlug]);
 
   const outOfStock = (product?.stock ?? 1) <= 0;
 
@@ -173,14 +178,14 @@ export default function ProductDetailPage() {
   }, [product?.ringSize]);
 
   useEffect(() => {
-    if (!id) {
+    if (!routeSlug) {
       setLoading(false);
       setError('Invalid product');
       return;
     }
 
     // Mock products (frontend-only)
-    const mock = MOCK_PRODUCTS.find((p) => p._id === id);
+    const mock = MOCK_PRODUCTS.find((p) => p._id === routeSlug);
     if (mock) {
       setProduct(mock as Product);
       setWishlisted(typeof window !== 'undefined' && isInWishlist(mock._id));
@@ -192,7 +197,7 @@ export default function ProductDetailPage() {
     setLoading(true);
     setError('');
     const base = getApiBase();
-    fetch(`${base}/api/products/${id}`)
+    fetch(`${base}/api/products/${encodeURIComponent(routeSlug)}`)
       .then((res) => {
         if (!res.ok) {
           if (res.status === 404) throw new Error('Product not found');
@@ -206,7 +211,13 @@ export default function ProductDetailPage() {
           setProduct(null);
           return;
         }
+        const canon = typeof data.canonicalSlug === 'string' ? data.canonicalSlug.trim() : '';
+        if (canon && canon !== routeSlug) {
+          router.replace(`/products/${encodeURIComponent(canon)}`);
+          return;
+        }
         const p = { ...data, _id: (data._id || data.id || '') as string };
+        delete (p as { canonicalSlug?: string }).canonicalSlug;
         setProduct(p);
         setWishlisted(typeof window !== 'undefined' && isInWishlist(p._id));
         setError('');
@@ -221,7 +232,7 @@ export default function ProductDetailPage() {
         setProduct(null);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [routeSlug]);
 
   const checkDelivery = async () => {
     const pin = pincode.trim().replace(/\D/g, '');
@@ -293,6 +304,7 @@ export default function ProductDetailPage() {
     } else {
       addToWishlist({
         id: product._id,
+        slug: product.slug,
         name: product.name,
         category: product.category,
         price: typeof product.calculatedPrice === 'number' ? String(product.calculatedPrice) : product.price,
@@ -552,7 +564,14 @@ export default function ProductDetailPage() {
                 onClick={() => {
                   if (outOfStock) return;
                   if (alreadyInCart) return;
-                  addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image, quantity: purchaseQty });
+                  addToCart({
+                    id: product._id,
+                    slug: product.slug,
+                    name: product.name,
+                    price: String(displayPrice),
+                    image: product.image,
+                    quantity: purchaseQty,
+                  });
                   setAddedToCart(true);
                   setAlreadyInCart(true);
                   setTimeout(() => setAddedToCart(false), 2500);
@@ -802,7 +821,7 @@ export default function ProductDetailPage() {
                 return (
                   <Link
                     key={p._id}
-                    href={`/products/${p._id}`}
+                    href={productHref(p)}
                     className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52"
                   >
                     <div className="aspect-square w-full overflow-hidden bg-stone-100">
@@ -826,7 +845,7 @@ export default function ProductDetailPage() {
               {recentlyViewed.map((item) => {
                 const imgSrc = item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? (item.image.startsWith('/uploads/') ? assetUrl(item.image) : item.image) : assetUrl(`/${item.image}`);
                 return (
-                  <Link key={item.id} href={`/products/${item.id}`} className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white">
+                  <Link key={item.id} href={productHref(item)} className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white">
                     <div className="aspect-square w-full overflow-hidden bg-stone-100">
                       <img src={imgSrc} alt={item.name} className="h-full w-full object-cover" />
                     </div>
@@ -851,7 +870,14 @@ export default function ProductDetailPage() {
               onClick={() => {
                 if (outOfStock) return;
                 if (alreadyInCart) return;
-                addToCart({ id: product._id, name: product.name, price: String(displayPrice), image: product.image, quantity: purchaseQty });
+                addToCart({
+                  id: product._id,
+                  slug: product.slug,
+                  name: product.name,
+                  price: String(displayPrice),
+                  image: product.image,
+                  quantity: purchaseQty,
+                });
                 setAddedToCart(true);
                 setAlreadyInCart(true);
                 setTimeout(() => setAddedToCart(false), 2500);

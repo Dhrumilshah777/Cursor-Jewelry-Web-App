@@ -3,9 +3,11 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { apiGet, assetUrl, addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 
 type Product = {
   _id: string;
+  slug?: string;
   name: string;
   category: string;
   price: string;
@@ -50,13 +52,21 @@ function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (wishlisted) removeFromWishlist(product._id);
-    else addToWishlist({ id: product._id, name: product.name, category: product.category, price: product.price, image: product.image });
+    else
+      addToWishlist({
+        id: product._id,
+        slug: product.slug,
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        image: product.image,
+      });
     setWishlisted(!wishlisted);
   };
 
   return (
     <div className="group">
-      <Link href={`/products/${product._id}`} className="block">
+      <Link href={productHref(product)} className="block">
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-stone-100">
           <img
             src={productImageSrc(product.image)}

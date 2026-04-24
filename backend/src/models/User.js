@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema(
     wishlist: [
       {
         productId: { type: String, required: true },
+        slug: { type: String, default: '' },
         name: { type: String, required: true },
         category: { type: String, default: '' },
         price: { type: String, required: true },

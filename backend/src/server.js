@@ -9,6 +9,7 @@ const passport = require('passport');
 const connectDB = require('./config/db');
 require('./config/passport');
 const { ensureOneRupeeProduct } = require('./seeds/ensureOneRupeeProduct');
+const { ensureProductSlugs } = require('./seeds/ensureProductSlugs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -128,6 +129,18 @@ async function start() {
     process.exit(1);
   }
   await connectDB();
+  try {
+    const Product = require('./models/Product');
+    await Product.syncIndexes();
+  } catch (err) {
+    console.warn('[db] Product.syncIndexes:', err?.message || err);
+    console.warn('[db] If slug index conflicts, drop legacy index in MongoDB: db.products.dropIndex("slug_1")');
+  }
+  try {
+    await ensureProductSlugs();
+  } catch (err) {
+    console.error('Failed to ensure product slugs:', err?.message || err);
+  }
   try {
     await ensureOneRupeeProduct();
   } catch (err) {

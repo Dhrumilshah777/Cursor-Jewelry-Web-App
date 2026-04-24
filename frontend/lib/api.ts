@@ -16,7 +16,7 @@ const SESSION_TTL_MS = 30_000;
 let userSession: SessionCache = { ok: false, checkedAt: 0 };
 let adminSession: SessionCache = { ok: false, checkedAt: 0 };
 
-export type WishlistProduct = { id: string; name: string; category: string; price: string; image: string };
+export type WishlistProduct = { id: string; slug?: string; name: string; category: string; price: string; image: string };
 /** Logged-in user's wishlist from API; null = not loaded yet */
 let userWishlistCache: WishlistProduct[] | null = null;
 
@@ -429,7 +429,7 @@ export function isInWishlist(productId: string): boolean {
 // Cart (localStorage) – guest cart, no login required. Item: { id, name, price, image, quantity }
 const CART_KEY = 'cart-items';
 
-export type CartItem = { id: string; name: string; price: string; image: string; quantity: number };
+export type CartItem = { id: string; slug?: string; name: string; price: string; image: string; quantity: number };
 
 function dispatchCartUpdated() {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('cart-updated'));
@@ -501,23 +501,36 @@ export function getCartCount(): number {
 
 /** Cart API (when user is logged in). Items use productId on server, we map to id for CartItem. */
 export async function getCartFromApi(): Promise<CartItem[]> {
-  const raw = await apiGet<{ productId: string; name: string; price: string; image: string; quantity: number }[]>(
-    '/api/cart',
-    { user: true }
-  );
+  const raw = await apiGet<
+    { productId: string; slug?: string; name: string; price: string; image: string; quantity: number }[]
+  >('/api/cart', { user: true });
   if (!Array.isArray(raw)) return [];
-  return raw.map((i) => ({ id: i.productId, name: i.name, price: i.price, image: i.image || '', quantity: i.quantity }));
+  return raw.map((i) => ({
+    id: i.productId,
+    slug: i.slug || undefined,
+    name: i.name,
+    price: i.price,
+    image: i.image || '',
+    quantity: i.quantity,
+  }));
 }
 
 /** Validated cart: server re-fetches products and returns items + backend-calculated subtotal. Use for cart page and checkout. */
 export type ValidatedCart = { items: CartItem[]; subtotal: number };
 export async function getValidatedCartFromApi(): Promise<ValidatedCart> {
-  const raw = await apiGet<{ items: { productId: string; name: string; price: string; image: string; quantity: number }[]; subtotal: number }>(
-    '/api/cart/validated',
-    { user: true }
-  );
+  const raw = await apiGet<{
+    items: { productId: string; slug?: string; name: string; price: string; image: string; quantity: number }[];
+    subtotal: number;
+  }>('/api/cart/validated', { user: true });
   const items = Array.isArray(raw?.items)
-    ? raw.items.map((i) => ({ id: i.productId, name: i.name, price: i.price, image: i.image || '', quantity: i.quantity }))
+    ? raw.items.map((i) => ({
+        id: i.productId,
+        slug: i.slug || undefined,
+        name: i.name,
+        price: i.price,
+        image: i.image || '',
+        quantity: i.quantity,
+      }))
     : [];
   const subtotal = typeof raw?.subtotal === 'number' ? raw.subtotal : 0;
   return { items, subtotal };

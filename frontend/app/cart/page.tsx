@@ -13,6 +13,7 @@ import {
   assetUrl,
   type CartItem,
 } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 
 function cartItemSubtotal(item: CartItem): number {
   const p = parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
@@ -144,7 +145,7 @@ export default function CartPage() {
             <ul className="mt-8 divide-y divide-stone-200 border border-stone-200 rounded-lg bg-white">
               {items.map((item) => (
                 <li key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6">
-                  <Link href={`/products/${item.id}`} className="flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 overflow-hidden rounded-md bg-stone-100">
+                  <Link href={productHref(item)} className="flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 overflow-hidden rounded-md bg-stone-100">
                     <img
                       src={imageSrc(item.image)}
                       alt=""
@@ -152,7 +153,7 @@ export default function CartPage() {
                     />
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link href={`/products/${item.id}`} className="font-sans font-semibold text-charcoal hover:underline">
+                    <Link href={productHref(item)} className="font-sans font-semibold text-charcoal hover:underline">
                       {item.name}
                     </Link>
                     <p className="mt-1 text-sm text-stone-500">₹{item.price} each</p>

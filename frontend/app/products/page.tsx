@@ -4,10 +4,12 @@ import { useState, useEffect, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiGet, assetUrl, addToWishlist, removeFromWishlist, getWishlist } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 import FilterSidebar, { type Facets } from '@/components/FilterSidebar';
 
 type Product = {
   _id: string;
+  slug?: string;
   name: string;
   category: string;
   price: string;
@@ -261,7 +263,7 @@ function ProductsContent() {
               <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <li key={product._id} className="group">
-                    <Link href={`/products/${product._id}`} className="block">
+                    <Link href={productHref(product)} className="block">
                       <div className="relative aspect-square w-full overflow-hidden rounded-none bg-stone-100">
                         <img
                           src={productImageSrc(product.image)}

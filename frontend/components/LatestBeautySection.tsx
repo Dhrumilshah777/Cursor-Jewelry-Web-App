@@ -10,9 +10,11 @@ import {
   isInWishlist,
   addToCart,
 } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 
 type Product = {
   id: string;
+  slug?: string;
   name: string;
   category: string;
   price: string;
@@ -53,6 +55,7 @@ function ProductCard({ product }: { product: Product }) {
       ? removeFromWishlist(product.id)
       : addToWishlist({
           id: product.id,
+          slug: product.slug,
           name: product.name,
           category: product.category,
           price: product.price,
@@ -63,7 +66,7 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="mx-auto w-full">
-      <Link href={`/products/${product.id}`}>
+      <Link href={productHref(product)}>
         <div className="rounded-sm bg-stone-100 shadow-md transition-all hover:shadow-xl">
 
           {/* 🔥 Bigger Responsive Image */}
@@ -111,7 +114,7 @@ function ProductCard({ product }: { product: Product }) {
               onClick={(e) => {
                 e.preventDefault();
                 if ((product.stock ?? 1) <= 0) return;
-                addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+                addToCart({ id: product.id, slug: product.slug, name: product.name, price: product.price, image: product.image });
               }}
               disabled={(product.stock ?? 1) <= 0}
               className="flex h-8 w-8 items-center justify-center rounded border border-stone-300 text-stone-600 transition-colors hover:border-charcoal hover:text-charcoal"
@@ -191,10 +194,12 @@ export default function LatestBeautySection() {
   }, []);
 
   useEffect(() => {
-    apiGet<Product[]>('/api/products')
-      .then((list) => {
+    apiGet<{ products?: unknown[] } | unknown[]>('/api/products')
+      .then((data) => {
+        const list = Array.isArray(data) ? data : Array.isArray((data as { products?: unknown[] }).products) ? (data as { products: unknown[] }).products : [];
         const mapped = list.map((p: any) => ({
           id: String(p._id),
+          slug: typeof p.slug === 'string' ? p.slug : undefined,
           name: p.name,
           category: p.category,
           price: p.price,

@@ -15,6 +15,9 @@ const GOLD_RATE_PUBLIC_CACHE_TTL_MS = (() => {
 function invalidateGoldRateCaches() {
   invalidateGoldRatesCache();
   appCache.delPrefix('goldrate:public:');
+  // Product JSON caches include calculated prices — clear when gold rates change.
+  appCache.delPrefix('products:list:');
+  appCache.delPrefix('products:one:');
 }
 
 exports.list = async (req, res) => {

@@ -10,6 +10,7 @@ import {
   isUserLoggedIn,
   refreshWishlistFromApi,
 } from '@/lib/api';
+import { productHref } from '@/lib/productLink';
 
 export default function WishlistPage() {
   const [items, setItems] = useState<WishlistProduct[]>([]);
@@ -82,7 +83,7 @@ export default function WishlistPage() {
                 key={product.id}
                 className="group flex flex-col overflow-hidden rounded border border-stone-200 bg-white"
               >
-                <Link href={`/products/${product.id}`} className="block flex-1">
+                <Link href={productHref(product)} className="block flex-1">
                   <div className="relative aspect-square w-full overflow-hidden bg-stone-100">
                     <img
                       src={

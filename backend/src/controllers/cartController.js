@@ -19,6 +19,7 @@ exports.get = async (req, res) => {
       const { price } = await getProductPrice(product);
       enriched.push({
         productId: String(product._id),
+        slug: product.slug || '',
         name: product.name,
         price: String(price || 0),
         image: product.image || '',
@@ -49,6 +50,7 @@ exports.getValidated = async (req, res) => {
       const { price } = await getProductPrice(product);
       validated.push({
         productId: String(product._id),
+        slug: product.slug || '',
         name: product.name,
         price: String(price),
         image: product.image || '',
@@ -88,7 +90,14 @@ exports.set = async (req, res) => {
       const qty = Math.min(it.quantity, product.stock);
       if (qty < 1) continue;
       const { price } = await getProductPrice(product);
-      out.push({ productId: String(product._id), name: product.name, price: String(price || 0), image: product.image || '', quantity: qty });
+      out.push({
+        productId: String(product._id),
+        slug: product.slug || '',
+        name: product.name,
+        price: String(price || 0),
+        image: product.image || '',
+        quantity: qty,
+      });
     }
     res.json(out);
   } catch (err) {
@@ -138,7 +147,14 @@ exports.addItem = async (req, res) => {
       const q = Math.min(it.quantity, p.stock);
       if (q < 1) continue;
       const { price } = await getProductPrice(p);
-      out.push({ productId: String(p._id), name: p.name, price: String(price || 0), image: p.image || '', quantity: q });
+      out.push({
+        productId: String(p._id),
+        slug: p.slug || '',
+        name: p.name,
+        price: String(price || 0),
+        image: p.image || '',
+        quantity: q,
+      });
     }
     res.json(out);
   } catch (err) {
@@ -181,7 +197,14 @@ exports.merge = async (req, res) => {
       const q = Math.min(it.quantity, p.stock);
       if (q < 1) continue;
       const { price } = await getProductPrice(p);
-      out.push({ productId: String(p._id), name: p.name, price: String(price || 0), image: p.image || '', quantity: q });
+      out.push({
+        productId: String(p._id),
+        slug: p.slug || '',
+        name: p.name,
+        price: String(price || 0),
+        image: p.image || '',
+        quantity: q,
+      });
     }
     res.json(out);
   } catch (err) {

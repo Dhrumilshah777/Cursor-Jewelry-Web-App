@@ -432,7 +432,7 @@ export default function ProductDetailPage() {
   })();
 
   type SpecTile = { key: string; label: string; value: string; icon: 'hex' | 'coin' | 'user' | 'tag' | 'ruler' | 'shield' };
-  const specTiles: SpecTile[] = [
+  const baseSpecTiles: SpecTile[] = [
     { key: 'metal', label: 'Metal', value: goldTypeLabel ? String(goldTypeLabel) : '', icon: 'hex' },
     { key: 'purity', label: 'Gold purity', value: goldPurityLabel ? String(goldPurityLabel) : '', icon: 'coin' },
     { key: 'weight', label: 'Product weight', value: normalizedWeight, icon: 'user' },
@@ -444,7 +444,9 @@ export default function ProductDetailPage() {
       icon: 'ruler',
     },
     { key: 'bis', label: 'BIS hallmarked', value: 'Yes', icon: 'shield' },
-  ].filter((t) => t.value && String(t.value).trim());
+  ];
+
+  const specTiles = baseSpecTiles.filter((t): t is SpecTile => Boolean(t.value && String(t.value).trim()));
 
   const iconSvg = (icon: SpecTile['icon']) => {
     switch (icon) {

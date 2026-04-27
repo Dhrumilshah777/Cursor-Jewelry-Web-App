@@ -729,8 +729,8 @@ export default function ProductDetailPage() {
             {specTiles.length > 0 && (
               <div className="mt-6 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
                 {specTiles.slice(0, 6).map((t) => (
-                  <div key={t.key} className="flex items-center gap-3 px-4 py-2.5 sm:px-5 sm:py-3">
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-stone-50 text-stone-700">
+                  <div key={t.key} className="flex items-center gap-2.5 px-3 py-2 sm:px-4 sm:py-2">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-stone-50 text-stone-700">
                       {iconSvg(t.icon)}
                     </span>
                     <div className="min-w-0 flex-1 leading-tight">

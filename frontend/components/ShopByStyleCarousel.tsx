@@ -13,15 +13,6 @@ function resolveImageUrl(url: string): string {
   return url;
 }
 
-/** Mock slides when API returns empty (e.g. localhost) */
-const MOCK_SLIDES: Slide[] = [
-  { image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600', label: 'OFFICE WEAR', link: '/products' },
-  { image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600', label: 'DAILY WEAR', link: '/products' },
-  { image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343a?w=600', label: 'PARTY WEAR', link: '/products' },
-  { image: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=600', label: 'WEDDING WEAR', link: '/products' },
-  { image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600', label: 'DATE NIGHT', link: '/products' },
-];
-
 const REPEAT_COUNT = 3; // triple the slides for infinite scroll
 const AUTOPLAY_MS = 4500;
 
@@ -34,17 +25,13 @@ export default function ShopByStyleCarousel() {
   const isJumpingRef = useRef(false);
 
   useEffect(() => {
-    const isLocalhost =
-      typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     apiGet<Slide[]>('/api/site/shop-by-style')
       .then((list) => {
         const arr = Array.isArray(list) ? list.filter((s) => s?.image) : [];
-        setSlides(arr.length > 0 ? arr : isLocalhost ? MOCK_SLIDES : []);
+        setSlides(arr.length > 0 ? arr : []);
       })
       .catch(() => {
-        const isLocalhost =
-          typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        setSlides(isLocalhost ? MOCK_SLIDES : []);
+        setSlides([]);
       })
       .finally(() => setLoading(false));
   }, []);

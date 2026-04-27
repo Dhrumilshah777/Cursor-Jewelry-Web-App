@@ -65,7 +65,6 @@ app.post('/api/webhooks/shiprocket', shiprocketWebhook);
 // Alias route: Shiprocket UI blocks URLs containing "shiprocket"
 app.post('/api/webhooks/shipment', shiprocketWebhook);
 app.use(passport.initialize());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Root (so visiting the backend URL shows something friendly)
 app.get('/', (req, res) => {

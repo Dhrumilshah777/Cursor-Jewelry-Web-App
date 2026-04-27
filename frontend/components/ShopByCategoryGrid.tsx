@@ -9,15 +9,6 @@ type ApiCategory = { _id?: string; name: string; image: string; image2?: string;
 
 const MOBILE_PAGE_SIZE = 4;
 
-/** Mock categories shown on localhost when API returns empty (for development) */
-const MOCK_CATEGORIES: Category[] = [
-  { id: 'mock-1', name: 'Wedding', image: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=600', slug: 'wedding' },
-  { id: 'mock-2', name: 'Diamond', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600', slug: 'diamond' },
-  { id: 'mock-3', name: 'Gold', image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343a?w=600', slug: 'gold' },
-  { id: 'mock-4', name: 'Dailywear', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600', slug: 'dailywear' },
-  { id: 'mock-5', name: 'Rings', image: 'https://images.unsplash.com/photo-1603561586110-d6a5dc2d2478?w=600', slug: 'rings' },
-];
-
 function ShopByCategorySlider({ categories }: { categories: Category[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -82,13 +73,13 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
 const ROTATE_INTERVAL_MS = 5000;
 
 /** Placeholder when a category has no image or image fails */
-const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800';
+const PLACEHOLDER_IMAGE = '';
 
 /** Placeholder category to fill empty slots in the 5-cell grid */
 const PLACEHOLDER_CATEGORY: Category = {
   id: 'placeholder',
   name: 'More coming soon',
-  image: PLACEHOLDER_IMAGE,
+  image: '',
   slug: 'products',
 };
 
@@ -111,9 +102,12 @@ function CategoryImage({
   warmOverlay?: boolean;
 }) {
   const [error, setError] = useState(false);
-  const primary = resolveImageUrl(category.image) || PLACEHOLDER_IMAGE;
-  const images = [primary];
-  if (category.image2) images.push(resolveImageUrl(category.image2));
+  const primary = resolveImageUrl(category.image);
+  const images = primary ? [primary] : [];
+  if (category.image2) {
+    const secondary = resolveImageUrl(category.image2);
+    if (secondary) images.push(secondary);
+  }
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -134,7 +128,7 @@ function CategoryImage({
       <div
         className={`relative h-full w-full overflow-hidden ${rounded ? 'rounded-2xl' : ''}`}
       >
-        {!error ? (
+        {!error && images.length > 0 ? (
           <>
             {images.map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element
@@ -150,11 +144,7 @@ function CategoryImage({
             ))}
           </>
         ) : (
-          <img
-            src={PLACEHOLDER_IMAGE}
-            alt={category.name}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <div className="absolute inset-0 bg-stone-300" />
         )}
         <div
           className={`pointer-events-none absolute inset-0 z-10 ${
@@ -177,8 +167,6 @@ export default function ShopByCategoryGrid() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const isLocalhost =
-      typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     apiGet<ApiCategory[]>('/api/site/view-by-categories')
       .then((list) => {
         const mapped: Category[] = (Array.isArray(list) ? list : []).map((c, i) => ({
@@ -188,10 +176,10 @@ export default function ShopByCategoryGrid() {
           image2: c.image2 || undefined,
           slug: c.slug || c.name?.toLowerCase().replace(/\s+/g, '-') || 'category',
         }));
-        setCategories(mapped.length > 0 ? mapped : isLocalhost ? MOCK_CATEGORIES : []);
+        setCategories(mapped.length > 0 ? mapped : []);
       })
       .catch(() => {
-        setCategories(isLocalhost ? MOCK_CATEGORIES : []);
+        setCategories([]);
       });
   }, []);
 

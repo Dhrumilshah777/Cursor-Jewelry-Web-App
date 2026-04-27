@@ -113,7 +113,6 @@ export default function ProductDetailPage() {
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
-  const [accordion, setAccordion] = useState({ ringDetails: true, delivery: false, care: false });
   const [alreadyInCart, setAlreadyInCart] = useState(false);
 
   useEffect(() => {
@@ -396,8 +395,40 @@ export default function ProductDetailPage() {
       ? product.colors
       : (product.goldType && String(product.goldType).trim() ? [String(product.goldType).trim()] : []);
   const isRing = /ring/i.test(product.category || '') || /ring/i.test(product.name || '');
-  const toggleAccordion = (key: 'ringDetails' | 'delivery' | 'care') => {
-    setAccordion((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const goldPurityLabel =
+    product.priceBreakup?.goldPurity ||
+    product.goldPurity ||
+    (typeof product.priceBreakup?.gstPercent === 'number' ? undefined : undefined);
+  const goldTypeLabel = product.goldType || colorsList[0];
+  const metaParts = [goldPurityLabel, goldTypeLabel, product.carat].filter((v) => typeof v === 'string' && v.trim());
+  const metaLine = metaParts.join(' | ');
+
+  const specRows: Array<{ label: string; value: string }> = [
+    { label: 'Metal', value: goldTypeLabel ? String(goldTypeLabel) : '' },
+    { label: 'Gold purity', value: goldPurityLabel ? String(goldPurityLabel) : '' },
+    { label: 'Product weight', value: product.weight ? String(product.weight) : (product.priceBreakup?.netWeight != null ? `${Number(product.priceBreakup.netWeight)} g` : '') },
+    { label: 'SKU', value: product.sku ? String(product.sku) : '' },
+  ].filter((r) => r.value && String(r.value).trim());
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    if (outOfStock) return;
+    if (!alreadyInCart) {
+      addToCart({
+        id: product._id,
+        slug: product.slug,
+        name: product.name,
+        price: String(displayPrice),
+        image: product.image,
+        quantity: purchaseQty,
+      });
+      setAlreadyInCart(true);
+    }
+    if (typeof window !== 'undefined') {
+      const loggedIn = localStorage.getItem('user_logged_in') === '1';
+      router.push(loggedIn ? '/checkout' : '/login?returnTo=/checkout');
+    }
   };
 
   return (
@@ -409,35 +440,65 @@ export default function ProductDetailPage() {
           <span className="font-medium uppercase tracking-wide text-charcoal">{product.name}</span>
         </nav>
 
-        {/* 3-row flow on mobile: gallery → buy column → product details. On lg: gallery+details in col 1, buy in col 2 (details directly under thumbs). */}
-        <div className="grid items-start gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-x-12 lg:gap-y-0">
-          {/* Col 1 row 1: main image + thumbnails only */}
-          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-            <div className="aspect-[4/5] w-full overflow-hidden rounded-xl bg-stone-100">
-              {!imageError && selectedSrc ? (
-                <img
-                  key={selectedImageIndex}
-                  src={selectedSrc}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
-                  <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+        <div className="grid items-start gap-8 lg:grid-cols-[1.35fr_1fr] lg:gap-x-12">
+          {/* Left: thumbnails + main image (vertical on md+) */}
+          <div className="min-w-0">
+            <div className="grid gap-4 md:grid-cols-[88px_1fr] md:items-start">
+              {allImages.length > 1 && (
+                <div className="hidden md:flex md:flex-col md:gap-3 md:overflow-auto md:pr-1 md:max-h-[520px]">
+                  {allImages.map((raw, i) => {
+                    const src = raw ? resolveSrc(raw) : '';
+                    const isSelected = selectedImageIndex === i;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setSelectedImageIndex(i);
+                          setImageError(false);
+                        }}
+                        className={`h-20 w-20 overflow-hidden rounded-md border-2 transition-colors ${
+                          isSelected ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
+                        }`}
+                        aria-label={`View image ${i + 1}`}
+                      >
+                        {src ? (
+                          <img src={src} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full bg-stone-200" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
+
+              <div className="aspect-[4/5] w-full overflow-hidden rounded-xl bg-stone-100">
+                {!imageError && selectedSrc ? (
+                  <img
+                    key={selectedImageIndex}
+                    src={selectedSrc}
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
+                    <svg className="h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </div>
 
             {allImages.length > 1 && (
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-1 md:hidden">
                 {allImages.map((raw, i) => {
                   const src = raw ? resolveSrc(raw) : '';
                   const isSelected = selectedImageIndex === i;
@@ -449,24 +510,12 @@ export default function ProductDetailPage() {
                         setSelectedImageIndex(i);
                         setImageError(false);
                       }}
-                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-colors sm:h-24 sm:w-24 ${
+                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
                         isSelected ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
                       }`}
+                      aria-label={`View image ${i + 1}`}
                     >
-                      {src ? (
-                        <img src={src} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-stone-200 text-stone-400">
-                          <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
+                      {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-stone-200" />}
                     </button>
                   );
                 })}
@@ -474,83 +523,140 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Col 2 row 1: title, price, CTAs, accordions (lg aligns top with gallery) */}
-          <div className="relative z-30 flex flex-col lg:col-start-2 lg:row-start-1 lg:pl-2">
-            <div className="flex items-center gap-2">
-              <div className="flex text-gold" aria-label="4.5 out of 5 stars">
-                {[1, 2, 3, 4].map((i) => (
-                  <svg key={i} className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                ))}
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gold" fill="url(#half-star-product)" viewBox="0 0 20 20">
-                  <defs><linearGradient id="half-star-product"><stop offset="50%" stopColor="currentColor" /><stop offset="50%" stopColor="#e5e7eb" /></linearGradient></defs>
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+          {/* Right: info panel */}
+          <div className="min-w-0">
+            <div className="flex items-start gap-3">
+              <div className="min-w-0">
+                <h1 className="font-sans text-2xl font-semibold text-charcoal sm:text-3xl">
+                  {product.name}
+                </h1>
+                {metaLine ? <p className="mt-1 text-sm text-stone-600">{metaLine}</p> : null}
               </div>
-              <span className="text-sm text-stone-600">95 REVIEWS</span>
-              <button type="button" onClick={handleShare} className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-500 hover:bg-stone-50" aria-label="Share">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25" /></svg>
-              </button>
-              <button
-                type="button"
-                onClick={toggleWishlist}
-                className={`flex h-9 w-9 items-center justify-center rounded-full border ${wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 text-stone-500 hover:bg-stone-50'}`}
-                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-              >
-                <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-500 hover:bg-stone-50"
+                  aria-label="Share"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25" /></svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleWishlist}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border ${
+                    wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 text-stone-500 hover:bg-stone-50'
+                  }`}
+                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <svg className="h-5 w-5" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                </button>
+              </div>
             </div>
 
-            <h1 className="mt-4 font-sans text-2xl font-bold text-charcoal sm:text-3xl">
-              {product.name}
-            </h1>
-            {outOfStock && (
-              <div className="mt-2 inline-flex w-fit items-center rounded bg-black px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                Out of stock
-              </div>
-            )}
-            <p className="mt-1 text-stone-600">
-              {product.description?.split('\n')[0] || `This ${product.name} shines with elegant craftsmanship.`}
-            </p>
-
-            <div className="mt-4 flex flex-wrap items-baseline gap-2">
-              <span className="font-sans text-2xl font-bold text-charcoal">₹ {displayPrice.toFixed(2)}</span>
+            <div className="mt-4 flex items-center gap-3">
+              <p className="font-sans text-3xl font-semibold text-charcoal">₹ {displayPrice.toFixed(2)}</p>
               {compareAtPrice != null && compareAtPrice > displayPrice && (
-                <span className="text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</span>
+                <p className="text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
               )}
+              <div className="ml-auto">
+                {outOfStock ? (
+                  <span className="inline-flex items-center rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                    Out of stock
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    In stock
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="mt-1 text-xs text-stone-500">(MRP inclusive of all taxes)</p>
+            <p className="mt-1 text-xs text-stone-500">(Inclusive of all taxes)</p>
 
-            {colorsList.length > 0 && (
+            {/* Trust badges (visual only, like reference) */}
+            <div className="mt-5 grid grid-cols-2 gap-3 rounded-lg border border-stone-200 bg-white p-4 sm:grid-cols-4">
+              <div className="flex items-center gap-2 text-stone-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+                  </svg>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase leading-4">Hallmarked</p>
+                  <p className="text-[11px] text-stone-500 leading-4">BIS</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-stone-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7l3-7z" />
+                  </svg>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase leading-4">Certified</p>
+                  <p className="text-[11px] text-stone-500 leading-4">IGI</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-stone-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17a2 2 0 104 0" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17a2 2 0 104 0" />
+                  </svg>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase leading-4">Free shipping</p>
+                  <p className="text-[11px] text-stone-500 leading-4">& Returns</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-stone-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21s-7-4.35-7-10a4 4 0 017-2.5A4 4 0 0119 11c0 5.65-7 10-7 10z" />
+                  </svg>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase leading-4">Warranty</p>
+                  <p className="text-[11px] text-stone-500 leading-4">Lifetime</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Optional variations */}
+            {colorsList.length > 1 && (
               <div className="mt-6">
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
                   Color: {colorsList[selectedColorIndex] ?? colorsList[0]}
                 </p>
-                {colorsList.length > 1 && (
-                  <div className="mt-2 flex gap-2">
-                    {colorsList.map((c, i) => {
-                      const isSelected = selectedColorIndex === i;
-                      const colorMap: Record<string, string> = {
-                        'yellow gold': '#D4AF37',
-                        'rose gold': '#B76E79',
-                        'silver': '#C0C0C0',
-                        'gold': '#D4AF37',
-                        'platinum': '#E5E4E2',
-                        'white gold': '#E5E7EB',
-                      };
-                      const bg = colorMap[c.toLowerCase()] || '#D4AF37';
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setSelectedColorIndex(i)}
-                          className={`h-10 w-10 flex-shrink-0 rounded border-2 transition-all ${isSelected ? 'border-charcoal ring-2 ring-charcoal/20' : 'border-stone-200 hover:border-stone-400'}`}
-                          style={{ backgroundColor: bg }}
-                          aria-label={`Color ${c}`}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
+                <div className="mt-2 flex gap-2">
+                  {colorsList.map((c, i) => {
+                    const isSelected = selectedColorIndex === i;
+                    const colorMap: Record<string, string> = {
+                      'yellow gold': '#D4AF37',
+                      'rose gold': '#B76E79',
+                      'silver': '#C0C0C0',
+                      'gold': '#D4AF37',
+                      'platinum': '#E5E4E2',
+                      'white gold': '#E5E7EB',
+                    };
+                    const bg = colorMap[c.toLowerCase()] || '#D4AF37';
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setSelectedColorIndex(i)}
+                        className={`h-10 w-10 flex-shrink-0 rounded border-2 transition-all ${
+                          isSelected ? 'border-charcoal ring-2 ring-charcoal/20' : 'border-stone-200 hover:border-stone-400'
+                        }`}
+                        style={{ backgroundColor: bg }}
+                        aria-label={`Color ${c}`}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -562,59 +668,84 @@ export default function ProductDetailPage() {
                     type="text"
                     value={ringSizeInput}
                     onChange={(e) => setRingSizeInput(e.target.value)}
-                    placeholder="e.g. 3.35"
-                    className="w-24 border border-stone-300 px-3 py-2 text-sm"
+                    placeholder="e.g. 12"
+                    className="w-28 rounded border border-stone-300 px-3 py-2 text-sm"
                   />
-                  <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">Ring size guide</Link>
+                  <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">
+                    Ring size guide
+                  </Link>
                 </div>
               </div>
             )}
 
-            <div className="mt-6 flex flex-col gap-3">
+            {/* Specs (organized like reference; only render available fields) */}
+            {specRows.length > 0 && (
+              <div className="mt-6 rounded-lg border border-stone-200 bg-white p-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {specRows.map((row) => (
+                    <div key={row.label} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v9L12 21 4 16.5v-9L12 3z" />
+                        </svg>
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">{row.label}</p>
+                        <p className="mt-0.5 text-sm font-medium text-charcoal">{row.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTAs */}
+            <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
                 Quantity: {purchaseQty}
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  if (outOfStock) return;
-                  if (alreadyInCart) return;
-                  addToCart({
-                    id: product._id,
-                    slug: product.slug,
-                    name: product.name,
-                    price: String(displayPrice),
-                    image: product.image,
-                    quantity: purchaseQty,
-                  });
-                  setAddedToCart(true);
-                  setAlreadyInCart(true);
-                  setTimeout(() => setAddedToCart(false), 2500);
-                }}
-                disabled={alreadyInCart || outOfStock}
-                className={`w-full py-3 font-sans text-sm font-semibold uppercase tracking-wide transition-colors ${
-                  alreadyInCart || outOfStock
-                    ? 'cursor-not-allowed bg-stone-300 text-stone-600'
-                    : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
-                }`}
-              >
-                {outOfStock ? 'Out of stock' : alreadyInCart ? 'Already in cart' : 'Add to cart'}
-              </button>
-              {outOfStock && (
-                <p className="text-xs text-stone-600">
-                  This item is currently out of stock. You can still view details, but purchasing is disabled.
-                </p>
-              )}
-              <Link
-                href="/products"
-                className="flex w-full items-center justify-center border border-black bg-black py-3 font-sans text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-stone-900"
-              >
-                Shop now
-              </Link>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (outOfStock) return;
+                    if (alreadyInCart) return;
+                    addToCart({
+                      id: product._id,
+                      slug: product.slug,
+                      name: product.name,
+                      price: String(displayPrice),
+                      image: product.image,
+                      quantity: purchaseQty,
+                    });
+                    setAddedToCart(true);
+                    setAlreadyInCart(true);
+                    setTimeout(() => setAddedToCart(false), 2500);
+                  }}
+                  disabled={alreadyInCart || outOfStock}
+                  className={`w-full rounded border px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                    alreadyInCart || outOfStock
+                      ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-500'
+                      : 'border-charcoal bg-white text-charcoal hover:bg-stone-50'
+                  }`}
+                >
+                  {outOfStock ? 'Out of stock' : alreadyInCart ? 'In cart' : 'Add to cart'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={outOfStock}
+                  className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                    outOfStock ? 'cursor-not-allowed bg-stone-300 text-stone-600' : 'bg-black text-white hover:bg-stone-900'
+                  }`}
+                >
+                  Buy now
+                </button>
+              </div>
             </div>
 
-            {/* Pincode check — below Add to cart */}
-            <div className="mt-6 border border-stone-200 bg-stone-50 p-4">
+            {/* Delivery check (kept, but compact) */}
+            <div className="mt-6 rounded-lg border border-stone-200 bg-stone-50 p-4">
               <p className="text-xs font-medium text-stone-600">Check delivery</p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <input
@@ -624,7 +755,7 @@ export default function ProductDetailPage() {
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Pincode"
-                  className="w-40 border border-stone-300 px-3 py-2 text-sm"
+                  className="w-40 rounded border border-stone-300 px-3 py-2 text-sm"
                   onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
                 />
                 <button
@@ -639,123 +770,6 @@ export default function ProductDetailPage() {
               {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
               {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
             </div>
-
-            {/* Collapsible: Ring Details, Delivery & Returns, Care */}
-            <div className="mt-8 border-t border-stone-200 pt-6">
-              <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('ringDetails')}>
-                <span className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Ring Details</span>
-                <svg className={`h-5 w-5 text-stone-500 transition-transform ${accordion.ringDetails ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              {accordion.ringDetails && (
-                <div className="mt-2 space-y-1 border-b border-stone-100 pb-4 text-sm text-stone-700">
-                  <p><span className="font-medium text-stone-600">SKU:</span> {product.sku || product._id || '—'}</p>
-                  <p><span className="font-medium text-stone-600">Width:</span> {product.weight || '—'}</p>
-                  <p><span className="font-medium text-stone-600">Diamond shape:</span> {product.carat || '—'}</p>
-                  <p>
-                    <span className="font-medium text-stone-600">Material:</span>{' '}
-                    {[product.priceBreakup?.goldPurity || product.goldPurity, product.goldType].filter(Boolean).join(' · ') ||
-                      product.category ||
-                      '—'}
-                  </p>
-                  <p><span className="font-medium text-stone-600">Style:</span> {product.category || '—'}</p>
-                  <p><span className="font-medium text-stone-600">Profile:</span> Medium</p>
-                </div>
-              )}
-
-              <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('delivery')}>
-                <span className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Delivery & Returns</span>
-                <svg className={`h-5 w-5 text-stone-500 transition-transform ${accordion.delivery ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              {accordion.delivery && (
-                <div className="mt-2 space-y-2 border-b border-stone-100 pb-4 text-sm text-stone-600">
-                  <p>Free delivery on orders above ₹ 83,000. Standard delivery in 4–7 business days. Easy returns within 30 days.</p>
-                </div>
-              )}
-
-              <button type="button" className="flex w-full items-center justify-between py-2 text-left" onClick={() => toggleAccordion('care')}>
-                <span className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Care Information</span>
-                <svg className={`h-5 w-5 text-stone-500 transition-transform ${accordion.care ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              {accordion.care && (
-                <div className="mt-2 border-b border-stone-100 pb-4 text-sm text-stone-600">
-                  Store in a dry place. Avoid contact with perfumes and chemicals. Clean with a soft cloth. Professional cleaning recommended annually.
-                </div>
-              )}
-            </div>
-
-            {/* Value propositions — one per line */}
-            <div className="mt-4 flex flex-col gap-4 border-t border-stone-200 pt-4">
-              <div className="flex gap-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-charcoal">Flexible payment</p>
-                  <p className="text-xs text-stone-600">Pay with multiple payment options</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-                </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-charcoal">Free shipping</p>
-                  <p className="text-xs text-stone-600">On orders above Rs. 83,000.00</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-charcoal">Online support</p>
-                  <p className="text-xs text-stone-600">24 hours a day, 7 days a week</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-charcoal">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
-                </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-charcoal">Lifetime warranty</p>
-                  <p className="text-xs text-stone-600">A lifetime warranty for core</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Col 1 row 2: product copy directly under gallery (no dead space beside tall right column) */}
-          <div className="min-w-0 border-t border-stone-200 pt-6 lg:col-start-1 lg:row-start-2 lg:pt-8">
-            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Product Details</h3>
-            <p className="mt-4 text-sm text-stone-700">
-              <span className="font-bold italic text-charcoal">{product.name}</span>
-              {product.description?.trim()
-                ? ` ${product.description.split('\n')[0].trim()}`
-                : ' showcases elegant craftsmanship and refined design.'}
-            </p>
-            <hr className="my-6 border-stone-200" />
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-              <div>
-                <p className="text-sm font-semibold text-charcoal">Weight</p>
-                <ul className="mt-2 space-y-1 text-sm text-stone-700">
-                  {product.weight && <li>Gross (Product) – {product.weight}</li>}
-                  {product.priceBreakup?.netWeight != null && (
-                    <li>Net (Gold) – {Number(product.priceBreakup.netWeight)} gm</li>
-                  )}
-                  {!product.weight && product.priceBreakup?.netWeight == null && <li>—</li>}
-                </ul>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-charcoal">Purity</p>
-                <p className="mt-2 text-sm text-stone-700">
-                  {product.priceBreakup?.goldPurity || product.goldPurity || '—'}
-                  {product.colors?.[0] ? ` (${product.colors[0]})` : ''}
-                </p>
-              </div>
-            </div>
-            {product.description && product.description.split('\n').length > 1 && (
-              <p className="mt-6 text-sm text-stone-700 whitespace-pre-wrap">{product.description}</p>
-            )}
           </div>
         </div>
 

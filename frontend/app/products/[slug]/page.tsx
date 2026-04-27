@@ -431,22 +431,33 @@ export default function ProductDetailPage() {
     return s;
   })();
 
-  type SpecTile = { key: string; label: string; value: string; icon: 'hex' | 'coin' | 'user' | 'tag' | 'ruler' | 'shield' };
+  type SpecTile = {
+    key: string;
+    label: string;
+    value: string;
+    icon: 'hex' | 'scale' | 'balance' | 'tag' | 'ruler' | 'medal';
+  };
   const baseSpecTiles: SpecTile[] = [
     { key: 'metal', label: 'Metal', value: goldTypeLabel ? String(goldTypeLabel) : '', icon: 'hex' },
-    { key: 'purity', label: 'Gold purity', value: goldPurityLabel ? String(goldPurityLabel) : '', icon: 'coin' },
-    { key: 'weight', label: 'Product weight', value: normalizedWeight, icon: 'user' },
+    { key: 'purity', label: 'Gold purity', value: goldPurityLabel ? String(goldPurityLabel) : '', icon: 'scale' },
+    { key: 'weight', label: 'Product weight', value: normalizedWeight, icon: 'balance' },
     { key: 'sku', label: 'SKU', value: product.sku ? String(product.sku) : '', icon: 'tag' },
-    {
-      key: 'ringSize',
-      label: 'Ring size',
-      value: isRing && ringSizeInput ? String(ringSizeInput) : '',
-      icon: 'ruler',
-    },
-    { key: 'bis', label: 'BIS hallmarked', value: 'Yes', icon: 'shield' },
+    ...(isRing
+      ? ([
+          {
+            key: 'ringSize',
+            label: 'Ring size',
+            value: ringSizeInput.trim() ? String(ringSizeInput) : '—',
+            icon: 'ruler',
+          },
+        ] as SpecTile[])
+      : []),
+    { key: 'bis', label: 'BIS hallmarked', value: 'Yes', icon: 'medal' },
   ];
 
-  const specTiles = baseSpecTiles.filter((t): t is SpecTile => Boolean(t.value && String(t.value).trim()));
+  const specTiles = baseSpecTiles.filter((t): t is SpecTile =>
+    Boolean(t.value && String(t.value).trim())
+  );
 
   const iconSvg = (icon: SpecTile['icon']) => {
     switch (icon) {
@@ -456,19 +467,20 @@ export default function ProductDetailPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l8 4.5v11L12 22 4 17.5v-11L12 2z" />
           </svg>
         );
-      case 'coin':
+      case 'scale':
         return (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3c4.418 0 8 1.79 8 4s-3.582 4-8 4-8-1.79-8-4 3.582-4 8-4z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7v5c0 2.21-3.582 4-8 4s-8-1.79-8-4V7" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12v5c0 2.21-3.582 4-8 4s-8-1.79-8-4v-5" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v18" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 7l3 12h8l3-12" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6" />
           </svg>
         );
-      case 'user':
+      case 'balance':
         return (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 21a8 8 0 10-16 0" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21V9" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9l9-5-2 14H5l-2-14 9 5z" />
           </svg>
         );
       case 'tag':
@@ -488,11 +500,12 @@ export default function ProductDetailPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 9l2 2" />
           </svg>
         );
-      case 'shield':
+      case 'medal':
         return (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15a6 6 0 100-12 6 6 0 000 12z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.5 5.5L6 3M15.5 5.5L18 3" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21v-4" />
           </svg>
         );
       default:
@@ -534,7 +547,7 @@ export default function ProductDetailPage() {
               className={`grid gap-4 md:items-start ${allImages.length > 1 ? 'md:grid-cols-[88px_1fr]' : ''}`}
             >
               {allImages.length > 1 && (
-                <div className="hidden md:flex md:flex-col md:gap-3 md:overflow-auto md:pr-1 md:max-h-[520px]">
+                <div className="hidden md:flex md:flex-col md:gap-3 md:overflow-auto md:pr-1 md:max-h-[540px]">
                   {allImages.map((raw, i) => {
                     const src = raw ? resolveSrc(raw) : '';
                     const isSelected = selectedImageIndex === i;
@@ -547,7 +560,7 @@ export default function ProductDetailPage() {
                           setImageError(false);
                         }}
                         className={`h-20 w-20 overflow-hidden rounded-md border-2 transition-colors ${
-                          isSelected ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
+                          isSelected ? 'border-blue-600' : 'border-stone-200 hover:border-stone-400'
                         }`}
                         aria-label={`View image ${i + 1}`}
                       >
@@ -559,6 +572,18 @@ export default function ProductDetailPage() {
                       </button>
                     );
                   })}
+                  <button
+                    type="button"
+                    disabled
+                    className="flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-stone-300 bg-white text-[10px] font-semibold uppercase tracking-wide text-stone-600"
+                    title="360° view coming soon"
+                  >
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 12a8 8 0 018-8M20 12a8 8 0 01-16 0" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span className="leading-none">360°</span>
+                  </button>
                 </div>
               )}
 
@@ -600,7 +625,7 @@ export default function ProductDetailPage() {
                         setImageError(false);
                       }}
                       className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                        isSelected ? 'border-charcoal' : 'border-stone-200 hover:border-stone-400'
+                        isSelected ? 'border-blue-600' : 'border-stone-200 hover:border-stone-400'
                       }`}
                       aria-label={`View image ${i + 1}`}
                     >
@@ -611,49 +636,6 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Details strip under gallery (like reference) */}
-            <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl border border-stone-200 bg-white p-4 sm:grid-cols-4">
-              {[
-                { title: 'Free shipping', sub: 'Across India', icon: 'truck' as const },
-                { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' as const },
-                { title: 'Secure payment', sub: 'Trusted gateway', icon: 'lock' as const },
-                { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'badge' as const },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-2">
-                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-stone-700">
-                    {item.icon === 'truck' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17a2 2 0 104 0" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17a2 2 0 104 0" />
-                      </svg>
-                    )}
-                    {item.icon === 'shield' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
-                      </svg>
-                    )}
-                    {item.icon === 'lock' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V8a4 4 0 10-8 0v3" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 11h12v10H6V11z" />
-                      </svg>
-                    )}
-                    {item.icon === 'badge' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7l3-7z" />
-                      </svg>
-                    )}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal">{item.title}</p>
-                    <p className="text-[11px] text-stone-500">{item.sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Right: info panel */}
@@ -687,24 +669,26 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center gap-3">
-              <p className="font-sans text-3xl font-semibold text-charcoal">₹ {displayPrice.toFixed(2)}</p>
+            <div className="mt-4 flex flex-wrap items-end gap-3">
+              <div>
+                <p className="font-sans text-3xl font-semibold text-charcoal">₹ {displayPrice.toFixed(2)}</p>
+                <p className="mt-1 text-xs font-medium text-emerald-700">(Inclusive of all taxes)</p>
+              </div>
               {compareAtPrice != null && compareAtPrice > displayPrice && (
-                <p className="text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
+                <p className="mb-1 text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
               )}
-              <div className="ml-auto">
+              <div className="ml-auto pb-1">
                 {outOfStock ? (
                   <span className="inline-flex items-center rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
                     Out of stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
                     In stock
                   </span>
                 )}
               </div>
             </div>
-            <p className="mt-1 text-xs text-stone-500">(Inclusive of all taxes)</p>
 
             {/* Optional variations */}
             {colorsList.length > 1 && (
@@ -741,53 +725,28 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {isRing && (
-              <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Ring Size</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={ringSizeInput}
-                    onChange={(e) => setRingSizeInput(e.target.value)}
-                    placeholder="e.g. 15 (UK)"
-                    className="w-32 rounded border border-stone-300 px-3 py-2 text-sm"
-                  />
-                  <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">
-                    Ring size guide
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Specs card like reference (3 columns × 2 rows) */}
+            {/* Specs list (reference layout) */}
             {specTiles.length > 0 && (
-              <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">
-                <div className="grid grid-cols-3">
-                  {specTiles.slice(0, 6).map((t, idx) => {
-                    const isEndOfRow = (idx + 1) % 3 === 0;
-                    const isLastRow = idx >= 3;
-                    return (
-                      <div
-                        key={t.key}
-                        className={[
-                          'flex flex-col items-center justify-center px-3 py-5 text-center',
-                          !isEndOfRow ? 'border-r border-stone-200' : '',
-                          !isLastRow ? 'border-b border-stone-200' : '',
-                        ].join(' ')}
-                      >
-                        <div className="text-stone-700">{iconSvg(t.icon)}</div>
-                        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
-                        <p className="mt-1 text-sm font-medium text-charcoal">{t.value}</p>
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="mt-6 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
+                {specTiles.slice(0, 6).map((t) => (
+                  <div key={t.key} className="flex items-start gap-4 px-4 py-4 sm:px-5">
+                    <span className="mt-0.5 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-stone-50 text-stone-700">
+                      {iconSvg(t.icon)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
+                      <p className="mt-1 text-sm font-medium text-charcoal">{t.value}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
             {/* Quantity + CTAs (like reference) */}
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Quantity</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
+                Quantity: <span className="font-semibold text-charcoal">{Math.max(1, quantity)}</span>
+              </p>
               <div className="mt-2 grid grid-cols-[140px_1fr] gap-3">
                 <div className="flex items-center justify-between rounded border border-stone-300 bg-white px-3 py-2">
                   <button
@@ -853,34 +812,87 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Delivery check (kept, but compact) */}
-            <div className="mt-6 rounded-lg border border-stone-200 bg-stone-50 p-4">
-              <p className="text-xs font-medium text-stone-600">Check delivery</p>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Pincode"
-                  className="w-40 rounded border border-stone-300 px-3 py-2 text-sm"
-                  onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
-                />
-                <button
-                  type="button"
-                  onClick={checkDelivery}
-                  disabled={deliveryChecking}
-                  className="rounded bg-charcoal px-5 py-2 text-sm text-white disabled:opacity-60"
-                >
-                  {deliveryChecking ? 'Checking…' : 'Check'}
-                </button>
+            {/* Delivery check */}
+            <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
+                  </svg>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-charcoal">Check delivery</p>
+                  <p className="mt-1 text-xs text-stone-500">Enter pincode to check estimated delivery date</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={pincode}
+                      onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="Pincode"
+                      className="min-w-[140px] flex-1 rounded border border-stone-300 px-3 py-2 text-sm"
+                      onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
+                    />
+                    <button
+                      type="button"
+                      onClick={checkDelivery}
+                      disabled={deliveryChecking}
+                      className="rounded bg-charcoal px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+                    >
+                      {deliveryChecking ? 'Checking…' : 'Check'}
+                    </button>
+                  </div>
+                  {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
+                  {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
+                </div>
               </div>
-              {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
-              {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
             </div>
 
           </div>
+        </div>
+
+        {/* Full-width trust banner (reference) */}
+        <div className="mt-8 grid grid-cols-2 divide-x divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 sm:grid-cols-4">
+          {[
+            { title: 'Free shipping', sub: 'Across India', icon: 'truck' as const },
+            { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' as const },
+            { title: 'Secure payment', sub: 'Trusted gateway', icon: 'lock' as const },
+            { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'shield2' as const },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-3 px-4 py-4 sm:px-5">
+              <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-stone-700 shadow-sm">
+                {item.icon === 'truck' && (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
+                  </svg>
+                )}
+                {item.icon === 'shield' && (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+                  </svg>
+                )}
+                {item.icon === 'lock' && (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V8a4 4 0 10-8 0v3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 11h12v10H6V11z" />
+                  </svg>
+                )}
+                {item.icon === 'shield2' && (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21s-7-4.35-7-10a4 4 0 017-2.5A4 4 0 0119 11c0 5.65-7 10-7 10z" />
+                  </svg>
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal">{item.title}</p>
+                <p className="mt-0.5 text-[11px] text-stone-600">{item.sub}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Full-width: Price breakup, recommendations */}

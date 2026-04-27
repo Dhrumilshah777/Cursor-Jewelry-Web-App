@@ -443,7 +443,9 @@ export default function ProductDetailPage() {
         <div className="grid items-start gap-8 lg:grid-cols-[1.35fr_1fr] lg:gap-x-12">
           {/* Left: thumbnails + main image (vertical on md+) */}
           <div className="min-w-0">
-            <div className="grid gap-4 md:grid-cols-[88px_1fr] md:items-start">
+            <div
+              className={`grid gap-4 md:items-start ${allImages.length > 1 ? 'md:grid-cols-[88px_1fr]' : ''}`}
+            >
               {allImages.length > 1 && (
                 <div className="hidden md:flex md:flex-col md:gap-3 md:overflow-auto md:pr-1 md:max-h-[520px]">
                   {allImages.map((raw, i) => {

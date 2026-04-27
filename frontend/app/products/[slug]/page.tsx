@@ -463,13 +463,13 @@ export default function ProductDetailPage() {
     switch (icon) {
       case 'hex':
         return (
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l8 4.5v11L12 22 4 17.5v-11L12 2z" />
           </svg>
         );
       case 'scale':
         return (
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v18" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 7l3 12h8l3-12" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6" />
@@ -477,7 +477,7 @@ export default function ProductDetailPage() {
         );
       case 'balance':
         return (
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21V9" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9l9-5-2 14H5l-2-14 9 5z" />
@@ -485,7 +485,7 @@ export default function ProductDetailPage() {
         );
       case 'tag':
         return (
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h7l5 5-7 7-5-5V7z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7l-2 2v5l5 5" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 10h.01" />
@@ -493,7 +493,7 @@ export default function ProductDetailPage() {
         );
       case 'ruler':
         return (
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 17l10-10 8 8-10 10H3v-8z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 13l2 2" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 11l2 2" />
@@ -502,7 +502,7 @@ export default function ProductDetailPage() {
         );
       case 'medal':
         return (
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15a6 6 0 100-12 6 6 0 000 12z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.5 5.5L6 3M15.5 5.5L18 3" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21v-4" />
@@ -729,13 +729,13 @@ export default function ProductDetailPage() {
             {specTiles.length > 0 && (
               <div className="mt-6 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
                 {specTiles.slice(0, 6).map((t) => (
-                  <div key={t.key} className="flex items-start gap-4 px-4 py-4 sm:px-5">
-                    <span className="mt-0.5 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-stone-50 text-stone-700">
+                  <div key={t.key} className="flex items-center gap-3 px-4 py-2.5 sm:px-5 sm:py-3">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-stone-50 text-stone-700">
                       {iconSvg(t.icon)}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
-                      <p className="mt-1 text-sm font-medium text-charcoal">{t.value}</p>
+                    <div className="min-w-0 flex-1 leading-tight">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
+                      <p className="mt-0.5 text-sm font-medium text-charcoal">{t.value}</p>
                     </div>
                   </div>
                 ))}

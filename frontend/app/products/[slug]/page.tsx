@@ -113,6 +113,7 @@ export default function ProductDetailPage() {
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
+  const [quantity, setQuantity] = useState(1);
   const [alreadyInCart, setAlreadyInCart] = useState(false);
 
   useEffect(() => {
@@ -185,6 +186,10 @@ export default function ProductDetailPage() {
     if (product?.ringSize) setRingSizeInput(product.ringSize);
     else setRingSizeInput('');
   }, [product?.ringSize]);
+
+  useEffect(() => {
+    setQuantity(Math.max(1, Number(product?.purchaseQuantity) || 1));
+  }, [product?._id, product?.purchaseQuantity]);
 
   useEffect(() => {
     if (!routeSlug) {
@@ -414,17 +419,15 @@ export default function ProductDetailPage() {
   const handleBuyNow = () => {
     if (!product) return;
     if (outOfStock) return;
-    if (!alreadyInCart) {
-      addToCart({
-        id: product._id,
-        slug: product.slug,
-        name: product.name,
-        price: String(displayPrice),
-        image: product.image,
-        quantity: purchaseQty,
-      });
-      setAlreadyInCart(true);
-    }
+    addToCart({
+      id: product._id,
+      slug: product.slug,
+      name: product.name,
+      price: String(displayPrice),
+      image: product.image,
+      quantity: Math.max(1, quantity),
+    });
+    setAlreadyInCart(true);
     if (typeof window !== 'undefined') {
       const loggedIn = localStorage.getItem('user_logged_in') === '1';
       router.push(loggedIn ? '/checkout' : '/login?returnTo=/checkout');
@@ -649,49 +652,72 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* CTAs */}
+            {/* Quantity + CTAs (like reference) */}
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
-                Quantity: {purchaseQty}
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (outOfStock) return;
-                    if (alreadyInCart) return;
-                    addToCart({
-                      id: product._id,
-                      slug: product.slug,
-                      name: product.name,
-                      price: String(displayPrice),
-                      image: product.image,
-                      quantity: purchaseQty,
-                    });
-                    setAddedToCart(true);
-                    setAlreadyInCart(true);
-                    setTimeout(() => setAddedToCart(false), 2500);
-                  }}
-                  disabled={alreadyInCart || outOfStock}
-                  className={`w-full rounded border px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                    alreadyInCart || outOfStock
-                      ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-500'
-                      : 'border-charcoal bg-white text-charcoal hover:bg-stone-50'
-                  }`}
-                >
-                  {outOfStock ? 'Out of stock' : alreadyInCart ? 'In cart' : 'Add to cart'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  disabled={outOfStock}
-                  className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                    outOfStock ? 'cursor-not-allowed bg-stone-300 text-stone-600' : 'bg-black text-white hover:bg-stone-900'
-                  }`}
-                >
-                  Buy now
-                </button>
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">Quantity</p>
+              <div className="mt-2 grid grid-cols-[140px_1fr] gap-3">
+                <div className="flex items-center justify-between rounded border border-stone-300 bg-white px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="h-8 w-8 rounded text-lg text-stone-700 hover:bg-stone-50"
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="text-sm font-semibold text-charcoal" aria-live="polite">
+                    {Math.max(1, quantity)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="h-8 w-8 rounded text-lg text-stone-700 hover:bg-stone-50"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (outOfStock) return;
+                      addToCart({
+                        id: product._id,
+                        slug: product.slug,
+                        name: product.name,
+                        price: String(displayPrice),
+                        image: product.image,
+                        quantity: Math.max(1, quantity),
+                      });
+                      setAddedToCart(true);
+                      setAlreadyInCart(true);
+                      setTimeout(() => setAddedToCart(false), 2500);
+                    }}
+                    disabled={outOfStock}
+                    className={`w-full rounded border px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                      outOfStock
+                        ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-500'
+                        : 'border-stone-700 bg-white text-charcoal hover:bg-stone-50'
+                    }`}
+                  >
+                    Add to cart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    disabled={outOfStock}
+                    className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                      outOfStock ? 'cursor-not-allowed bg-stone-300 text-stone-600' : 'bg-black text-white hover:bg-stone-900'
+                    }`}
+                  >
+                    Buy now
+                  </button>
+                </div>
               </div>
+              {alreadyInCart && !outOfStock && (
+                <p className="mt-2 text-xs text-stone-500">This product is already in your cart; adding again will increase quantity.</p>
+              )}
             </div>
 
             {/* Delivery check (kept, but compact) */}
@@ -719,6 +745,50 @@ export default function ProductDetailPage() {
               </div>
               {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
               {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
+            </div>
+
+            {/* Bottom service strip (like reference) */}
+            <div className="mt-6 grid grid-cols-2 gap-3 border-t border-stone-200 pt-4 sm:grid-cols-4">
+              {[
+                { title: 'Free shipping', sub: 'Across India', icon: 'truck' },
+                { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' },
+                { title: 'Secure payment', sub: 'Trusted gateway', icon: 'lock' },
+                { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'badge' },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+                    {item.icon === 'truck' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17a2 2 0 104 0" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17a2 2 0 104 0" />
+                      </svg>
+                    )}
+                    {item.icon === 'shield' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+                      </svg>
+                    )}
+                    {item.icon === 'lock' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V8a4 4 0 10-8 0v3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 11h12v10H6V11z" />
+                      </svg>
+                    )}
+                    {item.icon === 'badge' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7l3-7z" />
+                      </svg>
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal">{item.title}</p>
+                    <p className="text-[11px] text-stone-500">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -204,7 +204,7 @@ export default function AdminBestSellingPage() {
         <button
           type="submit"
           disabled={saving || allProducts.length === 0}
-          className="mt-8 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+          className="mt-8 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save changes'}
         </button>

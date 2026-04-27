@@ -39,9 +39,9 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      {/* 1. Top promotional banner – theme brown */}
-      <div className="bg-[#1e3a5f] py-1.5 text-center">
-        <p className="text-xs font-medium uppercase tracking-wide text-white sm:text-sm">
+      {/* 1. Top promotional banner */}
+      <div className="bg-[#C7B7A6] py-1.5 text-center">
+        <p className="text-xs font-medium uppercase tracking-wide text-accent-cream sm:text-sm">
           FLAT 10% OFF FIRST PURCHASE. CODE SAVE10
         </p>
       </div>
@@ -71,11 +71,11 @@ export default function Header() {
 
           {/* Center: Logo + brand name */}
           <Link href="/" className="flex flex-shrink-0 flex-col items-center">
-            <span className="flex items-center justify-center font-serif text-2xl font-semibold tracking-tight text-[#1e3a5f] sm:text-3xl">
+            <span className="flex items-center justify-center font-serif text-2xl font-semibold tracking-tight text-[#C7B7A6] sm:text-3xl">
               <span className="relative">
                 TB
                 <svg
-                  className="absolute -right-1 -top-3 h-3 w-3 text-[#1e3a5f] sm:-top-4 sm:h-4 sm:w-4"
+                  className="absolute -right-1 -top-3 h-3 w-3 text-[#C7B7A6] sm:-top-4 sm:h-4 sm:w-4"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   aria-hidden
@@ -84,7 +84,7 @@ export default function Header() {
                 </svg>
               </span>
             </span>
-            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-stone-800 sm:text-base">
+            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-[#C7B7A6] sm:text-base">
               The Bride Jewelry
             </span>
           </Link>
@@ -116,7 +116,7 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1e3a5f] text-[10px] font-medium text-white">
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-medium text-accent-cream">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -177,7 +177,7 @@ export default function Header() {
         >
           <div className="flex h-full flex-col px-4 pt-6 pb-6">
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-serif text-lg font-semibold text-[#1e3a5f]">Menu</span>
+              <span className="font-serif text-lg font-semibold text-[#C7B7A6]">Menu</span>
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}

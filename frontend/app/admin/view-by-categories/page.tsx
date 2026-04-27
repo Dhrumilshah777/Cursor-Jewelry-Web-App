@@ -128,7 +128,7 @@ export default function AdminViewByCategoriesPage() {
             Upload image
             <input type="file" accept="image/*" onChange={(e) => handleUpload(e)} className="hidden" />
           </label>
-          <button type="button" onClick={addCategory} className="rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800">
+          <button type="button" onClick={addCategory} className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90">
             Add category
           </button>
         </div>
@@ -182,7 +182,7 @@ export default function AdminViewByCategoriesPage() {
         </ul>
         {categories.length === 0 && <p className="mt-6 text-sm text-stone-500">No categories yet. Add one above; they will appear in the &quot;View by categories&quot; section.</p>}
 
-        <button type="submit" disabled={saving} className="mt-8 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="mt-8 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>

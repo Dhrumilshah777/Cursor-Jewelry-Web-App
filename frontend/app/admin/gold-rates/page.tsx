@@ -137,7 +137,7 @@ export default function AdminGoldRatesPage() {
             type="button"
             onClick={save}
             disabled={saving || !isDirty}
-            className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm transition hover:bg-accent/90 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save rates'}
           </button>

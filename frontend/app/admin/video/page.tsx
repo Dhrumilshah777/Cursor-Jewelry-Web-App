@@ -83,7 +83,7 @@ export default function AdminVideoPage() {
             <video src={videoSrc} controls className="mt-2 max-h-48 w-full rounded border border-stone-200 object-contain" />
           </div>
         )}
-        <button type="submit" disabled={saving} className="mt-6 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="mt-6 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save video'}
         </button>
       </form>

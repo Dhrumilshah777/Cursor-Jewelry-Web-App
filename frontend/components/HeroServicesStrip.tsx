@@ -1,6 +1,6 @@
 'use client';
 
-const ICON_CLASS = 'mx-auto h-10 w-10 text-[#1e3a5f] transition-colors duration-300 group-hover:text-[#2d5a8a] sm:h-12 sm:w-12';
+const ICON_CLASS = 'mx-auto h-10 w-10 text-blue-600 transition-colors duration-300 group-hover:text-blue-600/80 sm:h-12 sm:w-12';
 
 function IconHeart() {
   return (
@@ -67,9 +67,9 @@ const SERVICES = [
 
 export default function HeroServicesStrip() {
   return (
-    <section className="border-b border-stone-100 bg-[#e8eef6] py-10 sm:py-12">
+    <section className="border-b border-stone-100 bg-blue-50 py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mt-6 mb-8 text-center font-serif text-3xl font-medium italic tracking-wide text-[#1e3a5f] sm:text-4xl">
+        <h2 className="mt-6 mb-8 text-center font-serif text-3xl font-medium italic tracking-wide text-blue-700 sm:text-4xl">
           Our Commitment to Excellence
         </h2>
         <div className="grid grid-cols-2 gap-6 gap-y-8 sm:gap-8 lg:grid-cols-4">

@@ -84,13 +84,13 @@ function OrderSuccessContent() {
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link
             href={orderId ? `/orders/${orderId}` : '/orders'}
-            className="rounded bg-charcoal px-6 py-3 text-sm font-medium text-white hover:bg-stone-800"
+            className="rounded bg-accent px-6 py-3 text-sm font-medium text-accent-cream hover:bg-accent/90"
           >
             View order
           </Link>
           <Link
             href="/products"
-            className="rounded border border-stone-300 px-6 py-3 text-sm font-medium text-charcoal hover:bg-stone-50"
+            className="rounded bg-accent px-6 py-3 text-sm font-medium text-accent-cream hover:bg-accent/90"
           >
             Continue shopping
           </Link>

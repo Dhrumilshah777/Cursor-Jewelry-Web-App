@@ -84,12 +84,42 @@ function categoryToSlug(cat: string): string {
   return String(cat || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
 }
 
-const MOCK_PRODUCTS: Array<Pick<Product, '_id' | 'name' | 'category' | 'price' | 'image'>> = [
-  { _id: 'mock-1', name: 'Circle Necklace', category: 'Accessories', price: '52.00', image: '/instagram-1.jpg' },
-  { _id: 'mock-2', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { _id: 'mock-3', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { _id: 'mock-4', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
-  { _id: 'mock-5', name: 'Small Earrings', category: 'Accessories', price: '50.00', image: '/instagram-2.jpg' },
+const MOCK_PRODUCTS: Array<
+  Pick<
+    Product,
+    | '_id'
+    | 'slug'
+    | 'name'
+    | 'category'
+    | 'price'
+    | 'image'
+    | 'subImages'
+    | 'goldPurity'
+    | 'goldType'
+    | 'weight'
+    | 'sku'
+    | 'ringSize'
+    | 'stock'
+  >
+> = [
+  {
+    _id: 'demo-1',
+    slug: 'demo-solitaire-ring',
+    name: 'Demo Solitaire Ring',
+    category: 'Rings',
+    price: '32450.00',
+    image: 'https://i.pinimg.com/736x/78/a1/5b/78a15b2384a21581bab8f3992f04522b.jpg',
+    subImages: [
+      "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23ffffff'/%3E%3Ccircle%20cx='400'%20cy='320'%20r='110'%20fill='%23f3f4f6'/%3E%3Cpath%20d='M220%20480%20c110%2060%20250%2060%20360%200'%20fill='none'%20stroke='%23d6d3d1'%20stroke-width='40'%20stroke-linecap='round'/%3E%3C/svg%3E",
+      "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23ffffff'/%3E%3Cpath%20d='M400%20200%20c-80%2060-100%20120-100%20200%200%20120%20100%20220%20100%20220%20s100-100%20100-220%20c0-80-20-140-100-200z'%20fill='%23f3f4f6'/%3E%3C/svg%3E",
+    ],
+    goldPurity: '18K (750)',
+    goldType: 'Yellow Gold',
+    weight: '2.31 g (Approx.)',
+    sku: 'RING-18K-002',
+    ringSize: '15 (UK)',
+    stock: 10,
+  },
 ];
 
 export default function ProductDetailPage() {
@@ -199,7 +229,7 @@ export default function ProductDetailPage() {
     }
 
     // Mock products (frontend-only)
-    const mock = MOCK_PRODUCTS.find((p) => p._id === routeSlug);
+    const mock = MOCK_PRODUCTS.find((p) => p._id === routeSlug || p.slug === routeSlug);
     if (mock) {
       setProduct(mock as Product);
       setWishlisted(typeof window !== 'undefined' && isInWishlist(mock._id));
@@ -362,6 +392,7 @@ export default function ProductDetailPage() {
   // Build gallery: main image + sub images; resolve URL for each
   const resolveSrc = (raw: string) => {
     if (!raw) return '';
+    if (raw.startsWith('data:')) return raw;
     const normalized = raw.startsWith('/') ? raw : `/${raw}`;
     return raw.startsWith('http') ? raw : normalized.startsWith('/uploads/') ? assetUrl(normalized) : normalized;
   };
@@ -587,7 +618,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-stone-100">
+              <div className="aspect-square w-full overflow-hidden rounded-xl bg-stone-100">
                 {!imageError && selectedSrc ? (
                   <img
                     key={selectedImageIndex}
@@ -787,10 +818,10 @@ export default function ProductDetailPage() {
                       setTimeout(() => setAddedToCart(false), 2500);
                     }}
                     disabled={outOfStock}
-                    className={`w-full rounded border px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                    className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                       outOfStock
-                        ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-500'
-                        : 'border-stone-700 bg-white text-charcoal hover:bg-stone-50'
+                        ? 'cursor-not-allowed bg-stone-100 text-stone-500'
+                        : 'bg-[#C7B7A6] text-white hover:bg-[#C7B7A6]/90'
                     }`}
                   >
                     Add to cart
@@ -800,7 +831,7 @@ export default function ProductDetailPage() {
                     onClick={handleBuyNow}
                     disabled={outOfStock}
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      outOfStock ? 'cursor-not-allowed bg-stone-300 text-stone-600' : 'bg-black text-white hover:bg-stone-900'
+                      outOfStock ? 'cursor-not-allowed bg-stone-300 text-stone-600' : 'bg-[#C7B7A6] text-white hover:bg-[#C7B7A6]/90'
                     }`}
                   >
                     Buy now
@@ -839,7 +870,7 @@ export default function ProductDetailPage() {
                       type="button"
                       onClick={checkDelivery}
                       disabled={deliveryChecking}
-                      className="rounded bg-charcoal px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-accent-cream disabled:opacity-60"
                     >
                       {deliveryChecking ? 'Checking…' : 'Check'}
                     </button>
@@ -1037,7 +1068,7 @@ export default function ProductDetailPage() {
               className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                 alreadyInCart || outOfStock
                   ? 'cursor-not-allowed bg-stone-300 text-stone-600'
-                  : 'bg-[#1e3a5f] text-white hover:bg-[#152a45]'
+                  : 'bg-[#C7B7A6] text-white hover:bg-[#C7B7A6]/90'
               }`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -1050,7 +1081,7 @@ export default function ProductDetailPage() {
 
         {addedToCart && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-[#C7B7A6] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >
@@ -1059,7 +1090,7 @@ export default function ProductDetailPage() {
         )}
         {linkCopied && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-charcoal px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-[#C7B7A6] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >

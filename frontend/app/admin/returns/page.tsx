@@ -282,7 +282,7 @@ export default function AdminReturnsPage() {
                       r.order.status === 'refunded' ||
                       Boolean(String(r.order.razorpayRefundId || '').trim())
                     }
-                    className="rounded bg-charcoal px-3 py-1.5 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-60"
+                    className="rounded bg-accent px-3 py-1.5 text-xs font-semibold text-accent-cream hover:opacity-95 disabled:opacity-60"
                     title={r.status !== 'approved' ? 'Approve return first' : 'Trigger Razorpay refund'}
                   >
                     Refund

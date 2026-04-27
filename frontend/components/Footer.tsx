@@ -32,7 +32,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-white hover:text-cream/80"
+                className="shrink-0 rounded bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-accent-cream transition hover:bg-accent/90"
               >
                 Subscribe
               </button>

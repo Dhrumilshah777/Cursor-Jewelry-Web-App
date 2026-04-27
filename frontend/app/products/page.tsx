@@ -62,6 +62,7 @@ type ProductsResponse = { products: Product[]; facets: Facets };
 
 function productImageSrc(image: string) {
   if (!image) return '';
+  if (image.startsWith('data:')) return image;
   if (image.startsWith('http')) return image;
   if (image.startsWith('/uploads/')) return assetUrl(image);
   return image.startsWith('/') ? image : `/${image}`;
@@ -75,6 +76,42 @@ const defaultFacets: Facets = {
 };
 
 const SKELETON_CARD_COUNT = 6;
+
+const DEMO_PRODUCTS: Product[] = [
+  {
+    _id: 'demo-1',
+    slug: 'demo-solitaire-ring',
+    name: 'Demo Solitaire Ring',
+    category: 'Rings',
+    price: '32450.00',
+    image:
+      "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23f5f5f4'/%3E%3Ccircle%20cx='400'%20cy='320'%20r='110'%20fill='%23e7e5e4'/%3E%3Cpath%20d='M220%20480%20c110%2060%20250%2060%20360%200'%20fill='none'%20stroke='%23d6d3d1'%20stroke-width='40'%20stroke-linecap='round'/%3E%3Ctext%20x='400'%20y='690'%20text-anchor='middle'%20font-family='Arial'%20font-size='30'%20fill='%23787878'%3EDemo%20Product%3C/text%3E%3C/svg%3E",
+    colors: ['Yellow Gold'],
+    stock: 10,
+  },
+  {
+    _id: 'demo-2',
+    slug: 'demo-gold-pendant',
+    name: 'Demo Gold Pendant',
+    category: 'Pendants',
+    price: '12500.00',
+    image:
+      "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23f5f5f4'/%3E%3Cpath%20d='M400%20160%20c-60%2040-80%2090-80%20140%200%2090%2080%20160%2080%20160%20s80-70%2080-160%20c0-50-20-100-80-140z'%20fill='%23e7e5e4'/%3E%3Cpath%20d='M320%20240%20c30-35%2060-55%2080-65%2020%2010%2050%2030%2080%2065'%20fill='none'%20stroke='%23d6d3d1'%20stroke-width='16'%20stroke-linecap='round'/%3E%3Ctext%20x='400'%20y='690'%20text-anchor='middle'%20font-family='Arial'%20font-size='30'%20fill='%23787878'%3EDemo%20Product%3C/text%3E%3C/svg%3E",
+    colors: ['Rose Gold'],
+    stock: 5,
+  },
+  {
+    _id: 'demo-3',
+    slug: 'demo-earrings',
+    name: 'Demo Earrings',
+    category: 'Earrings',
+    price: '8900.00',
+    image:
+      "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23f5f5f4'/%3E%3Ccircle%20cx='320'%20cy='340'%20r='70'%20fill='%23e7e5e4'/%3E%3Ccircle%20cx='480'%20cy='340'%20r='70'%20fill='%23e7e5e4'/%3E%3Cpath%20d='M320%20410%20v120'%20stroke='%23d6d3d1'%20stroke-width='18'%20stroke-linecap='round'/%3E%3Cpath%20d='M480%20410%20v120'%20stroke='%23d6d3d1'%20stroke-width='18'%20stroke-linecap='round'/%3E%3Ctext%20x='400'%20y='690'%20text-anchor='middle'%20font-family='Arial'%20font-size='30'%20fill='%23787878'%3EDemo%20Product%3C/text%3E%3C/svg%3E",
+    colors: ['White Gold'],
+    stock: 3,
+  },
+];
 
 function ProductsLoadingSkeleton() {
   return (
@@ -146,24 +183,28 @@ function ProductsContent() {
           ? (res as ProductsResponse).products
           : Array.isArray(res) ? (res as unknown as Product[]) : [];
         const facets = (res as ProductsResponse).facets || defaultFacets;
-        setData({
-          products: products.map((p) => {
-            const raw = p as { _id?: string; colors?: string[]; stock?: number };
-            return {
-              _id: String(raw._id ?? ''),
-              name: p.name,
-              category: p.category,
-              price: p.price,
-              image: p.image,
-              colors: Array.isArray(raw.colors) ? raw.colors : [],
-              stock: typeof raw.stock === 'number' ? raw.stock : undefined,
-            };
-          }),
-          facets,
+        const normalized = products.map((p) => {
+          const raw = p as { _id?: string; slug?: string; colors?: string[]; stock?: number };
+          return {
+            _id: String(raw._id ?? ''),
+            slug: typeof raw.slug === 'string' ? raw.slug : undefined,
+            name: p.name,
+            category: p.category,
+            price: p.price,
+            image: p.image,
+            colors: Array.isArray(raw.colors) ? raw.colors : [],
+            stock: typeof raw.stock === 'number' ? raw.stock : undefined,
+          };
         });
+
+        // Localhost/dev convenience: show demo products when DB is empty.
+        const finalProducts = normalized.length > 0 ? normalized : DEMO_PRODUCTS;
+        const finalFacets = normalized.length > 0 ? facets : defaultFacets;
+
+        setData({ products: finalProducts, facets: finalFacets });
       })
       .catch(() => {
-        if (!cancelled) setData({ products: [], facets: defaultFacets });
+        if (!cancelled) setData({ products: DEMO_PRODUCTS, facets: defaultFacets });
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -217,7 +258,7 @@ function ProductsContent() {
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm hover:bg-stone-50"
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm hover:bg-accent/90"
             aria-haspopup="dialog"
             aria-expanded={filtersOpen}
             aria-controls="products-filter-drawer"
@@ -365,7 +406,7 @@ function ProductsContent() {
                 <button
                   type="button"
                   onClick={() => setFiltersOpen(false)}
-                  className="rounded-full border border-stone-300 px-3 py-1.5 text-sm text-charcoal hover:bg-stone-50"
+                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
                   aria-label="Close"
                 >
                   ✕

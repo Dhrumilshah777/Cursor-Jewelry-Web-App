@@ -8,6 +8,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /** Primary CTA / brand blue */
+        accent: '#2563eb',
+        'accent-cream': '#ffffff',
         cream: '#F8F6F3',
         charcoal: '#1C1917',
         gold: '#B8860B',

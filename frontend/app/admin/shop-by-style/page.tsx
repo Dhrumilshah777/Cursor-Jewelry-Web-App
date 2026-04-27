@@ -151,7 +151,7 @@ export default function AdminShopByStylePage() {
             Upload image
             <input type="file" accept="image/*" onChange={(e) => handleUpload(e)} className="hidden" />
           </label>
-          <button type="button" onClick={addSlide} className="rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800">
+          <button type="button" onClick={addSlide} className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90">
             Add slide
           </button>
         </div>
@@ -206,7 +206,7 @@ export default function AdminShopByStylePage() {
           <p className="mt-6 text-sm text-stone-500">No slides yet. Add one above; they will appear in the Shop by Style carousel.</p>
         )}
 
-        <button type="submit" disabled={saving} className="mt-8 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="mt-8 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>

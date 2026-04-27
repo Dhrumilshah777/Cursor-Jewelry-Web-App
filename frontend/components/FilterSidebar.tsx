@@ -143,7 +143,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                   <span
                     className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                       !category
-                        ? 'border-[#00324e] bg-[#00324e]'
+                        ? 'border-accent bg-accent'
                         : 'border-stone-300 bg-white'
                     }`}
                   >
@@ -169,7 +169,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                       <span
                         className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                           isActive
-                            ? 'border-[#00324e] bg-[#00324e]'
+                            ? 'border-accent bg-accent'
                             : 'border-stone-300 bg-white'
                         }`}
                       >
@@ -230,7 +230,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                       <span
                         className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                           isSelected
-                            ? 'border-[#00324e] bg-[#00324e]'
+                            ? 'border-accent bg-accent'
                             : 'border-stone-300 bg-white'
                         }`}
                       >
@@ -292,7 +292,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                 </div>
                 <Link
                   href={applyPriceRange() || '/products'}
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#00324e] px-4 py-2 text-sm font-medium text-white hover:bg-[#00263b]"
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90"
                 >
                   Filter
                 </Link>
@@ -337,7 +337,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                       <span
                         className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                           isSelected
-                            ? 'border-[#00324e] bg-[#00324e]'
+                            ? 'border-accent bg-accent'
                             : 'border-stone-300 bg-white'
                         }`}
                         aria-hidden

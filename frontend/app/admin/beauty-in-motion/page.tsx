@@ -105,7 +105,7 @@ export default function AdminBeautyInMotionPage() {
               className="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm"
             />
           </div>
-          <button type="button" onClick={() => addVideo(newUrl)} className="rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800">
+          <button type="button" onClick={() => addVideo(newUrl)} className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90">
             Add video
           </button>
           <label className="cursor-pointer rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
@@ -142,7 +142,7 @@ export default function AdminBeautyInMotionPage() {
           <p className="mt-6 text-sm text-stone-500">No videos yet. Add a video URL or upload above.</p>
         )}
 
-        <button type="submit" disabled={saving} className="mt-8 rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="mt-8 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>

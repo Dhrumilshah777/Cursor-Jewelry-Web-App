@@ -489,7 +489,7 @@ export default function AdminProductsPage() {
         </div>
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
         <div className="mt-4 flex gap-2">
-          <button type="submit" className="rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800">
+          <button type="submit" className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90">
             {editingId ? 'Update' : 'Add'} product
           </button>
           {editingId && (

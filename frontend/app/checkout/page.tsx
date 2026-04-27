@@ -411,13 +411,13 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={placing}
-                className="rounded bg-charcoal px-6 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                className="rounded bg-accent px-6 py-2.5 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50"
               >
                 {placing ? 'Placing order…' : 'Place order & pay'}
               </button>
               <Link
                 href="/cart"
-                className="rounded border border-stone-300 px-6 py-2.5 text-sm font-medium text-charcoal hover:bg-stone-50"
+                className="rounded bg-accent px-6 py-2.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
               >
                 Back to cart
               </Link>

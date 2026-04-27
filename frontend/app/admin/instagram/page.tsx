@@ -96,7 +96,7 @@ export default function AdminInstagramPage() {
           Upload multiple images
           <input type="file" accept="image/*" multiple onChange={handleMultipleUpload} className="hidden" />
         </label>
-        <button type="button" onClick={save} disabled={saving} className="rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="button" onClick={save} disabled={saving} className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save order & images'}
         </button>
       </div>

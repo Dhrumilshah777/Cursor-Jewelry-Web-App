@@ -204,13 +204,13 @@ export default function CartPage() {
               <div className="flex gap-3">
                 <Link
                   href="/products"
-                  className="rounded border border-stone-300 px-4 py-2.5 text-sm font-medium text-charcoal hover:bg-stone-50"
+                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
                 >
                   Continue shopping
                 </Link>
                 <Link
                   href={isUserLoggedIn() ? '/checkout' : '/login?returnTo=/checkout'}
-                  className="rounded bg-charcoal px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800"
+                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
                 >
                   Proceed to checkout
                 </Link>

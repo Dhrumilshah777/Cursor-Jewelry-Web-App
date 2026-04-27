@@ -382,7 +382,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-4 text-sm font-medium text-brand-purple hover:underline"
+              className="mt-4 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream transition hover:bg-accent/90"
             >
               Log out
             </button>
@@ -415,7 +415,7 @@ export default function LoginPage() {
                     placeholder="+91 98765 43210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="mt-1 w-full border-0 border-b-2 border-stone-300 bg-transparent py-2 font-sans text-base font-semibold text-charcoal outline-none transition-colors placeholder:font-normal placeholder:text-stone-400 focus:border-brand-purple disabled:opacity-50"
+                    className="mt-1 w-full border-0 border-b-2 border-stone-300 bg-transparent py-2 font-sans text-base font-semibold text-charcoal outline-none transition-colors placeholder:font-normal placeholder:text-stone-400 focus:border-accent disabled:opacity-50"
                     disabled={otpLoading}
                   />
                 </div>
@@ -424,7 +424,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={otpLoading || !phoneOk}
-                  className="mt-10 w-full rounded-2xl bg-brand-purple py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-white shadow-md shadow-brand-purple/25 transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  className="mt-10 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                   {otpLoading ? 'Sending…' : 'Get OTP'}
                 </button>
@@ -460,7 +460,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={otpLoading || otp.length !== OTP_LENGTH}
-                  className="mt-8 w-full rounded-2xl bg-brand-purple py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-white shadow-md shadow-brand-purple/25 transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  className="mt-8 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                   {otpLoading ? 'Verifying…' : 'Verify & Proceed'}
                 </button>

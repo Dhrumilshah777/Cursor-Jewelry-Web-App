@@ -84,7 +84,7 @@ function ProductCard({ product }: { product: Product }) {
             onClick={toggleWishlist}
             className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border bg-white/80 backdrop-blur transition-colors ${
               wishlisted
-                ? 'border-blue-200 text-blue-600 hover:border-blue-300 hover:text-blue-700'
+                ? 'border-blue-600/40 text-blue-600 hover:border-blue-600/60 hover:text-blue-600'
                 : 'border-stone-200 text-stone-500 hover:border-stone-400 hover:text-charcoal'
             }`}
             aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -154,7 +154,7 @@ export default function BestSellingCarousel() {
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="container mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-[#1e3a5f]">
+        <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-blue-700">
           Our bestellers
         </h2>
 

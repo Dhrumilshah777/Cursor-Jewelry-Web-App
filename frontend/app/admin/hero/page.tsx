@@ -175,7 +175,7 @@ export default function AdminHeroPage() {
         <button type="button" onClick={addSlide} className="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50">
           + Add slide
         </button>
-        <button type="button" onClick={save} disabled={saving} className="rounded bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="button" onClick={save} disabled={saving} className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream hover:bg-accent/90 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save all slides'}
         </button>
       </div>

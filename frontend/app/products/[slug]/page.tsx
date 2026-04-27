@@ -412,9 +412,91 @@ export default function ProductDetailPage() {
   const specRows: Array<{ label: string; value: string }> = [
     { label: 'Metal', value: goldTypeLabel ? String(goldTypeLabel) : '' },
     { label: 'Gold purity', value: goldPurityLabel ? String(goldPurityLabel) : '' },
-    { label: 'Product weight', value: product.weight ? String(product.weight) : (product.priceBreakup?.netWeight != null ? `${Number(product.priceBreakup.netWeight)} g` : '') },
+    {
+      label: 'Product weight',
+      value: product.weight
+        ? String(product.weight)
+        : (product.priceBreakup?.netWeight != null ? `${Number(product.priceBreakup.netWeight)} g` : ''),
+    },
     { label: 'SKU', value: product.sku ? String(product.sku) : '' },
   ].filter((r) => r.value && String(r.value).trim());
+
+  const normalizedWeight = (() => {
+    const w = specRows.find((r) => r.label === 'Product weight')?.value || '';
+    if (!w) return '';
+    const s = String(w).trim();
+    if (/\(approx\.\)$/i.test(s)) return s;
+    // If it looks like "2.31 g" or "2.31g", append Approx. like the reference.
+    if (/\bg\b/i.test(s) && !/[a-zA-Z]{3,}/.test(s.replace(/\bg\b/i, ''))) return `${s} (Approx.)`;
+    return s;
+  })();
+
+  type SpecTile = { key: string; label: string; value: string; icon: 'hex' | 'coin' | 'user' | 'tag' | 'ruler' | 'shield' };
+  const specTiles: SpecTile[] = [
+    { key: 'metal', label: 'Metal', value: goldTypeLabel ? String(goldTypeLabel) : '', icon: 'hex' },
+    { key: 'purity', label: 'Gold purity', value: goldPurityLabel ? String(goldPurityLabel) : '', icon: 'coin' },
+    { key: 'weight', label: 'Product weight', value: normalizedWeight, icon: 'user' },
+    { key: 'sku', label: 'SKU', value: product.sku ? String(product.sku) : '', icon: 'tag' },
+    {
+      key: 'ringSize',
+      label: 'Ring size',
+      value: isRing && ringSizeInput ? String(ringSizeInput) : '',
+      icon: 'ruler',
+    },
+    { key: 'bis', label: 'BIS hallmarked', value: 'Yes', icon: 'shield' },
+  ].filter((t) => t.value && String(t.value).trim());
+
+  const iconSvg = (icon: SpecTile['icon']) => {
+    switch (icon) {
+      case 'hex':
+        return (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l8 4.5v11L12 22 4 17.5v-11L12 2z" />
+          </svg>
+        );
+      case 'coin':
+        return (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3c4.418 0 8 1.79 8 4s-3.582 4-8 4-8-1.79-8-4 3.582-4 8-4z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7v5c0 2.21-3.582 4-8 4s-8-1.79-8-4V7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12v5c0 2.21-3.582 4-8 4s-8-1.79-8-4v-5" />
+          </svg>
+        );
+      case 'user':
+        return (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 21a8 8 0 10-16 0" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
+          </svg>
+        );
+      case 'tag':
+        return (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h7l5 5-7 7-5-5V7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7l-2 2v5l5 5" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 10h.01" />
+          </svg>
+        );
+      case 'ruler':
+        return (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 17l10-10 8 8-10 10H3v-8z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 13l2 2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 11l2 2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 9l2 2" />
+          </svg>
+        );
+      case 'shield':
+        return (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleBuyNow = () => {
     if (!product) return;
@@ -621,8 +703,8 @@ export default function ProductDetailPage() {
                     type="text"
                     value={ringSizeInput}
                     onChange={(e) => setRingSizeInput(e.target.value)}
-                    placeholder="e.g. 12"
-                    className="w-28 rounded border border-stone-300 px-3 py-2 text-sm"
+                    placeholder="e.g. 15 (UK)"
+                    className="w-32 rounded border border-stone-300 px-3 py-2 text-sm"
                   />
                   <Link href="/ring-size-guide" className="text-sm text-charcoal underline hover:no-underline">
                     Ring size guide
@@ -631,23 +713,28 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Specs (organized like reference; only render available fields) */}
-            {specRows.length > 0 && (
-              <div className="mt-6 rounded-lg border border-stone-200 bg-white p-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {specRows.map((row) => (
-                    <div key={row.label} className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-700">
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v9L12 21 4 16.5v-9L12 3z" />
-                        </svg>
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">{row.label}</p>
-                        <p className="mt-0.5 text-sm font-medium text-charcoal">{row.value}</p>
+            {/* Specs card like reference (3 columns × 2 rows) */}
+            {specTiles.length > 0 && (
+              <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">
+                <div className="grid grid-cols-3">
+                  {specTiles.slice(0, 6).map((t, idx) => {
+                    const isEndOfRow = (idx + 1) % 3 === 0;
+                    const isLastRow = idx >= 3;
+                    return (
+                      <div
+                        key={t.key}
+                        className={[
+                          'flex flex-col items-center justify-center px-3 py-5 text-center',
+                          !isEndOfRow ? 'border-r border-stone-200' : '',
+                          !isLastRow ? 'border-b border-stone-200' : '',
+                        ].join(' ')}
+                      >
+                        <div className="text-stone-700">{iconSvg(t.icon)}</div>
+                        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
+                        <p className="mt-1 text-sm font-medium text-charcoal">{t.value}</p>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

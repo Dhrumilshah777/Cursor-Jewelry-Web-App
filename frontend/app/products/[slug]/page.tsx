@@ -587,7 +587,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              <div className="aspect-[3/4] w-full overflow-hidden rounded-xl bg-stone-100">
+              <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-stone-100">
                 {!imageError && selectedSrc ? (
                   <img
                     key={selectedImageIndex}

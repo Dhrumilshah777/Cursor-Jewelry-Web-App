@@ -382,7 +382,7 @@ export default function OrderDetailPage() {
                 type="button"
                 onClick={() => void handleRetryPayment()}
                 disabled={retryBusy}
-                className="rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent/90 disabled:opacity-50"
+                className="rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent-hover disabled:opacity-50"
               >
                 {retryBusy ? 'Please wait…' : 'Retry payment'}
               </button>
@@ -406,7 +406,7 @@ export default function OrderDetailPage() {
             </p>
             <Link
               href="/checkout"
-              className="mt-3 inline-block rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent/90"
+              className="mt-3 inline-block rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent-hover"
             >
               Place order again
             </Link>

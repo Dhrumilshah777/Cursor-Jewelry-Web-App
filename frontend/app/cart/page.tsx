@@ -162,7 +162,7 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => handleQuantity(item.id, item.quantity - 1)}
-                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-hero/60"
+                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-body"
                           aria-label="Decrease quantity"
                         >
                           −
@@ -173,7 +173,7 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => handleQuantity(item.id, item.quantity + 1)}
-                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-hero/60"
+                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-body"
                           aria-label="Increase quantity"
                         >
                           +
@@ -204,13 +204,13 @@ export default function CartPage() {
               <div className="flex gap-3">
                 <Link
                   href="/products"
-                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-card hover:bg-accent/90"
+                  className="rounded border-2 border-accent bg-card px-4 py-2.5 text-sm font-medium text-brown hover:border-accent"
                 >
                   Continue shopping
                 </Link>
                 <Link
                   href={isUserLoggedIn() ? '/checkout' : '/login?returnTo=/checkout'}
-                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-card hover:bg-accent/90"
+                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover"
                 >
                   Proceed to checkout
                 </Link>

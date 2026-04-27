@@ -382,7 +382,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-4 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream transition hover:bg-accent/90"
+              className="mt-4 rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream transition hover:bg-accent-hover"
             >
               Log out
             </button>
@@ -424,7 +424,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={otpLoading || !phoneOk}
-                  className="mt-10 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  className="mt-10 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                   {otpLoading ? 'Sending…' : 'Get OTP'}
                 </button>
@@ -460,7 +460,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={otpLoading || otp.length !== OTP_LENGTH}
-                  className="mt-8 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  className="mt-8 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                   {otpLoading ? 'Verifying…' : 'Verify & Proceed'}
                 </button>

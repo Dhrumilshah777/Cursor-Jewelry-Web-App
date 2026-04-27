@@ -38,23 +38,23 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-body shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       {/* 1. Top promotional banner */}
-      <div className="bg-accent py-1.5 text-center">
-        <p className="text-xs font-medium uppercase tracking-wide text-card sm:text-sm">
+      <div className="bg-[#D6C2A8] py-1.5 text-center">
+        <p className="text-xs font-medium uppercase tracking-wide text-text sm:text-sm">
           FLAT 10% OFF FIRST PURCHASE. CODE SAVE10
         </p>
       </div>
 
-      {/* 2. Main header – white */}
-      <div className="border-b border-border bg-card">
+      {/* 2. Main header — #F5EFE6 */}
+      <div className="border-b border-border bg-body">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2 sm:px-6 lg:px-8">
           {/* Left: Search on mobile; Book appointment on desktop */}
           <div className="flex min-w-0 flex-1 items-center justify-start">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex h-10 w-10 items-center justify-center text-text-muted md:hidden"
+              className="flex h-10 w-10 items-center justify-center text-text md:hidden"
               aria-label="Search"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -75,7 +75,7 @@ export default function Header() {
               <span className="relative">
                 TB
                 <svg
-                  className="absolute -right-1 -top-3 h-3 w-3 text-accent sm:-top-4 sm:h-4 sm:w-4"
+                  className="absolute -right-1 -top-3 h-3 w-3 text-text sm:-top-4 sm:h-4 sm:w-4"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   aria-hidden
@@ -94,29 +94,29 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="hidden text-text-muted transition-opacity hover:opacity-70 md:block"
+              className="hidden text-text transition-opacity hover:opacity-80 md:block"
               aria-label="Search"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </button>
-            <Link href="/login" className="hidden text-text-muted transition-opacity hover:opacity-70 md:block" aria-label="Account">
+            <Link href="/login" className="hidden text-text transition-opacity hover:opacity-80 md:block" aria-label="Account">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
             </Link>
-            <Link href="/wishlist" className="hidden text-text-muted transition-opacity hover:opacity-70 md:block" aria-label="Wishlist">
+            <Link href="/wishlist" className="hidden text-text transition-opacity hover:opacity-80 md:block" aria-label="Wishlist">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </Link>
-            <Link href="/cart" className="relative hidden text-text-muted transition-opacity hover:opacity-70 md:block" aria-label="Cart">
+            <Link href="/cart" className="relative hidden text-text transition-opacity hover:opacity-80 md:block" aria-label="Cart">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-medium text-card">
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-icon-badge text-[10px] font-medium text-card">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -124,7 +124,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className="flex h-10 w-10 items-center justify-center text-text-muted md:hidden"
+              className="flex h-10 w-10 items-center justify-center text-text md:hidden"
               aria-expanded={mobileOpen}
               aria-label="Toggle menu"
             >
@@ -142,13 +142,13 @@ export default function Header() {
         </div>
 
         {/* 3. Bottom navigation – horizontal links (visible only 1024px+) */}
-        <nav className="border-t border-stone-100 py-2" aria-label="Main">
+        <nav className="border-t border-border py-2" aria-label="Main">
           <div className="mx-auto hidden max-w-7xl flex-wrap items-center justify-center gap-6 px-4 sm:gap-8 sm:px-6 lg:flex lg:gap-10 lg:px-8">
             {mainNavLinks.map(({ href, label }) => (
               <Link
                 key={label}
                 href={href}
-                className="font-sans text-xs font-medium uppercase tracking-[0.15em] text-stone-800 transition-opacity hover:opacity-70"
+                className="font-sans text-xs font-medium uppercase tracking-[0.15em] text-text transition-opacity hover:opacity-70"
               >
                 {label}
               </Link>
@@ -181,7 +181,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-hero/60"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-text transition-colors hover:bg-body"
                 aria-label="Close menu"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
-              className="mb-4 flex items-center gap-2 font-sans text-xs font-medium uppercase tracking-wider text-text-muted"
+              className="mb-4 flex items-center gap-2 font-sans text-xs font-medium uppercase tracking-wider text-text"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -205,16 +205,16 @@ export default function Header() {
                   key={label}
                   href={href}
                   onClick={() => setMobileOpen(false)}
-                  className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-text transition-colors hover:bg-hero/60"
+                  className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-text transition-colors hover:bg-body"
                 >
                   {label}
                 </Link>
               ))}
               <div className="my-2 border-t border-border" />
-              <Link href="/cart" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-text transition-colors hover:bg-hero/60">
+              <Link href="/cart" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-text transition-colors hover:bg-body">
                 Cart{cartCount > 0 ? ` (${cartCount})` : ''}
               </Link>
-              <Link href="/login" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-text transition-colors hover:bg-hero/60">
+              <Link href="/login" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-text transition-colors hover:bg-body">
                 Login
               </Link>
               <Link href="/register" onClick={() => setMobileOpen(false)} className="rounded px-3 py-2.5 font-sans text-sm font-medium uppercase tracking-wider text-stone-800 transition-colors hover:bg-stone-50">

@@ -201,7 +201,7 @@ export default function ShopByCategoryGrid() {
 
   return (
     <section className="bg-cream py-10 sm:py-12">
-      <div className="container mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-blue-700">
           Shop by category
         </h2>

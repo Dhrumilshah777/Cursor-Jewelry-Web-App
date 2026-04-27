@@ -1,28 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const LOGO_DURATION_MS = 1200;
 const SLIDE_DURATION_MS = 800;
+/** Always hide even if intermediate timers were cleared (e.g. Strict Mode / tab throttling). */
+const SAFETY_HIDE_MS = LOGO_DURATION_MS + SLIDE_DURATION_MS + 1500;
 
 export default function PageLoader() {
   const [phase, setPhase] = useState<'visible' | 'sliding' | 'gone'>('visible');
+  const innerTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const startSlide = setTimeout(() => {
+    const outerTimer = window.setTimeout(() => {
       setPhase('sliding');
+      innerTimerRef.current = window.setTimeout(() => {
+        innerTimerRef.current = null;
+        setPhase('gone');
+      }, SLIDE_DURATION_MS);
     }, LOGO_DURATION_MS);
 
-    return () => clearTimeout(startSlide);
-  }, []);
-
-  useEffect(() => {
-    if (phase !== 'sliding') return;
-    const remove = setTimeout(() => {
+    const safetyTimer = window.setTimeout(() => {
       setPhase('gone');
-    }, SLIDE_DURATION_MS);
-    return () => clearTimeout(remove);
-  }, [phase]);
+    }, SAFETY_HIDE_MS);
+
+    return () => {
+      window.clearTimeout(outerTimer);
+      window.clearTimeout(safetyTimer);
+      if (innerTimerRef.current != null) {
+        window.clearTimeout(innerTimerRef.current);
+        innerTimerRef.current = null;
+      }
+    };
+  }, []);
 
   if (phase === 'gone') return null;
 

@@ -165,7 +165,7 @@ export default function GiftForEveryOccasionSection() {
 
   return (
     <section className="bg-cream py-10 sm:py-12">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="mb-8 mt-6 text-center text-3xl font-thin uppercase tracking-wide text-blue-700 sm:mb-12">
           Everyday Gifts
         </h2>

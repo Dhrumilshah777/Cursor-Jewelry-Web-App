@@ -478,7 +478,12 @@ export default function ProductDetailPage() {
           {
             key: 'ringSize',
             label: 'Ring size',
-            value: ringSizeInput.trim() ? String(ringSizeInput) : '—',
+            value: (() => {
+              const fromInput = ringSizeInput.trim();
+              if (fromInput) return fromInput;
+              const fromProduct = product.ringSize ? String(product.ringSize).trim() : '';
+              return fromProduct || '—';
+            })(),
             icon: 'ruler',
           },
         ] as SpecTile[])
@@ -491,32 +496,31 @@ export default function ProductDetailPage() {
   );
 
   const iconSvg = (icon: SpecTile['icon']) => {
+    const cls = 'h-6 w-6 shrink-0';
     switch (icon) {
       case 'hex':
         return (
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l8 4.5v11L12 22 4 17.5v-11L12 2z" />
           </svg>
         );
       case 'scale':
         return (
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v18" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 7l3 12h8l3-12" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6" />
+          <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
+            <circle cx="12" cy="12" r="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
           </svg>
         );
       case 'balance':
         return (
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21V9" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9l9-5-2 14H5l-2-14 9 5z" />
+          <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
         );
       case 'tag':
         return (
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h7l5 5-7 7-5-5V7z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7l-2 2v5l5 5" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 10h.01" />
@@ -524,19 +528,16 @@ export default function ProductDetailPage() {
         );
       case 'ruler':
         return (
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 17l10-10 8 8-10 10H3v-8z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 13l2 2" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 11l2 2" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 9l2 2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 13l2 2M9 11l2 2M11 9l2 2" />
           </svg>
         );
       case 'medal':
         return (
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15a6 6 0 100-12 6 6 0 000 12z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.5 5.5L6 3M15.5 5.5L18 3" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21v-4" />
+          <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m9 12 2 2 4-4" />
           </svg>
         );
       default:
@@ -563,7 +564,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <main className="min-h-[50vh] bg-hero px-4 py-6 pb-24 sm:py-8 md:px-6 lg:px-8 md:pb-12">
+    <main className="min-h-[50vh] bg-body px-4 py-6 pb-24 sm:py-8 md:px-6 lg:px-8 md:pb-12">
       <div className="mx-auto max-w-6xl">
         <nav className="mb-6 text-sm text-text-muted">
           <Link href="/" className="hover:text-text">HOME</Link>
@@ -572,7 +573,7 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid items-start gap-8 lg:grid-cols-[1.35fr_1fr] lg:gap-x-12">
-          {/* Left: thumbnails + main image (vertical on md+) */}
+          {/* Left: thumbnails + main image */}
           <div className="min-w-0">
             <div
               className={`grid gap-4 md:items-start ${allImages.length > 1 ? 'md:grid-cols-[88px_1fr]' : ''}`}
@@ -590,7 +591,7 @@ export default function ProductDetailPage() {
                           setSelectedImageIndex(i);
                           setImageError(false);
                         }}
-                        className={`h-20 w-20 overflow-hidden rounded-md border-2 transition-colors ${
+                        className={`h-20 w-20 overflow-hidden rounded-md border-2 bg-card transition-colors ${
                           isSelected ? 'border-accent' : 'border-border hover:border-text-muted'
                         }`}
                         aria-label={`View image ${i + 1}`}
@@ -618,7 +619,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              <div className="aspect-square w-full overflow-hidden rounded-xl bg-stone-100">
+              <div className="aspect-square w-full overflow-hidden rounded-xl">
                 {!imageError && selectedSrc ? (
                   <img
                     key={selectedImageIndex}
@@ -655,7 +656,7 @@ export default function ProductDetailPage() {
                         setSelectedImageIndex(i);
                         setImageError(false);
                       }}
-                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
+                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 bg-card transition-colors ${
                         isSelected ? 'border-accent' : 'border-border hover:border-text-muted'
                       }`}
                       aria-label={`View image ${i + 1}`}
@@ -673,7 +674,7 @@ export default function ProductDetailPage() {
           <div className="min-w-0">
             <div className="flex items-start gap-3">
               <div className="min-w-0">
-                <h1 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
+                <h1 className="font-serif text-2xl font-semibold text-text sm:text-3xl">
                   {product.name}
                 </h1>
                 {metaLine ? <p className="mt-1 text-sm text-text-muted">{metaLine}</p> : null}
@@ -682,7 +683,7 @@ export default function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-text-muted hover:bg-hero/60"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-text hover:bg-body"
                   aria-label="Share"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25" /></svg>
@@ -691,7 +692,7 @@ export default function ProductDetailPage() {
                   type="button"
                   onClick={toggleWishlist}
                   className={`flex h-9 w-9 items-center justify-center rounded-full border ${
-                    wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-border text-text-muted hover:bg-hero/60'
+                    wishlisted ? 'border-border bg-body text-text' : 'border-border text-text hover:bg-body'
                   }`}
                   aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
@@ -714,7 +715,8 @@ export default function ProductDetailPage() {
                     Out of stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-in-stock px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                     In stock
                   </span>
                 )}
@@ -756,20 +758,32 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Specs list (reference layout) */}
+            {/* Product details — borders use border-border (#E7E1D7); fill stays white */}
             {specTiles.length > 0 && (
-              <div className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-                {specTiles.slice(0, 6).map((t) => (
-                  <div key={t.key} className="flex items-center gap-2.5 px-3 py-2 sm:px-4 sm:py-2">
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-hero/60 text-text-muted">
-                      {iconSvg(t.icon)}
-                    </span>
-                    <div className="min-w-0 flex-1 leading-tight">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">{t.label}</p>
-                      <p className="mt-0.5 text-sm font-medium text-text">{t.value}</p>
-                    </div>
+              <div className="mt-6">
+                <h3 className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
+                  Product details
+                </h3>
+                <div className="overflow-hidden rounded-xl border border-border bg-card p-px shadow-sm">
+                  <div className="grid grid-cols-3 gap-px bg-border">
+                    {specTiles.slice(0, 6).map((t) => (
+                      <div
+                        key={t.key}
+                        className="flex min-h-[92px] flex-col items-center justify-center gap-3 bg-card px-3 py-4 text-center sm:min-h-[100px] sm:px-4 sm:py-5"
+                      >
+                        <span className="text-accent [&_svg]:h-5 [&_svg]:w-5">{iconSvg(t.icon)}</span>
+                        <div className="flex w-full max-w-[14rem] flex-col items-center">
+                          <p className="w-full text-[10px] font-semibold uppercase leading-tight tracking-[0.12em] text-text-muted sm:text-[11px]">
+                            {t.label}
+                          </p>
+                          <p className="mt-3 w-full border-t border-border pt-3 text-xs font-medium leading-snug text-text sm:text-sm">
+                            {t.value}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             )}
 
@@ -783,7 +797,7 @@ export default function ProductDetailPage() {
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-hero/60"
+                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-body"
                     aria-label="Decrease quantity"
                   >
                     −
@@ -794,7 +808,7 @@ export default function ProductDetailPage() {
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-hero/60"
+                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-body"
                     aria-label="Increase quantity"
                   >
                     +
@@ -821,7 +835,7 @@ export default function ProductDetailPage() {
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                       outOfStock
                         ? 'cursor-not-allowed bg-border text-text-muted'
-                        : 'bg-accent text-card hover:bg-accent/90'
+                        : 'border-2 border-accent bg-card text-brown hover:bg-card hover:border-accent'
                     }`}
                   >
                     Add to cart
@@ -831,7 +845,7 @@ export default function ProductDetailPage() {
                     onClick={handleBuyNow}
                     disabled={outOfStock}
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-card hover:bg-accent/90'
+                      outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
                     }`}
                   >
                     Buy now
@@ -846,7 +860,7 @@ export default function ProductDetailPage() {
             {/* Delivery check */}
             <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-hero/60 text-text-muted">
+                <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-body text-accent">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
@@ -870,7 +884,7 @@ export default function ProductDetailPage() {
                       type="button"
                       onClick={checkDelivery}
                       disabled={deliveryChecking}
-                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-card hover:bg-accent/90 disabled:opacity-60"
+                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
                     >
                       {deliveryChecking ? 'Checking…' : 'Check'}
                     </button>
@@ -893,7 +907,7 @@ export default function ProductDetailPage() {
             { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'shield2' as const },
           ].map((item) => (
             <div key={item.title} className="flex items-start gap-3 px-4 py-4 sm:px-5">
-              <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-hero/60 text-text-muted shadow-sm">
+              <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-body text-accent shadow-sm">
                 {item.icon === 'truck' && (
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
@@ -971,7 +985,7 @@ export default function ProductDetailPage() {
                       ).toFixed(2)}
                     </td>
                   </tr>
-                  <tr className="bg-hero/60 font-semibold text-text">
+                  <tr className="bg-body font-semibold text-text">
                     <td className="px-4 py-3">Total</td>
                     <td className="px-4 py-3">
                       ₹{(
@@ -1068,10 +1082,16 @@ export default function ProductDetailPage() {
               className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                 alreadyInCart || outOfStock
                   ? 'cursor-not-allowed bg-border text-text-muted'
-                  : 'bg-accent text-card hover:bg-accent/90'
+                  : 'border-2 border-accent bg-card text-brown hover:bg-card hover:border-accent'
               }`}
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <svg
+                className={`h-5 w-5 shrink-0 ${alreadyInCart || outOfStock ? '' : 'text-text'}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
               </svg>
               {outOfStock ? 'Out of stock' : alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
@@ -1081,7 +1101,7 @@ export default function ProductDetailPage() {
 
         {addedToCart && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-card shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >
@@ -1090,7 +1110,7 @@ export default function ProductDetailPage() {
         )}
         {linkCopied && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-card shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >

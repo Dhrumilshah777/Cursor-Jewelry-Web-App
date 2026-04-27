@@ -190,7 +190,7 @@ export default function MyOrdersPage() {
                     <button
                       onClick={() => void requestReturn(order._id)}
                       disabled={submitting === order._id}
-                      className="rounded bg-accent px-3 py-1.5 text-xs font-semibold text-accent-cream hover:bg-accent/90 disabled:opacity-60"
+                      className="rounded bg-accent px-3 py-1.5 text-xs font-semibold text-accent-cream hover:bg-accent-hover disabled:opacity-60"
                     >
                       {submitting === order._id ? 'Requesting…' : 'Request return'}
                     </button>

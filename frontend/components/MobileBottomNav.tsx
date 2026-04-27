@@ -89,7 +89,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-md items-center justify-around rounded-full bg-accent px-4 py-3 shadow-lg md:hidden"
+      className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-md items-center justify-around rounded-full border border-border bg-card px-4 py-3 shadow-lg md:hidden"
       aria-label="Mobile navigation"
     >
       {items.map(({ href, label, icon }) => {
@@ -99,7 +99,7 @@ export default function MobileBottomNav() {
             key={href}
             href={href}
             className={`flex flex-col items-center justify-center rounded-full p-2.5 transition-colors ${
-              active ? 'text-accent-cream' : 'text-accent-cream/70 hover:text-accent-cream/90'
+              active ? 'text-text' : 'text-text-muted hover:text-text'
             }`}
             aria-label={label}
             aria-current={active ? 'page' : undefined}
@@ -107,14 +107,14 @@ export default function MobileBottomNav() {
             {icon === 'bag' && cartCount > 0 ? (
               <span className="relative inline-block">
                 <NavIcon type={icon} active={active} />
-                <span className="absolute -right-2 -top-1 flex min-w-[14px] items-center justify-center rounded-full bg-white/25 px-1 text-[10px] font-medium leading-4 text-accent-cream">
+                <span className="absolute -right-2 -top-1 flex min-w-[14px] items-center justify-center rounded-full bg-icon-badge px-1 text-[10px] font-medium leading-4 text-card">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               </span>
             ) : icon === 'heart' && wishlistCount > 0 ? (
               <span className="relative inline-block">
                 <NavIcon type={icon} active={active} />
-                <span className="absolute -right-2 -top-1 flex min-w-[14px] items-center justify-center rounded-full bg-white/25 px-1 text-[10px] font-medium leading-4 text-accent-cream">
+                <span className="absolute -right-2 -top-1 flex min-w-[14px] items-center justify-center rounded-full bg-icon-badge px-1 text-[10px] font-medium leading-4 text-card">
                   {wishlistCount > 99 ? '99+' : wishlistCount}
                 </span>
               </span>

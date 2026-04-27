@@ -258,7 +258,7 @@ function ProductsContent() {
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm hover:bg-accent/90"
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm hover:bg-accent-hover"
             aria-haspopup="dialog"
             aria-expanded={filtersOpen}
             aria-controls="products-filter-drawer"
@@ -406,7 +406,7 @@ function ProductsContent() {
                 <button
                   type="button"
                   onClick={() => setFiltersOpen(false)}
-                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-card hover:bg-accent/90"
+                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-card hover:bg-accent-hover"
                   aria-label="Close"
                 >
                   ✕

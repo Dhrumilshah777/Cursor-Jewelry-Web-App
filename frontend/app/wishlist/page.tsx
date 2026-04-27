@@ -109,7 +109,7 @@ export default function WishlistPage() {
                   <button
                     type="button"
                     onClick={() => handleRemove(product.id)}
-                    className="w-full rounded py-2 text-sm text-text-muted transition-colors hover:bg-hero/60 hover:text-text"
+                    className="w-full rounded py-2 text-sm text-text-muted transition-colors hover:bg-body hover:text-text"
                   >
                     Remove from wishlist
                   </button>

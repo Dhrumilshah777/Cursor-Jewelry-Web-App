@@ -610,6 +610,50 @@ export default function ProductDetailPage() {
                 })}
               </div>
             )}
+
+            {/* Details strip under gallery (like reference) */}
+            <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl border border-stone-200 bg-white p-4 sm:grid-cols-4">
+              {[
+                { title: 'Free shipping', sub: 'Across India', icon: 'truck' as const },
+                { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' as const },
+                { title: 'Secure payment', sub: 'Trusted gateway', icon: 'lock' as const },
+                { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'badge' as const },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+                    {item.icon === 'truck' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17a2 2 0 104 0" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17a2 2 0 104 0" />
+                      </svg>
+                    )}
+                    {item.icon === 'shield' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+                      </svg>
+                    )}
+                    {item.icon === 'lock' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V8a4 4 0 10-8 0v3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 11h12v10H6V11z" />
+                      </svg>
+                    )}
+                    {item.icon === 'badge' && (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7l3-7z" />
+                      </svg>
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal">{item.title}</p>
+                    <p className="text-[11px] text-stone-500">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Right: info panel */}
@@ -836,49 +880,6 @@ export default function ProductDetailPage() {
               {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
             </div>
 
-            {/* Bottom service strip (like reference) */}
-            <div className="mt-6 grid grid-cols-2 gap-3 border-t border-stone-200 pt-4 sm:grid-cols-4">
-              {[
-                { title: 'Free shipping', sub: 'Across India', icon: 'truck' },
-                { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' },
-                { title: 'Secure payment', sub: 'Trusted gateway', icon: 'lock' },
-                { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'badge' },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-2">
-                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-stone-700">
-                    {item.icon === 'truck' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17a2 2 0 104 0" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17a2 2 0 104 0" />
-                      </svg>
-                    )}
-                    {item.icon === 'shield' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
-                      </svg>
-                    )}
-                    {item.icon === 'lock' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V8a4 4 0 10-8 0v3" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 11h12v10H6V11z" />
-                      </svg>
-                    )}
-                    {item.icon === 'badge' && (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7l3-7z" />
-                      </svg>
-                    )}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal">{item.title}</p>
-                    <p className="text-[11px] text-stone-500">{item.sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 

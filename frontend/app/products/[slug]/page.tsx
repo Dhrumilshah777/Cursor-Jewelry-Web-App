@@ -573,58 +573,6 @@ export default function ProductDetailPage() {
             </div>
             <p className="mt-1 text-xs text-stone-500">(Inclusive of all taxes)</p>
 
-            {/* Trust badges (visual only, like reference) */}
-            <div className="mt-5 grid grid-cols-2 gap-3 rounded-lg border border-stone-200 bg-white p-4 sm:grid-cols-4">
-              <div className="flex items-center gap-2 text-stone-700">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 4.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5v-6L12 3z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase leading-4">Hallmarked</p>
-                  <p className="text-[11px] text-stone-500 leading-4">BIS</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7l3-7z" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase leading-4">Certified</p>
-                  <p className="text-[11px] text-stone-500 leading-4">IGI</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17a2 2 0 104 0" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 17a2 2 0 104 0" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase leading-4">Free shipping</p>
-                  <p className="text-[11px] text-stone-500 leading-4">& Returns</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21s-7-4.35-7-10a4 4 0 017-2.5A4 4 0 0119 11c0 5.65-7 10-7 10z" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase leading-4">Warranty</p>
-                  <p className="text-[11px] text-stone-500 leading-4">Lifetime</p>
-                </div>
-              </div>
-            </div>
-
             {/* Optional variations */}
             {colorsList.length > 1 && (
               <div className="mt-6">

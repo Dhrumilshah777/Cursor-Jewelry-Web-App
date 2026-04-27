@@ -20,7 +20,17 @@ if (process.env.RENDER || process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+// Allow cross-origin <img> loads from the frontend (Vercel/localhost) to backend /uploads assets.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
+
+// Serve uploaded files (multer stores in backend/uploads, and API returns /uploads/<filename>)
+const UPLOADS_DIR = path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(UPLOADS_DIR, {
+  setHeaders: (res) => {
+    // Avoid CORP blocking when frontend is on a different origin.
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  },
+}));
 
 // Middleware: CORS with credentials so frontend can send httpOnly cookies
 const CORS_ORIGINS = (process.env.CORS_ORIGINS || FRONTEND_URL)

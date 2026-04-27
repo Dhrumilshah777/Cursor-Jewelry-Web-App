@@ -127,7 +127,7 @@ function ProductsLoadingSkeleton() {
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
           <div className="hidden lg:block lg:w-64 lg:flex-shrink-0">
-            <div className="rounded border border-stone-200 bg-white p-5">
+            <div className="rounded border border-border bg-card p-5">
               <div className="h-4 w-16 rounded bg-stone-200" />
               <div className="mt-4 space-y-3 border-t border-stone-100 pt-4">
                 <div className="h-4 w-full rounded bg-stone-100" />
@@ -242,10 +242,10 @@ function ProductsContent() {
   return (
     <main className="min-h-[50vh] px-4 py-12">
       <div className="mx-auto max-w-6xl">
-        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
+        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">
           {categoryLabel ? `${categoryLabel}` : 'Products'}
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-text-muted">
           {filteredProducts.length === 0
             ? categoryParam
               ? 'No products match these filters.'
@@ -269,7 +269,7 @@ function ProductsContent() {
             Filter
           </button>
           {searchParams.toString() && (
-            <Link href="/products" className="text-sm font-medium text-charcoal underline hover:no-underline">
+            <Link href="/products" className="text-sm font-medium text-text underline hover:no-underline">
               Clear
             </Link>
           )}
@@ -286,17 +286,17 @@ function ProductsContent() {
           </div>
           <div className="min-w-0 flex-1">
             {filteredProducts.length === 0 ? (
-              <div className="border border-stone-200 bg-stone-50 p-8 text-center">
-                <p className="text-stone-600">
+              <div className="border border-border bg-card p-8 text-center">
+                <p className="text-text-muted">
                   {searchParams.toString()
                     ? 'Try changing or clearing filters.'
                     : 'Products added in the admin will appear here.'}
                 </p>
-                <Link href="/products" className="mt-4 inline-block text-sm font-medium text-charcoal underline hover:no-underline">
+                <Link href="/products" className="mt-4 inline-block text-sm font-medium text-text underline hover:no-underline">
                   Clear filters
                 </Link>
                 <span className="mx-2 text-stone-400">|</span>
-                <Link href="/" className="text-sm font-medium text-charcoal underline hover:no-underline">
+                <Link href="/" className="text-sm font-medium text-text underline hover:no-underline">
                   ← Back to home
                 </Link>
               </div>
@@ -340,10 +340,10 @@ function ProductsContent() {
                               return next;
                             });
                           }}
-                          className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border bg-white/90 shadow-sm backdrop-blur transition-colors hover:bg-white ${
+                          className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border bg-card/90 shadow-sm backdrop-blur transition-colors hover:bg-card ${
                             wishlistedIds.has(String(product._id))
                               ? 'border-red-200 text-red-600'
-                              : 'border-stone-200 text-stone-600'
+                              : 'border-border text-text-muted'
                           }`}
                           aria-label={wishlistedIds.has(String(product._id)) ? 'Remove from wishlist' : 'Add to wishlist'}
                         >
@@ -363,11 +363,11 @@ function ProductsContent() {
                         </button>
                       </div>
                       <div className="min-h-[4.5rem] pt-3">
-                        <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal line-clamp-2">
+                        <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-text line-clamp-2">
                           {product.name}
                         </h2>
-                        <p className="mt-1 text-xs text-stone-500">{product.category}</p>
-                        <p className="mt-2 font-sans text-sm font-semibold text-charcoal">₹{product.price}</p>
+                        <p className="mt-1 text-xs text-text-muted">{product.category}</p>
+                        <p className="mt-2 font-sans text-sm font-semibold text-text">₹{product.price}</p>
                       </div>
                     </Link>
                   </li>
@@ -377,7 +377,7 @@ function ProductsContent() {
 
             {filteredProducts.length > 0 && (
               <p className="mt-8">
-                <Link href="/" className="text-sm text-charcoal underline hover:no-underline">
+                <Link href="/" className="text-sm text-text underline hover:no-underline">
                   ← Back to home
                 </Link>
               </p>
@@ -400,13 +400,13 @@ function ProductsContent() {
               onClick={() => setFiltersOpen(false)}
               aria-label="Close filters"
             />
-            <div className="absolute right-0 top-0 h-full w-[88vw] max-w-sm overflow-auto bg-white p-4 shadow-2xl">
+            <div className="absolute right-0 top-0 h-full w-[88vw] max-w-sm overflow-auto bg-card p-4 shadow-2xl">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">Filters</h2>
+                <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-text">Filters</h2>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen(false)}
-                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
+                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-card hover:bg-accent/90"
                   aria-label="Close"
                 >
                   ✕

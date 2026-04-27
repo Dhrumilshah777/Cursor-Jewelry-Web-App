@@ -367,7 +367,7 @@ export default function ProductDetailPage() {
     return (
       <main className="min-h-[50vh] px-4 py-12">
         <div className="mx-auto max-w-4xl">
-          <p className="text-stone-500">Loading product…</p>
+          <p className="text-text-muted">Loading product…</p>
         </div>
       </main>
     );
@@ -377,11 +377,11 @@ export default function ProductDetailPage() {
     return (
       <main className="min-h-[50vh] px-4 py-12">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="font-sans text-2xl font-semibold text-charcoal">
+          <h1 className="font-sans text-2xl font-semibold text-text">
             {error === 'Product not found' ? 'Product not found' : 'Could not load product'}
           </h1>
-          <p className="mt-2 text-stone-600">{error}</p>
-          <Link href="/" className="mt-6 inline-block text-charcoal underline hover:no-underline">
+          <p className="mt-2 text-text-muted">{error}</p>
+          <Link href="/" className="mt-6 inline-block text-text underline hover:no-underline">
             ← Back to home
           </Link>
         </div>
@@ -563,12 +563,12 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <main className="min-h-[50vh] px-4 py-6 pb-24 sm:py-8 md:px-6 lg:px-8 md:pb-12">
+    <main className="min-h-[50vh] bg-hero px-4 py-6 pb-24 sm:py-8 md:px-6 lg:px-8 md:pb-12">
       <div className="mx-auto max-w-6xl">
-        <nav className="mb-6 text-sm text-stone-500">
-          <Link href="/" className="hover:text-charcoal">HOME</Link>
+        <nav className="mb-6 text-sm text-text-muted">
+          <Link href="/" className="hover:text-text">HOME</Link>
           <span className="mx-2">&gt;</span>
-          <span className="font-medium uppercase tracking-wide text-charcoal">{product.name}</span>
+          <span className="font-medium uppercase tracking-wide text-text">{product.name}</span>
         </nav>
 
         <div className="grid items-start gap-8 lg:grid-cols-[1.35fr_1fr] lg:gap-x-12">
@@ -591,7 +591,7 @@ export default function ProductDetailPage() {
                           setImageError(false);
                         }}
                         className={`h-20 w-20 overflow-hidden rounded-md border-2 transition-colors ${
-                          isSelected ? 'border-blue-600' : 'border-stone-200 hover:border-stone-400'
+                          isSelected ? 'border-accent' : 'border-border hover:border-text-muted'
                         }`}
                         aria-label={`View image ${i + 1}`}
                       >
@@ -606,7 +606,7 @@ export default function ProductDetailPage() {
                   <button
                     type="button"
                     disabled
-                    className="flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-stone-300 bg-white text-[10px] font-semibold uppercase tracking-wide text-stone-600"
+                    className="flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-border bg-card text-[10px] font-semibold uppercase tracking-wide text-text-muted"
                     title="360° view coming soon"
                   >
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,7 +656,7 @@ export default function ProductDetailPage() {
                         setImageError(false);
                       }}
                       className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                        isSelected ? 'border-blue-600' : 'border-stone-200 hover:border-stone-400'
+                        isSelected ? 'border-accent' : 'border-border hover:border-text-muted'
                       }`}
                       aria-label={`View image ${i + 1}`}
                     >
@@ -673,16 +673,16 @@ export default function ProductDetailPage() {
           <div className="min-w-0">
             <div className="flex items-start gap-3">
               <div className="min-w-0">
-                <h1 className="font-sans text-2xl font-semibold text-charcoal sm:text-3xl">
+                <h1 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
                   {product.name}
                 </h1>
-                {metaLine ? <p className="mt-1 text-sm text-stone-600">{metaLine}</p> : null}
+                {metaLine ? <p className="mt-1 text-sm text-text-muted">{metaLine}</p> : null}
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-500 hover:bg-stone-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-text-muted hover:bg-hero/60"
                   aria-label="Share"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l7.5-4.314m-7.5 4.314l7.5-4.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186m0 0L12.75 5.25" /></svg>
@@ -691,7 +691,7 @@ export default function ProductDetailPage() {
                   type="button"
                   onClick={toggleWishlist}
                   className={`flex h-9 w-9 items-center justify-center rounded-full border ${
-                    wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-300 text-stone-500 hover:bg-stone-50'
+                    wishlisted ? 'border-red-200 bg-red-50 text-red-600' : 'border-border text-text-muted hover:bg-hero/60'
                   }`}
                   aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
@@ -702,7 +702,7 @@ export default function ProductDetailPage() {
 
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <div>
-                <p className="font-sans text-3xl font-semibold text-charcoal">₹ {displayPrice.toFixed(2)}</p>
+                <p className="font-sans text-3xl font-semibold text-text">₹ {displayPrice.toFixed(2)}</p>
                 <p className="mt-1 text-xs font-medium text-emerald-700">(Inclusive of all taxes)</p>
               </div>
               {compareAtPrice != null && compareAtPrice > displayPrice && (
@@ -724,7 +724,7 @@ export default function ProductDetailPage() {
             {/* Optional variations */}
             {colorsList.length > 1 && (
               <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                   Color: {colorsList[selectedColorIndex] ?? colorsList[0]}
                 </p>
                 <div className="mt-2 flex gap-2">
@@ -745,7 +745,7 @@ export default function ProductDetailPage() {
                         type="button"
                         onClick={() => setSelectedColorIndex(i)}
                         className={`h-10 w-10 flex-shrink-0 rounded border-2 transition-all ${
-                          isSelected ? 'border-charcoal ring-2 ring-charcoal/20' : 'border-stone-200 hover:border-stone-400'
+                          isSelected ? 'border-text ring-2 ring-text/15' : 'border-border hover:border-text-muted'
                         }`}
                         style={{ backgroundColor: bg }}
                         aria-label={`Color ${c}`}
@@ -758,15 +758,15 @@ export default function ProductDetailPage() {
 
             {/* Specs list (reference layout) */}
             {specTiles.length > 0 && (
-              <div className="mt-6 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
+              <div className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
                 {specTiles.slice(0, 6).map((t) => (
                   <div key={t.key} className="flex items-center gap-2.5 px-3 py-2 sm:px-4 sm:py-2">
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-stone-50 text-stone-700">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-hero/60 text-text-muted">
                       {iconSvg(t.icon)}
                     </span>
                     <div className="min-w-0 flex-1 leading-tight">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
-                      <p className="mt-0.5 text-sm font-medium text-charcoal">{t.value}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">{t.label}</p>
+                      <p className="mt-0.5 text-sm font-medium text-text">{t.value}</p>
                     </div>
                   </div>
                 ))}
@@ -775,26 +775,26 @@ export default function ProductDetailPage() {
 
             {/* Quantity + CTAs (like reference) */}
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-700">
-                Quantity: <span className="font-semibold text-charcoal">{Math.max(1, quantity)}</span>
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Quantity: <span className="font-semibold text-text">{Math.max(1, quantity)}</span>
               </p>
               <div className="mt-2 grid grid-cols-[140px_1fr] gap-3">
-                <div className="flex items-center justify-between rounded border border-stone-300 bg-white px-3 py-2">
+                <div className="flex items-center justify-between rounded border border-border bg-card px-3 py-2">
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-8 w-8 rounded text-lg text-stone-700 hover:bg-stone-50"
+                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-hero/60"
                     aria-label="Decrease quantity"
                   >
                     −
                   </button>
-                  <span className="text-sm font-semibold text-charcoal" aria-live="polite">
+                  <span className="text-sm font-semibold text-text" aria-live="polite">
                     {Math.max(1, quantity)}
                   </span>
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="h-8 w-8 rounded text-lg text-stone-700 hover:bg-stone-50"
+                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-hero/60"
                     aria-label="Increase quantity"
                   >
                     +
@@ -820,8 +820,8 @@ export default function ProductDetailPage() {
                     disabled={outOfStock}
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                       outOfStock
-                        ? 'cursor-not-allowed bg-stone-100 text-stone-500'
-                        : 'bg-[#C7B7A6] text-white hover:bg-[#C7B7A6]/90'
+                        ? 'cursor-not-allowed bg-border text-text-muted'
+                        : 'bg-accent text-card hover:bg-accent/90'
                     }`}
                   >
                     Add to cart
@@ -831,7 +831,7 @@ export default function ProductDetailPage() {
                     onClick={handleBuyNow}
                     disabled={outOfStock}
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      outOfStock ? 'cursor-not-allowed bg-stone-300 text-stone-600' : 'bg-[#C7B7A6] text-white hover:bg-[#C7B7A6]/90'
+                      outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-card hover:bg-accent/90'
                     }`}
                   >
                     Buy now
@@ -839,22 +839,22 @@ export default function ProductDetailPage() {
                 </div>
               </div>
               {alreadyInCart && !outOfStock && (
-                <p className="mt-2 text-xs text-stone-500">This product is already in your cart; adding again will increase quantity.</p>
+                <p className="mt-2 text-xs text-text-muted">This product is already in your cart; adding again will increase quantity.</p>
               )}
             </div>
 
             {/* Delivery check */}
-            <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+            <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+                <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-hero/60 text-text-muted">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10h3l3 3v4h-6v-7z" />
                   </svg>
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-charcoal">Check delivery</p>
-                  <p className="mt-1 text-xs text-stone-500">Enter pincode to check estimated delivery date</p>
+                  <p className="text-sm font-semibold text-text">Check delivery</p>
+                  <p className="mt-1 text-xs text-text-muted">Enter pincode to check estimated delivery date</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <input
                       type="text"
@@ -863,20 +863,20 @@ export default function ProductDetailPage() {
                       value={pincode}
                       onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="Pincode"
-                      className="min-w-[140px] flex-1 rounded border border-stone-300 px-3 py-2 text-sm"
+                      className="min-w-[140px] flex-1 rounded border border-border bg-card px-3 py-2 text-sm text-text placeholder:text-text-muted"
                       onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
                     />
                     <button
                       type="button"
                       onClick={checkDelivery}
                       disabled={deliveryChecking}
-                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-accent-cream disabled:opacity-60"
+                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-card hover:bg-accent/90 disabled:opacity-60"
                     >
                       {deliveryChecking ? 'Checking…' : 'Check'}
                     </button>
                   </div>
                   {deliveryError && <p className="mt-2 text-xs text-red-600">{deliveryError}</p>}
-                  {deliveryCheck && <p className="mt-2 text-sm font-medium text-stone-700">{deliveryCheck.message}</p>}
+                  {deliveryCheck && <p className="mt-2 text-sm font-medium text-text">{deliveryCheck.message}</p>}
                 </div>
               </div>
             </div>
@@ -885,7 +885,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Full-width trust banner (reference) */}
-        <div className="mt-8 grid grid-cols-2 divide-x divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 sm:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 divide-x divide-border overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-4">
           {[
             { title: 'Free shipping', sub: 'Across India', icon: 'truck' as const },
             { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' as const },
@@ -893,7 +893,7 @@ export default function ProductDetailPage() {
             { title: 'Lifetime warranty', sub: 'On core jewellery', icon: 'shield2' as const },
           ].map((item) => (
             <div key={item.title} className="flex items-start gap-3 px-4 py-4 sm:px-5">
-              <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-stone-700 shadow-sm">
+              <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-hero/60 text-text-muted shadow-sm">
                 {item.icon === 'truck' && (
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h12v10H3V7z" />
@@ -919,8 +919,8 @@ export default function ProductDetailPage() {
                 )}
               </span>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal">{item.title}</p>
-                <p className="mt-0.5 text-[11px] text-stone-600">{item.sub}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text">{item.title}</p>
+                <p className="mt-0.5 text-[11px] text-text-muted">{item.sub}</p>
               </div>
             </div>
           ))}
@@ -928,18 +928,18 @@ export default function ProductDetailPage() {
 
         {/* Full-width: Price breakup, recommendations */}
         {product.priceBreakup && (
-          <div className="mt-8 border-t border-stone-200 pt-8">
-            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Price breakup</h3>
-            <div className="mt-4 overflow-hidden rounded border border-stone-200">
-              <table className="w-full text-left text-sm text-stone-700">
+          <div className="mt-8 border-t border-border pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-text">Price breakup</h3>
+            <div className="mt-4 overflow-hidden rounded border border-border bg-card">
+              <table className="w-full text-left text-sm text-text">
                 <tbody>
                   {product.priceBreakup.netWeight != null && (
-                    <tr className="border-b border-stone-200">
+                    <tr className="border-b border-border">
                       <td className="px-4 py-3">Net weight</td>
                       <td className="px-4 py-3 font-medium">{Number(product.priceBreakup.netWeight)} g</td>
                     </tr>
                   )}
-                  <tr className="border-b border-stone-200">
+                  <tr className="border-b border-border">
                     <td className="px-4 py-3">
                       Gold value{product.priceBreakup.goldPurity ? ` (${product.priceBreakup.goldPurity})` : ''}
                     </td>
@@ -951,7 +951,7 @@ export default function ProductDetailPage() {
                       ).toFixed(2)}
                     </td>
                   </tr>
-                  <tr className="border-b border-stone-200">
+                  <tr className="border-b border-border">
                     <td className="px-4 py-3">Making charge</td>
                     <td className="px-4 py-3 font-medium">
                       ₹{(
@@ -961,7 +961,7 @@ export default function ProductDetailPage() {
                       ).toFixed(2)}
                     </td>
                   </tr>
-                  <tr className="border-b border-stone-200">
+                  <tr className="border-b border-border">
                     <td className="px-4 py-3">GST charge ({product.priceBreakup.gstPercent ?? 3}%)</td>
                     <td className="px-4 py-3 font-medium">
                       ₹{(
@@ -971,7 +971,7 @@ export default function ProductDetailPage() {
                       ).toFixed(2)}
                     </td>
                   </tr>
-                  <tr className="bg-stone-50 font-semibold text-charcoal">
+                  <tr className="bg-hero/60 font-semibold text-text">
                     <td className="px-4 py-3">Total</td>
                     <td className="px-4 py-3">
                       ₹{(
@@ -988,8 +988,8 @@ export default function ProductDetailPage() {
         )}
 
         {youMayAlsoLike.length > 0 && (
-          <div className="mt-8 border-t border-stone-200 pt-8">
-            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">You may also like</h3>
+          <div className="mt-8 border-t border-border pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-text">You may also like</h3>
             <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
               {youMayAlsoLike.map((p) => {
                 const imgSrc = p.image.startsWith('http')
@@ -1004,14 +1004,14 @@ export default function ProductDetailPage() {
                   <Link
                     key={p._id}
                     href={productHref(p)}
-                    className="flex w-44 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white sm:w-52"
+                    className="flex w-44 shrink-0 flex-col overflow-hidden border border-border bg-card sm:w-52"
                   >
                     <div className="aspect-square w-full overflow-hidden bg-stone-100">
                       <img src={imgSrc} alt={p.name} className="h-full w-full object-cover" />
                     </div>
                     <div className="p-3">
-                      <p className="font-sans text-sm font-semibold text-charcoal">₹{priceStr}</p>
-                      <p className="mt-0.5 line-clamp-2 text-xs text-stone-600">{p.name}</p>
+                      <p className="font-sans text-sm font-semibold text-text">₹{priceStr}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-text-muted">{p.name}</p>
                     </div>
                   </Link>
                 );
@@ -1021,19 +1021,19 @@ export default function ProductDetailPage() {
         )}
 
         {recentlyViewed.length > 0 && (
-          <div className="mt-8 border-t border-stone-200 pt-8">
-            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-charcoal">Recently viewed</h3>
+          <div className="mt-8 border-t border-border pt-8">
+            <h3 className="font-sans text-lg font-semibold uppercase tracking-wide text-text">Recently viewed</h3>
             <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
               {recentlyViewed.map((item) => {
                 const imgSrc = item.image.startsWith('http') ? item.image : item.image.startsWith('/') ? (item.image.startsWith('/uploads/') ? assetUrl(item.image) : item.image) : assetUrl(`/${item.image}`);
                 return (
-                  <Link key={item.id} href={productHref(item)} className="flex w-28 shrink-0 flex-col overflow-hidden border border-stone-200 bg-white">
+                  <Link key={item.id} href={productHref(item)} className="flex w-28 shrink-0 flex-col overflow-hidden border border-border bg-card">
                     <div className="aspect-square w-full overflow-hidden bg-stone-100">
                       <img src={imgSrc} alt={item.name} className="h-full w-full object-cover" />
                     </div>
                     <div className="p-2">
-                      <p className="truncate text-xs font-medium text-charcoal">{item.name}</p>
-                      <p className="text-xs text-stone-600">₹{item.price}</p>
+                      <p className="truncate text-xs font-medium text-text">{item.name}</p>
+                      <p className="text-xs text-text-muted">₹{item.price}</p>
                     </div>
                   </Link>
                 );
@@ -1042,9 +1042,9 @@ export default function ProductDetailPage() {
           </div>
         )}
         {/* Sticky Add to cart bar — 768px and below only */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white p-3 md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3 md:hidden">
           <div className="mx-auto max-w-5xl px-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-700">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
               Quantity: {purchaseQty}
             </p>
             <button
@@ -1067,8 +1067,8 @@ export default function ProductDetailPage() {
               disabled={alreadyInCart || outOfStock}
               className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                 alreadyInCart || outOfStock
-                  ? 'cursor-not-allowed bg-stone-300 text-stone-600'
-                  : 'bg-[#C7B7A6] text-white hover:bg-[#C7B7A6]/90'
+                  ? 'cursor-not-allowed bg-border text-text-muted'
+                  : 'bg-accent text-card hover:bg-accent/90'
               }`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -1081,7 +1081,7 @@ export default function ProductDetailPage() {
 
         {addedToCart && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-[#C7B7A6] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-card shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >
@@ -1090,7 +1090,7 @@ export default function ProductDetailPage() {
         )}
         {linkCopied && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-stone-200 bg-[#C7B7A6] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-card shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >

@@ -43,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${cormorant.variable} ${dmSans.variable} ${poppins.variable}`}>
-      <body className="min-h-screen bg-cream font-sans text-charcoal antialiased">
+      <body className="min-h-screen bg-hero font-sans text-text antialiased">
         <PageLoader />
         <SiteLayout>{children}</SiteLayout>
       </body>

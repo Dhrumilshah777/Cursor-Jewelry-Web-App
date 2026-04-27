@@ -8,11 +8,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /** Primary CTA / brand blue */
-        accent: '#2563eb',
-        'accent-cream': '#ffffff',
-        cream: '#F8F6F3',
-        charcoal: '#1C1917',
+        /** Reference palette (Apr 2026) */
+        hero: '#E8D8C3',
+        card: '#FFFFFF',
+        text: '#1A1A1A',
+        'text-muted': '#8A8A8A',
+        border: '#E5E5E5',
+        accent: '#C6A46C',
+
+        /** Legacy names still used across the app */
+        cream: '#E8D8C3',
+        charcoal: '#1A1A1A',
+        'accent-cream': '#FFFFFF',
         gold: '#B8860B',
         'gold-light': '#D4AF37',
         stone: '#78716C',

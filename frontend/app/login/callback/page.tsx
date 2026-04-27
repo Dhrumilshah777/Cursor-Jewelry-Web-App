@@ -82,8 +82,8 @@ function LoginCallbackContent() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-stone-600">Sign-in failed or link expired.</p>
-          <a href="/login" className="mt-4 inline-block text-charcoal underline hover:no-underline">
+          <p className="text-text-muted">Sign-in failed or link expired.</p>
+          <a href="/login" className="mt-4 inline-block text-text underline hover:no-underline">
             Back to login
           </a>
         </div>
@@ -93,7 +93,7 @@ function LoginCallbackContent() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <p className="text-stone-500">Signing you in…</p>
+      <p className="text-text-muted">Signing you in…</p>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export default function LoginCallbackPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[60vh] items-center justify-center px-4">
-          <p className="text-stone-500">Signing you in…</p>
+          <p className="text-text-muted">Signing you in…</p>
         </div>
       }
     >

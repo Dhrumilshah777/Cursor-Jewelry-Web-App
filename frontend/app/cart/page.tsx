@@ -105,7 +105,7 @@ export default function CartPage() {
     return (
       <main className="min-h-[50vh] px-4 py-12">
         <div className="mx-auto max-w-4xl">
-          <p className="text-stone-500">Loading cart…</p>
+          <p className="text-text-muted">Loading cart…</p>
         </div>
       </main>
     );
@@ -114,35 +114,35 @@ export default function CartPage() {
   return (
     <main className="min-h-[50vh] px-4 py-12">
       <div className="mx-auto max-w-4xl">
-        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
+        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">
           Cart
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-text-muted">
           {items.length === 0
             ? 'Your cart is empty.'
             : `${items.reduce((s, i) => s + i.quantity, 0)} item${items.reduce((s, i) => s + i.quantity, 0) === 1 ? '' : 's'} in your cart.`}
         </p>
 
         {items.length === 0 ? (
-          <div className="mt-8 rounded border border-stone-200 bg-stone-50 p-8 text-center">
-            <p className="text-stone-600">Add products from the collection or product pages.</p>
+          <div className="mt-8 rounded border border-border bg-card p-8 text-center">
+            <p className="text-text-muted">Add products from the collection or product pages.</p>
             <Link
               href="/products"
-              className="mt-4 inline-block text-sm font-medium text-charcoal underline hover:no-underline"
+              className="mt-4 inline-block text-sm font-medium text-text underline hover:no-underline"
             >
               Browse products
             </Link>
             <span className="mx-2 text-stone-400">·</span>
             <Link
               href="/"
-              className="text-sm font-medium text-charcoal underline hover:no-underline"
+              className="text-sm font-medium text-text underline hover:no-underline"
             >
               Back to home
             </Link>
           </div>
         ) : (
           <>
-            <ul className="mt-8 divide-y divide-stone-200 border border-stone-200 rounded-lg bg-white">
+            <ul className="mt-8 divide-y divide-border rounded-lg border border-border bg-card">
               {items.map((item) => (
                 <li key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6">
                   <Link href={productHref(item)} className="flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 overflow-hidden rounded-md bg-stone-100">
@@ -153,16 +153,16 @@ export default function CartPage() {
                     />
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link href={productHref(item)} className="font-sans font-semibold text-charcoal hover:underline">
+                    <Link href={productHref(item)} className="font-sans font-semibold text-text hover:underline">
                       {item.name}
                     </Link>
-                    <p className="mt-1 text-sm text-stone-500">₹{item.price} each</p>
+                    <p className="mt-1 text-sm text-text-muted">₹{item.price} each</p>
                     <div className="mt-3 flex items-center gap-3">
-                      <div className="flex items-center border border-stone-300 rounded">
+                      <div className="flex items-center rounded border border-border bg-card">
                         <button
                           type="button"
                           onClick={() => handleQuantity(item.id, item.quantity - 1)}
-                          className="h-8 w-8 flex items-center justify-center text-stone-600 hover:bg-stone-100"
+                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-hero/60"
                           aria-label="Decrease quantity"
                         >
                           −
@@ -173,7 +173,7 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => handleQuantity(item.id, item.quantity + 1)}
-                          className="h-8 w-8 flex items-center justify-center text-stone-600 hover:bg-stone-100"
+                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-hero/60"
                           aria-label="Increase quantity"
                         >
                           +
@@ -182,14 +182,14 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => handleRemove(item.id)}
-                        className="text-sm text-stone-500 hover:text-red-600"
+                        className="text-sm text-text-muted hover:text-red-600"
                       >
                         Remove
                       </button>
                     </div>
                   </div>
                   <div className="flex-shrink-0 text-right">
-                    <p className="font-sans font-semibold text-charcoal">
+                    <p className="font-sans font-semibold text-text">
                       ₹{(cartItemSubtotal(item)).toFixed(2)}
                     </p>
                   </div>
@@ -198,26 +198,26 @@ export default function CartPage() {
             </ul>
 
             <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <p className="font-sans text-lg font-semibold text-charcoal">
+              <p className="font-sans text-lg font-semibold text-text">
                 Subtotal: ₹{displaySubtotal.toFixed(2)}
               </p>
               <div className="flex gap-3">
                 <Link
                   href="/products"
-                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
+                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-card hover:bg-accent/90"
                 >
                   Continue shopping
                 </Link>
                 <Link
                   href={isUserLoggedIn() ? '/checkout' : '/login?returnTo=/checkout'}
-                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-accent-cream hover:bg-accent/90"
+                  className="rounded bg-accent px-4 py-2.5 text-sm font-medium text-card hover:bg-accent/90"
                 >
                   Proceed to checkout
                 </Link>
               </div>
             </div>
             {!isUserLoggedIn() && (
-              <p className="mt-4 text-sm text-stone-500">
+              <p className="mt-4 text-sm text-text-muted">
                 Sign in when you proceed to checkout; your cart will be kept.
               </p>
             )}

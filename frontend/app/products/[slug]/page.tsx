@@ -674,7 +674,7 @@ export default function ProductDetailPage() {
           <div className="min-w-0">
             <div className="flex items-start gap-3">
               <div className="min-w-0">
-                <h1 className="font-serif text-2xl font-semibold text-text sm:text-3xl">
+                <h1 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
                   {product.name}
                 </h1>
                 {metaLine ? <p className="mt-1 text-sm text-text-muted">{metaLine}</p> : null}
@@ -707,7 +707,7 @@ export default function ProductDetailPage() {
                 <p className="mt-1 text-xs font-medium text-emerald-700">(Inclusive of all taxes)</p>
               </div>
               {compareAtPrice != null && compareAtPrice > displayPrice && (
-                <p className="mb-1 text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
+                <p className="mb-1 font-sans text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
               )}
               <div className="ml-auto pb-1">
                 {outOfStock ? (
@@ -715,8 +715,8 @@ export default function ProductDetailPage() {
                     Out of stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-in-stock px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                  <span className="inline-flex items-center gap-2 rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-text" aria-hidden />
                     In stock
                   </span>
                 )}
@@ -835,7 +835,7 @@ export default function ProductDetailPage() {
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                       outOfStock
                         ? 'cursor-not-allowed bg-border text-text-muted'
-                        : 'border-2 border-accent bg-card text-brown hover:bg-card hover:border-accent'
+                        : 'border-2 border-accent bg-card text-accent hover:bg-body hover:border-accent'
                     }`}
                   >
                     Add to cart
@@ -1082,7 +1082,7 @@ export default function ProductDetailPage() {
               className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                 alreadyInCart || outOfStock
                   ? 'cursor-not-allowed bg-border text-text-muted'
-                  : 'border-2 border-accent bg-card text-brown hover:bg-card hover:border-accent'
+                  : 'border-2 border-accent bg-card text-accent hover:bg-body hover:border-accent'
               }`}
             >
               <svg

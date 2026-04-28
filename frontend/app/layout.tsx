@@ -1,27 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, DM_Sans, Poppins } from 'next/font/google';
+import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import PageLoader from '@/components/PageLoader';
 import SiteLayout from '@/components/SiteLayout';
 
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-cormorant',
-  display: 'swap',
-});
-
-const dmSans = DM_Sans({
+const playfair = Playfair_Display({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-dm-sans',
+  variable: '--font-playfair',
   display: 'swap',
 });
 
-const poppins = Poppins({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['200', '300', '400', '500', '600'],
-  variable: '--font-poppins',
+  variable: '--font-inter',
   display: 'swap',
 });
 
@@ -42,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${dmSans.variable} ${poppins.variable}`}>
-      <body className="min-h-screen bg-body font-sans text-text antialiased">
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+      <body className="min-h-screen bg-white font-sans text-text antialiased">
         <PageLoader />
         <SiteLayout>{children}</SiteLayout>
       </body>

@@ -8,6 +8,11 @@
   --font-mona-sans: 'Mona Sans', system-ui, sans-serif;
 }
 
+html,
+body {
+  background-color: #ffffff;
+}
+
 @keyframes hero-text-in {
   from {
     opacity: 0;

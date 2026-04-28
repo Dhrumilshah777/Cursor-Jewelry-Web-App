@@ -911,7 +911,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Full-width trust banner (reference) */}
-        <div className="mt-8 grid grid-cols-2 divide-x divide-border overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 sm:divide-y-0 sm:divide-x md:grid-cols-4">
           {[
             { title: 'Free shipping', sub: 'Across India', icon: 'truck' as const },
             { title: 'BIS hallmarked', sub: 'Gold purity assured', icon: 'shield' as const },

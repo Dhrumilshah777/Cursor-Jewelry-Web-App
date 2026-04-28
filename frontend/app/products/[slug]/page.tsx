@@ -108,7 +108,7 @@ const MOCK_PRODUCTS: Array<
     name: 'Demo Solitaire Ring',
     category: 'Rings',
     price: '32450.00',
-    image: 'https://i.pinimg.com/736x/78/a1/5b/78a15b2384a21581bab8f3992f04522b.jpg',
+    image: 'https://live.jewelbox.co.in/wp-content/uploads/2026/03/1774873698_PER1831.jpg',
     subImages: [
       "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23ffffff'/%3E%3Ccircle%20cx='400'%20cy='320'%20r='110'%20fill='%23f3f4f6'/%3E%3Cpath%20d='M220%20480%20c110%2060%20250%2060%20360%200'%20fill='none'%20stroke='%23d6d3d1'%20stroke-width='40'%20stroke-linecap='round'/%3E%3C/svg%3E",
       "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23ffffff'/%3E%3Cpath%20d='M400%20200%20c-80%2060-100%20120-100%20200%200%20120%20100%20220%20100%20220%20s100-100%20100-220%20c0-80-20-140-100-200z'%20fill='%23f3f4f6'/%3E%3C/svg%3E",
@@ -715,8 +715,8 @@ export default function ProductDetailPage() {
                     Out of stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-text" aria-hidden />
+                  <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white" aria-hidden />
                     In stock
                   </span>
                 )}

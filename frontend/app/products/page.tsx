@@ -84,8 +84,7 @@ const DEMO_PRODUCTS: Product[] = [
     name: 'Demo Solitaire Ring',
     category: 'Rings',
     price: '32450.00',
-    image:
-      "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='800'%20viewBox='0%200%20800%20800'%3E%3Crect%20width='800'%20height='800'%20fill='%23f5f5f4'/%3E%3Ccircle%20cx='400'%20cy='320'%20r='110'%20fill='%23e7e5e4'/%3E%3Cpath%20d='M220%20480%20c110%2060%20250%2060%20360%200'%20fill='none'%20stroke='%23d6d3d1'%20stroke-width='40'%20stroke-linecap='round'/%3E%3Ctext%20x='400'%20y='690'%20text-anchor='middle'%20font-family='Arial'%20font-size='30'%20fill='%23787878'%3EDemo%20Product%3C/text%3E%3C/svg%3E",
+    image: 'https://live.jewelbox.co.in/wp-content/uploads/2026/03/1774873698_PER1831.jpg',
     colors: ['Yellow Gold'],
     stock: 10,
   },

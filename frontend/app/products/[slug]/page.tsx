@@ -47,6 +47,7 @@ type Product = {
   priceBreakup?: PriceBreakup | null;
   description?: string;
   ringSize?: string;
+  braceletSize?: string;
   sku?: string;
   goldPurity?: string;
   goldType?: string;
@@ -431,6 +432,7 @@ export default function ProductDetailPage() {
       ? product.colors
       : (product.goldType && String(product.goldType).trim() ? [String(product.goldType).trim()] : []);
   const isRing = /ring/i.test(product.category || '') || /ring/i.test(product.name || '');
+  const isBracelet = /bracelet/i.test(product.category || '') || /bracelet/i.test(product.name || '');
 
   const goldPurityLabel =
     product.priceBreakup?.goldPurity ||
@@ -484,6 +486,16 @@ export default function ProductDetailPage() {
               const fromProduct = product.ringSize ? String(product.ringSize).trim() : '';
               return fromProduct || '—';
             })(),
+            icon: 'ruler',
+          },
+        ] as SpecTile[])
+      : []),
+    ...(isBracelet
+      ? ([
+          {
+            key: 'braceletSize',
+            label: 'Bracelet size',
+            value: product.braceletSize ? String(product.braceletSize).trim() : '',
             icon: 'ruler',
           },
         ] as SpecTile[])
@@ -814,7 +826,7 @@ export default function ProductDetailPage() {
                     +
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => {

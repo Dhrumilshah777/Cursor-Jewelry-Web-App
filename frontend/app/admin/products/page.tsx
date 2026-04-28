@@ -34,6 +34,7 @@ type Product = {
   makingChargeValue?: number;
   description?: string;
   ringSize?: string;
+  braceletSize?: string;
   sku?: string;
   homeSections?: string[];
   goldType?: string;
@@ -60,6 +61,7 @@ export default function AdminProductsPage() {
     makingChargeValue: 0,
     description: '',
     ringSize: '',
+    braceletSize: '',
     sku: '',
     homeSections: [],
     goldType: '',
@@ -161,6 +163,7 @@ export default function AdminProductsPage() {
         makingChargeValue: 0,
         description: '',
         ringSize: '',
+        braceletSize: '',
         sku: '',
         homeSections: [],
         goldType: '',
@@ -283,6 +286,23 @@ export default function AdminProductsPage() {
                 placeholder="e.g. 8, 9, 10"
                 className="mt-1 w-full max-w-md rounded border border-stone-300 px-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
+            </div>
+          )}
+          {/bracelet/i.test(String(form.category || '')) && (
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-stone-700">Bracelet size</label>
+              <select
+                value={form.braceletSize ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, braceletSize: e.target.value }))}
+                className="mt-1 w-full max-w-md rounded border border-stone-300 px-3 py-2"
+              >
+                <option value="">Select size</option>
+                {['20', '21', '22', '23', '24', '25'].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
           <div className="sm:col-span-2">
@@ -514,6 +534,7 @@ export default function AdminProductsPage() {
                   makingChargeValue: 0,
                   description: '',
                   ringSize: '',
+                  braceletSize: '',
                   sku: '',
                   homeSections: [],
                   goldType: '',
@@ -571,6 +592,7 @@ export default function AdminProductsPage() {
                     makingChargeValue: (p as Product).makingChargeValue ?? 0,
                     description: (p as Product).description ?? '',
                     ringSize: (p as Product).ringSize ?? '',
+                    braceletSize: (p as Product).braceletSize ?? '',
                     sku: (p as Product).sku ?? '',
                     homeSections: (p as Product).homeSections ?? [],
                     goldType: (p as Product).goldType ?? '',

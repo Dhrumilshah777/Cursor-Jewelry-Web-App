@@ -42,6 +42,7 @@ const productSchema = new mongoose.Schema(
     gstPercent: { type: Number, default: 3 },
     description: { type: String, default: '' },
     ringSize: { type: String, default: '' },
+    braceletSize: { type: String, default: '' },
     sku: { type: String, required: true, unique: true },
     // Optional homepage placement tags (e.g. latestBeauty, bestSelling)
     homeSections: { type: [String], default: [] },

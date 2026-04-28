@@ -1067,47 +1067,40 @@ export default function ProductDetailPage() {
             </div>
           </div>
         )}
-        {/* Sticky Add to cart bar — 768px and below only */}
+        {/* Sticky bottom bar (mobile): price + BUY NOW */}
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3 md:hidden">
           <div className="mx-auto max-w-5xl px-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Quantity: {purchaseQty}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                if (outOfStock) return;
-                if (alreadyInCart) return;
-                addToCart({
-                  id: product._id,
-                  slug: product.slug,
-                  name: product.name,
-                  price: String(displayPrice),
-                  image: product.image,
-                  quantity: purchaseQty,
-                });
-                setAddedToCart(true);
-                setAlreadyInCart(true);
-                setTimeout(() => setAddedToCart(false), 2500);
-              }}
-              disabled={alreadyInCart || outOfStock}
-              className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                alreadyInCart || outOfStock
-                  ? 'cursor-not-allowed bg-border text-text-muted'
-                  : 'border-2 border-accent bg-card text-accent hover:bg-body hover:border-accent'
-              }`}
-            >
-              <svg
-                className={`h-5 w-5 shrink-0 ${alreadyInCart || outOfStock ? '' : 'text-text'}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
+            <div className="grid grid-cols-[1fr_1.2fr] items-center gap-3">
+              <div className="min-w-0">
+                <p className="font-sans text-base font-semibold text-text">₹ {displayPrice.toFixed(2)}</p>
+                <p className="text-[11px] text-text-muted">(Inclusive of all taxes)</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (outOfStock) return;
+                  addToCart({
+                    id: product._id,
+                    slug: product.slug,
+                    name: product.name,
+                    price: String(displayPrice),
+                    image: product.image,
+                    quantity: purchaseQty,
+                  });
+                  setAlreadyInCart(true);
+                  if (typeof window !== 'undefined') {
+                    const loggedIn = localStorage.getItem('user_logged_in') === '1';
+                    router.push(loggedIn ? '/checkout' : '/login?returnTo=/checkout');
+                  }
+                }}
+                disabled={outOfStock}
+                className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                  outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
+                }`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-              </svg>
-              {outOfStock ? 'Out of stock' : alreadyInCart ? 'Already in cart' : addedToCart ? 'Added to cart' : 'Add to cart'}
-            </button>
+                Buy now
+              </button>
+            </div>
           </div>
         </div>
 

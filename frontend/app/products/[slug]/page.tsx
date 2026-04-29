@@ -431,8 +431,12 @@ export default function ProductDetailPage() {
     product.colors && product.colors.length > 0
       ? product.colors
       : (product.goldType && String(product.goldType).trim() ? [String(product.goldType).trim()] : []);
-  const isRing = /ring/i.test(product.category || '') || /ring/i.test(product.name || '');
-  const isBracelet = /bracelet/i.test(product.category || '') || /bracelet/i.test(product.name || '');
+  const ringSizeValue = product.ringSize ? String(product.ringSize).trim() : '';
+  const braceletSizeValue = product.braceletSize ? String(product.braceletSize).trim() : '';
+  // Show spec tiles based on actual saved values first; fall back to category/name keywords for older data.
+  const isRing = Boolean(ringSizeValue) || /ring/i.test(product.category || '') || /ring/i.test(product.name || '');
+  const isBracelet =
+    Boolean(braceletSizeValue) || /bracelet/i.test(product.category || '') || /bracelet/i.test(product.name || '');
 
   const goldPurityLabel =
     product.priceBreakup?.goldPurity ||
@@ -495,7 +499,7 @@ export default function ProductDetailPage() {
           {
             key: 'braceletSize',
             label: 'Bracelet size',
-            value: product.braceletSize ? String(product.braceletSize).trim() : '',
+            value: braceletSizeValue,
             icon: 'ruler',
           },
         ] as SpecTile[])

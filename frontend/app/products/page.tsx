@@ -300,6 +300,29 @@ function ProductsContent() {
           </div>
         </div>
 
+        {/* Breadcrumbs (under poster on desktop) */}
+        <nav aria-label="Breadcrumb" className="hidden lg:block">
+          <ol className="flex flex-wrap items-center gap-2 text-sm text-text-muted">
+            <li>
+              <Link href="/" className="hover:text-text">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden className="text-stone-300">/</li>
+            <li>
+              <Link href="/products" className="hover:text-text">
+                Products
+              </Link>
+            </li>
+            {categoryLabel && (
+              <>
+                <li aria-hidden className="text-stone-300">/</li>
+                <li className="font-medium text-text">{categoryLabel}</li>
+              </>
+            )}
+          </ol>
+        </nav>
+
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-start justify-between gap-3">
             <div>

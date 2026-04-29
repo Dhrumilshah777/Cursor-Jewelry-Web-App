@@ -16,6 +16,7 @@ type Product = {
   image: string;
   colors?: string[];
   stock?: number;
+  createdAt?: string;
 };
 
 /** Mirrors backend `categoryToSlug` so filters match URL query params. */
@@ -172,6 +173,8 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<'newest'>('newest');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     let cancelled = false;
@@ -193,6 +196,9 @@ function ProductsContent() {
             image: p.image,
             colors: Array.isArray(raw.colors) ? raw.colors : [],
             stock: typeof raw.stock === 'number' ? raw.stock : undefined,
+            createdAt: (p as unknown as { createdAt?: string | Date }).createdAt
+              ? String((p as unknown as { createdAt?: string | Date }).createdAt)
+              : undefined,
           };
         });
 
@@ -216,7 +222,16 @@ function ProductsContent() {
   const { products: allProducts, facets } = data;
   const filteredProducts = useMemo(() => {
     const params = new URLSearchParams(filterQueryKey);
-    return filterProducts(allProducts, params);
+    const list = filterProducts(allProducts, params);
+    if (sortBy === 'newest') {
+      // Backend uses mongoose timestamps; we keep it optional and fall back to stable order.
+      return list.slice().sort((a, b) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return db - da;
+      });
+    }
+    return list;
   }, [allProducts, filterQueryKey]);
 
   useEffect(() => {
@@ -241,16 +256,58 @@ function ProductsContent() {
   return (
     <main className="min-h-[50vh] px-4 py-12">
       <div className="mx-auto max-w-6xl">
-        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">
-          {categoryLabel ? `${categoryLabel}` : 'Products'}
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {filteredProducts.length === 0
-            ? categoryParam
-              ? 'No products match these filters.'
-              : 'No products yet.'
-            : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}.`}
-        </p>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">
+              {categoryLabel ? `${categoryLabel}` : 'Products'}
+            </h1>
+            <p className="mt-1 text-sm text-text-muted">
+              {filteredProducts.length === 0
+                ? categoryParam
+                  ? 'No products match these filters.'
+                  : 'No products yet.'
+                : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`}
+            </p>
+          </div>
+
+          {/* Desktop sort + view controls (for screenshot parity) */}
+          <div className="hidden items-center gap-3 lg:flex">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-text-muted">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy((e.target.value as 'newest') || 'newest')}
+                className="rounded border border-border bg-card px-3 py-2 text-sm text-text"
+                aria-label="Sort products"
+              >
+                <option value="newest">Newest First</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 rounded border border-border bg-card p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`h-9 w-9 rounded ${viewMode === 'grid' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
+                aria-label="Grid view"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`h-9 w-9 rounded ${viewMode === 'list' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
+                aria-label="List view"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Mobile filter button */}
         <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
@@ -300,75 +357,142 @@ function ProductsContent() {
                 </Link>
               </div>
             ) : (
-              <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
+              <ul
+                className={
+                  viewMode === 'list'
+                    ? 'flex flex-col gap-4'
+                    : 'grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3'
+                }
+              >
                 {filteredProducts.map((product) => (
-                  <li key={product._id} className="group">
-                    <Link href={productHref(product)} className="block">
-                      <div className="relative aspect-square w-full overflow-hidden rounded-none bg-stone-100">
-                        <img
-                          src={productImageSrc(product.image)}
-                          alt={product.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        {(product.stock ?? 1) <= 0 && (
-                          <div className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                            Out of stock
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const id = String(product._id);
-                            setWishlistedIds((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(id)) {
-                                removeFromWishlist(id);
-                                next.delete(id);
-                              } else {
-                                addToWishlist({
-                                  id,
-                                  name: product.name,
-                                  category: product.category,
-                                  price: product.price,
-                                  image: product.image,
-                                });
-                                next.add(id);
-                              }
-                              return next;
-                            });
-                          }}
-                          className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border bg-card/90 shadow-sm backdrop-blur transition-colors hover:bg-card ${
-                            wishlistedIds.has(String(product._id))
-                              ? 'border-red-200 text-red-600'
-                              : 'border-border text-text-muted'
-                          }`}
-                          aria-label={wishlistedIds.has(String(product._id)) ? 'Remove from wishlist' : 'Add to wishlist'}
-                        >
-                          <svg
-                            className="h-5 w-5"
-                            fill={wishlistedIds.has(String(product._id)) ? 'currentColor' : 'none'}
-                            stroke="currentColor"
-                            strokeWidth={1.5}
-                            viewBox="0 0 24 24"
+                  <li
+                    key={product._id}
+                    className={`group overflow-hidden rounded-none border border-border bg-white ${
+                      viewMode === 'list' ? 'flex gap-4 p-4' : ''
+                    }`}
+                  >
+                    {(() => {
+                      const outOfStock = (product.stock ?? 1) <= 0;
+                      const href = productHref(product);
+                      return (
+                        <>
+                          <div
+                            className={
+                              viewMode === 'list'
+                                ? 'relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md bg-stone-100'
+                                : 'relative aspect-square w-full overflow-hidden bg-stone-100'
+                            }
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="min-h-[4.5rem] pt-3">
-                        <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-text line-clamp-2">
-                          {product.name}
-                        </h2>
-                        <p className="mt-1 text-xs text-text-muted">{product.category}</p>
-                        <p className="mt-2 font-sans text-sm font-semibold text-text">₹{product.price}</p>
-                      </div>
-                    </Link>
+                            {!outOfStock ? (
+                              <Link href={href} className="block h-full w-full">
+                                <img
+                                  src={productImageSrc(product.image)}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                              </Link>
+                            ) : (
+                              <img
+                                src={productImageSrc(product.image)}
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            )}
+
+                            {(product.stock ?? 1) <= 0 && (
+                              <div className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
+                                OUT OF STOCK
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const id = String(product._id);
+                                setWishlistedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(id)) {
+                                    removeFromWishlist(id);
+                                    next.delete(id);
+                                  } else {
+                                    addToWishlist({
+                                      id,
+                                      name: product.name,
+                                      category: product.category,
+                                      price: product.price,
+                                      image: product.image,
+                                    });
+                                    next.add(id);
+                                  }
+                                  return next;
+                                });
+                              }}
+                              className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border bg-card/90 shadow-sm backdrop-blur transition-colors hover:bg-card ${
+                                wishlistedIds.has(String(product._id))
+                                  ? 'border-red-200 text-red-600'
+                                  : 'border-border text-text-muted'
+                              }`}
+                              aria-label={wishlistedIds.has(String(product._id)) ? 'Remove from wishlist' : 'Add to wishlist'}
+                            >
+                              <svg
+                                className="h-5 w-5"
+                                fill={wishlistedIds.has(String(product._id)) ? 'currentColor' : 'none'}
+                                stroke="currentColor"
+                                strokeWidth={1.5}
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+
+                          <div className={viewMode === 'list' ? 'flex min-w-0 flex-1 flex-col justify-between' : 'p-4'}>
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                                {product.category}
+                              </p>
+                              <h2 className="mt-2 line-clamp-2 font-sans text-sm font-semibold text-text">
+                                {product.name}
+                              </h2>
+                              <p className="mt-2 font-sans text-sm font-semibold text-text">
+                                ₹{product.price}
+                              </p>
+                            </div>
+
+                            <div className="mt-4">
+                              {outOfStock ? (
+                                <button
+                                  type="button"
+                                  className="w-full rounded-none bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  NOTIFY ME
+                                </button>
+                              ) : (
+                                <Link
+                                  href={href}
+                                  className="flex w-full items-center justify-center gap-2 rounded-none border border-accent bg-accent px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
+                                >
+                                  VIEW DETAILS
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M4 12h16"/>
+                                  </svg>
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </li>
                 ))}
               </ul>

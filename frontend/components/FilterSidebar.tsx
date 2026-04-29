@@ -102,14 +102,9 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
         <h2 className="font-sans text-sm font-semibold uppercase tracking-wide text-charcoal">
           Filters
         </h2>
-        {hasFilters && (
-          <Link
-            href="/products"
-            className="text-xs text-charcoal underline hover:no-underline"
-          >
-            Clear all
-          </Link>
-        )}
+        <Link href="/products" className="text-xs text-charcoal underline hover:no-underline">
+          Reset All
+        </Link>
       </div>
 
       {categories.length > 0 && (
@@ -311,9 +306,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
               setOpenSections((s) => ({ ...s, colors: !s.colors }))
             }
           >
-            <h3 className="font-sans text-sm font-semibold text-charcoal">
-              Color
-            </h3>
+            <h3 className="font-sans text-sm font-semibold text-charcoal">METAL</h3>
             <span className="text-lg leading-none text-stone-500">
               {openSections.colors ? '−' : '+'}
             </span>

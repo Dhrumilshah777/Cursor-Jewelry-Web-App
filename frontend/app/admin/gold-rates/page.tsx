@@ -101,24 +101,24 @@ export default function AdminGoldRatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-charcoal">Gold Rates</h1>
-            <p className="mt-1 text-sm leading-relaxed text-stone-600">
+            <h1 className="text-2xl font-semibold tracking-tight text-text">Gold Rates</h1>
+            <p className="mt-1 text-sm leading-relaxed text-text-muted">
               Update gold price per gram for each purity. These rates are used in price breakup and gold-based pricing.
             </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-stone-500">
-              <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-text-muted">
+              <span className="rounded-full border border-border bg-body px-2.5 py-1">
                 Last refreshed: {lastLoadedAt ? formatUpdatedAt(lastLoadedAt) : '—'}
               </span>
               {isDirty && (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-800">
+                <span className="rounded-full border border-border bg-body px-2.5 py-1 text-text">
                   Unsaved changes
                 </span>
               )}
               {!hasAnyValue && !loading && (
-                <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">
+                <span className="rounded-full border border-border bg-body px-2.5 py-1">
                   Tip: enter rates to enable gold pricing
                 </span>
               )}
@@ -129,7 +129,7 @@ export default function AdminGoldRatesPage() {
             type="button"
             onClick={load}
             disabled={loading || saving}
-            className="rounded border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition hover:bg-stone-50 disabled:opacity-50"
+            className="rounded border border-border bg-card px-4 py-2 text-sm font-medium text-text shadow-sm transition hover:bg-body disabled:opacity-50"
           >
             Refresh
           </button>
@@ -137,7 +137,7 @@ export default function AdminGoldRatesPage() {
             type="button"
             onClick={save}
             disabled={saving || !isDirty}
-            className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm transition hover:bg-accent/90 disabled:opacity-50"
+            className="rounded bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm transition hover:bg-accent-hover disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save rates'}
           </button>
@@ -146,39 +146,39 @@ export default function AdminGoldRatesPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-charcoal">Price per gram</h2>
-              <p className="mt-0.5 text-xs text-stone-500">₹/gm for each purity</p>
+              <h2 className="text-sm font-semibold text-text">Price per gram</h2>
+              <p className="mt-0.5 text-xs text-text-muted">₹/gm for each purity</p>
             </div>
-            {loading && <span className="text-xs text-stone-500">Loading…</span>}
+            {loading && <span className="text-xs text-text-muted">Loading…</span>}
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {(['14K', '18K', '22K', '24K'] as const).map((purity) => (
-              <div key={purity} className="rounded-lg border border-stone-200 bg-stone-50/50 p-4">
+              <div key={purity} className="rounded-lg border border-border bg-body/50 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{purity}</p>
-                    <p className="mt-0.5 text-sm font-medium text-charcoal">{purityLabels[purity]}</p>
-                    <p className="mt-1 text-xs text-stone-500">Last updated: {formatUpdatedAt(updatedAtByPurity[purity])}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">{purity}</p>
+                    <p className="mt-0.5 text-sm font-medium text-text">{purityLabels[purity]}</p>
+                    <p className="mt-1 text-xs text-text-muted">Last updated: {formatUpdatedAt(updatedAtByPurity[purity])}</p>
                   </div>
-                  <span className="rounded-full border border-stone-200 bg-white px-2 py-0.5 text-[11px] font-medium text-stone-600">
+                  <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-text-muted">
                     ₹/gm
                   </span>
                 </div>
 
                 <div className="mt-3">
-                  <div className="flex items-center rounded border border-stone-300 bg-white px-3 py-2 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200">
-                    <span className="mr-2 text-sm text-stone-500">₹</span>
+                  <div className="flex items-center rounded border border-border bg-card px-3 py-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15">
+                    <span className="mr-2 text-sm text-text-muted">₹</span>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={inputs[purity] ?? ''}
                       onChange={(e) => handleNumberInput(purity, e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent text-sm text-charcoal placeholder:text-stone-400 outline-none"
+                      className="w-full bg-transparent text-sm text-text placeholder:text-text-muted outline-none"
                       aria-label={`${purity} gold price per gram`}
                     />
                   </div>
@@ -193,20 +193,20 @@ export default function AdminGoldRatesPage() {
             </div>
           )}
           {success && (
-            <div className="mt-4 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <div className="mt-4 rounded border border-border bg-body px-4 py-3 text-sm text-text">
               {success}
             </div>
           )}
         </div>
 
-        <aside className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
-          <h3 className="text-sm font-semibold text-charcoal">How pricing uses these rates</h3>
-          <p className="mt-2 text-sm text-stone-600">
+        <aside className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h3 className="text-sm font-semibold text-text">How pricing uses these rates</h3>
+          <p className="mt-2 text-sm text-text-muted">
             Gold value \(net weight × rate\) + making charge = subtotal. GST is applied on the subtotal. Final price = subtotal + GST.
           </p>
-          <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Best practice</p>
-            <ul className="mt-2 space-y-1 text-sm text-stone-600">
+          <div className="mt-4 rounded-lg border border-border bg-body p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Best practice</p>
+            <ul className="mt-2 space-y-1 text-sm text-text-muted">
               <li>- Refresh once daily (or when market moves).</li>
               <li>- Keep 24K as the reference; others are derived in many markets.</li>
             </ul>
@@ -219,7 +219,7 @@ export default function AdminGoldRatesPage() {
               setError('');
             }}
             disabled={!isDirty || saving}
-            className="mt-4 w-full rounded border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-charcoal hover:bg-stone-50 disabled:opacity-50"
+            className="mt-4 w-full rounded border border-border bg-card px-4 py-2 text-sm font-medium text-text hover:bg-body disabled:opacity-50"
           >
             Reset changes
           </button>

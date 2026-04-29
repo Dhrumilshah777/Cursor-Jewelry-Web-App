@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 
 const LOGO_DURATION_MS = 1200;
 const SLIDE_DURATION_MS = 800;
@@ -8,6 +9,10 @@ const SLIDE_DURATION_MS = 800;
 const SAFETY_HIDE_MS = LOGO_DURATION_MS + SLIDE_DURATION_MS + 1500;
 
 export default function PageLoader() {
+  const pathname = usePathname();
+  // On catalog pages we want the in-page skeleton grid to be visible.
+  if (pathname && pathname.startsWith('/products')) return null;
+
   const [phase, setPhase] = useState<'visible' | 'sliding' | 'gone'>('visible');
   const innerTimerRef = useRef<number | null>(null);
 

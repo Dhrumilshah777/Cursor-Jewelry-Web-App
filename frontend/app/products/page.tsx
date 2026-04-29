@@ -472,7 +472,7 @@ function ProductsContent() {
                 {filteredProducts.map((product) => (
                   <li
                     key={product._id}
-                    className={`group overflow-hidden rounded-none border border-border bg-white ${
+                    className={`group overflow-hidden rounded-none bg-white ${
                       viewMode === 'list' ? 'flex gap-4 p-4' : 'p-3 sm:p-4'
                     }`}
                   >
@@ -488,21 +488,13 @@ function ProductsContent() {
                                 : 'relative aspect-square w-full overflow-hidden bg-stone-100'
                             }
                           >
-                            {!outOfStock ? (
-                              <Link href={href} className="block h-full w-full">
-                                <img
-                                  src={productImageSrc(product.image)}
-                                  alt={product.name}
-                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
-                              </Link>
-                            ) : (
+                            <Link href={href} className="block h-full w-full">
                               <img
                                 src={productImageSrc(product.image)}
                                 alt={product.name}
-                                className="h-full w-full object-cover"
+                                className={`h-full w-full object-cover ${outOfStock ? '' : 'transition-transform duration-300 group-hover:scale-105'}`}
                               />
-                            )}
+                            </Link>
 
                             {(product.stock ?? 1) <= 0 && (
                               <div className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
@@ -563,36 +555,13 @@ function ProductsContent() {
                                 {product.category}
                               </p>
                               <h2 className="mt-2 line-clamp-2 font-sans text-sm font-semibold text-text">
-                                {product.name}
+                                <Link href={href} className="hover:underline">
+                                  {product.name}
+                                </Link>
                               </h2>
                               <p className="mt-2 font-sans text-sm font-semibold text-text">
                                 ₹{product.price}
                               </p>
-                            </div>
-
-                            <div className="mt-4">
-                              {outOfStock ? (
-                                <button
-                                  type="button"
-                                  className="w-full rounded-none bg-accent px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                >
-                                  NOTIFY ME
-                                </button>
-                              ) : (
-                                <Link
-                                  href={href}
-                                  className="flex w-full items-center justify-center gap-2 rounded-none border border-accent bg-accent px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
-                                >
-                                  VIEW DETAILS
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M4 12h16"/>
-                                  </svg>
-                                </Link>
-                              )}
                             </div>
                           </div>
                         </>

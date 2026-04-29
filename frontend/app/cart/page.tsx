@@ -86,6 +86,11 @@ export default function CartPage() {
       handleRemove(productId);
       return;
     }
+    // Customers should not be able to increase quantity from the cart UI.
+    const current = items.find((i) => i.id === productId)?.quantity;
+    if (typeof current === 'number' && quantity > current) {
+      return;
+    }
     if (isUserLoggedIn()) {
       const next = items.map((i) => (i.id === productId ? { ...i, quantity } : i));
       try {
@@ -170,14 +175,6 @@ export default function CartPage() {
                         <span className="w-8 text-center text-sm font-medium" aria-live="polite">
                           {item.quantity}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => handleQuantity(item.id, item.quantity + 1)}
-                          className="flex h-8 w-8 items-center justify-center text-text-muted hover:bg-body"
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
                       </div>
                       <button
                         type="button"

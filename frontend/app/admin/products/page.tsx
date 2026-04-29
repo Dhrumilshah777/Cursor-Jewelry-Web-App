@@ -127,6 +127,13 @@ export default function AdminProductsPage() {
 
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Coerce optional size fields to strings so they are included in JSON payloads.
+    // JSON.stringify drops `undefined` keys, which can prevent updates from persisting.
+    const normalizedForm = {
+      ...form,
+      ringSize: (form.ringSize ?? '').toString().trim(),
+      braceletSize: (form.braceletSize ?? '').toString().trim(),
+    };
     const hasGold = ['14K', '18K', '22K', '24K'].includes((form.goldPurity || '').trim().toUpperCase()) && Number(form.netWeight) > 0;
     if (!form.name?.trim() || !form.image?.trim()) {
       setError('Name and image are required.');
@@ -140,11 +147,11 @@ export default function AdminProductsPage() {
     try {
       if (editingId) {
         // Never send immutable Mongo fields back in update payload.
-        const { _id, ...payload } = form as Partial<Product> & { _id?: string };
+        const { _id, ...payload } = normalizedForm as Partial<Product> & { _id?: string };
         await apiPut(`/api/admin/products/${editingId}`, payload, true);
         setEditingId(null);
       } else {
-        await apiPost('/api/admin/products', form, true);
+        await apiPost('/api/admin/products', normalizedForm, true);
       }
       setForm({
         name: '',

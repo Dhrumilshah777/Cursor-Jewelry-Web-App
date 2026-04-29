@@ -117,18 +117,40 @@ function ProductsLoadingSkeleton() {
   return (
     <main className="min-h-[50vh] px-4 py-12" aria-busy="true" aria-label="Loading products">
       <div className="mx-auto max-w-6xl animate-pulse">
-        <div className="h-8 w-40 rounded-md bg-stone-200 sm:w-56" />
-        <div className="mt-2 h-4 w-28 rounded bg-stone-100" />
+        {/* Top heading + desktop sort/view controls */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <div className="h-7 w-28 rounded bg-stone-200" />
+            <div className="h-4 w-56 rounded bg-stone-100" />
+          </div>
 
+          <div className="hidden items-center gap-3 lg:flex">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-24 rounded bg-stone-100" />
+              <div className="h-10 w-52 rounded bg-card border border-border" />
+            </div>
+            <div className="flex items-center gap-2 rounded border border-border bg-card p-1">
+              <div className="h-9 w-9 rounded bg-stone-200" />
+              <div className="h-9 w-9 rounded bg-stone-200" />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile filter button placeholder */}
         <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
-          <div className="h-10 w-28 rounded-full bg-stone-200" />
-          <div className="h-4 w-14 rounded bg-stone-100" />
+          <div className="h-10 w-32 rounded-full bg-stone-200" />
+          <div className="h-8 w-24 rounded bg-stone-100" />
         </div>
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
+          {/* Desktop sidebar skeleton */}
           <div className="hidden lg:block lg:w-64 lg:flex-shrink-0">
             <div className="rounded border border-border bg-card p-5">
-              <div className="h-4 w-16 rounded bg-stone-200" />
+              <div className="flex items-center justify-between">
+                <div className="h-4 w-16 rounded bg-stone-200" />
+                <div className="h-4 w-20 rounded bg-stone-100" />
+              </div>
+
               <div className="mt-4 space-y-3 border-t border-stone-100 pt-4">
                 <div className="h-4 w-full rounded bg-stone-100" />
                 <div className="h-4 w-5/6 rounded bg-stone-100" />
@@ -136,6 +158,7 @@ function ProductsLoadingSkeleton() {
                 <div className="h-4 w-full rounded bg-stone-100" />
                 <div className="h-4 w-3/4 rounded bg-stone-100" />
               </div>
+
               <div className="mt-6 space-y-3 border-t border-stone-100 pt-4">
                 <div className="h-4 w-24 rounded bg-stone-200" />
                 <div className="h-4 w-full rounded bg-stone-100" />
@@ -144,15 +167,19 @@ function ProductsLoadingSkeleton() {
             </div>
           </div>
 
+          {/* Product card grid skeleton */}
           <div className="min-w-0 flex-1">
             <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
               {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
-                <li key={i}>
-                  <div className="aspect-square w-full rounded-none bg-stone-200" />
-                  <div className="min-h-[4.5rem] pt-3">
-                    <div className="h-4 w-full rounded bg-stone-200" />
+                <li key={i} className="group">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-none bg-stone-200">
+                    <div className="absolute right-2 top-2 h-9 w-9 rounded-full bg-card border border-border" />
+                  </div>
+                  <div className="min-h-[7rem] pt-3">
+                    <div className="h-4 w-full rounded bg-stone-100" />
                     <div className="mt-2 h-3 w-2/3 rounded bg-stone-100" />
                     <div className="mt-3 h-4 w-20 rounded bg-stone-200" />
+                    <div className="mt-4 h-9 w-full rounded bg-stone-100" />
                   </div>
                 </li>
               ))}

@@ -116,7 +116,7 @@ const DEMO_PRODUCTS: Product[] = [
 function ProductsLoadingSkeleton() {
   return (
     <main className="min-h-[50vh] px-4 py-12" aria-busy="true" aria-label="Loading products">
-      <div className="mx-auto w-full max-w-5xl animate-pulse">
+      <div className="mx-auto max-w-6xl animate-pulse">
         <div className="h-8 w-40 rounded-md bg-stone-200 sm:w-56" />
         <div className="mt-2 h-4 w-28 rounded bg-stone-100" />
 
@@ -255,7 +255,7 @@ function ProductsContent() {
 
   return (
     <main className="min-h-[50vh] px-4 py-12">
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">

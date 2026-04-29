@@ -115,7 +115,7 @@ const DEMO_PRODUCTS: Product[] = [
 
 function ProductsLoadingSkeleton() {
   return (
-    <main className="min-h-[50vh] px-4 py-12" aria-busy="true" aria-label="Loading products">
+    <main className="min-h-[50vh] px-4 py-6 sm:py-10 lg:py-12" aria-busy="true" aria-label="Loading products">
       <div className="mx-auto max-w-6xl animate-pulse">
         {/* Top heading + desktop sort/view controls */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -136,10 +136,13 @@ function ProductsLoadingSkeleton() {
           </div>
         </div>
 
-        {/* Mobile filter button placeholder */}
+        {/* Mobile controls placeholder */}
         <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
-          <div className="h-10 w-32 rounded-full bg-stone-200" />
-          <div className="h-8 w-24 rounded bg-stone-100" />
+          <div className="h-10 w-28 rounded bg-stone-200" />
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-32 rounded bg-stone-200" />
+            <div className="h-6 w-12 rounded bg-stone-100" />
+          </div>
         </div>
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
@@ -169,7 +172,7 @@ function ProductsLoadingSkeleton() {
 
           {/* Product card grid skeleton */}
           <div className="min-w-0 flex-1">
-            <ul className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">
+            <ul className="grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-3">
               {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
                 <li key={i} className="group">
                   <div className="relative aspect-square w-full overflow-hidden rounded-none bg-stone-200">
@@ -281,20 +284,60 @@ function ProductsContent() {
   }
 
   return (
-    <main className="min-h-[50vh] px-4 py-12">
+    <main className="min-h-[50vh] px-4 py-6 sm:py-10 lg:py-12">
       <div className="mx-auto max-w-6xl">
+        {/* Desktop poster / hero banner */}
+        <div className="mb-8 hidden lg:block">
+          <div className="overflow-hidden rounded-none border border-border bg-card">
+            <div className="relative h-[140px] w-full xl:h-[170px]">
+              <img
+                src="https://live.jewelbox.co.in/wp-content/uploads/2026/01/all_rings_web.jpg"
+                alt="Products poster"
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">
-              {categoryLabel ? `${categoryLabel}` : 'Products'}
-            </h1>
-            <p className="mt-1 text-sm text-text-muted">
-              {filteredProducts.length === 0
-                ? categoryParam
-                  ? 'No products match these filters.'
-                  : 'No products yet.'
-                : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`}
-            </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-text">
+                {categoryLabel ? `${categoryLabel}` : 'Products'}
+              </h1>
+              <p className="mt-1 text-sm text-text-muted">
+                {filteredProducts.length === 0
+                  ? categoryParam
+                    ? 'No products match these filters.'
+                    : 'No products yet.'
+                  : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`}
+              </p>
+            </div>
+
+            {/* Mobile view toggles (grid/list) */}
+            <div className="flex items-center gap-2 rounded border border-border bg-card p-1 lg:hidden">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`h-9 w-9 rounded ${viewMode === 'grid' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
+                aria-label="Grid view"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`h-9 w-9 rounded ${viewMode === 'list' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
+                aria-label="List view"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Desktop sort + view controls (for screenshot parity) */}
@@ -336,12 +379,12 @@ function ProductsContent() {
           </div>
         </div>
 
-        {/* Mobile filter button */}
+        {/* Mobile controls (Filters + Sort) */}
         <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-cream shadow-sm hover:bg-accent-hover"
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-text shadow-sm hover:bg-body"
             aria-haspopup="dialog"
             aria-expanded={filtersOpen}
             aria-controls="products-filter-drawer"
@@ -349,13 +392,24 @@ function ProductsContent() {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h18M6 12h12M10 20h4" />
             </svg>
-            Filter
+            FILTERS
           </button>
-          {searchParams.toString() && (
-            <Link href="/products" className="text-sm font-medium text-text underline hover:no-underline">
-              Clear
-            </Link>
-          )}
+
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy((e.target.value as 'newest') || 'newest')}
+              className="h-10 rounded-md border border-border bg-card px-3 text-sm font-medium text-text"
+              aria-label="Sort products"
+            >
+              <option value="newest">Newest First</option>
+            </select>
+            {searchParams.toString() && (
+              <Link href="/products" className="text-sm font-medium text-text underline hover:no-underline">
+                Clear
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
@@ -388,14 +442,14 @@ function ProductsContent() {
                 className={
                   viewMode === 'list'
                     ? 'flex flex-col gap-4'
-                    : 'grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3'
+                    : 'grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-3'
                 }
               >
                 {filteredProducts.map((product) => (
                   <li
                     key={product._id}
                     className={`group overflow-hidden rounded-none border border-border bg-white ${
-                      viewMode === 'list' ? 'flex gap-4 p-4' : ''
+                      viewMode === 'list' ? 'flex gap-4 p-4' : 'p-3 sm:p-4'
                     }`}
                   >
                     {(() => {
@@ -479,7 +533,7 @@ function ProductsContent() {
                             </button>
                           </div>
 
-                          <div className={viewMode === 'list' ? 'flex min-w-0 flex-1 flex-col justify-between' : 'p-4'}>
+                          <div className={viewMode === 'list' ? 'flex min-w-0 flex-1 flex-col justify-between' : 'pt-3'}>
                             <div>
                               <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                                 {product.category}
@@ -496,7 +550,7 @@ function ProductsContent() {
                               {outOfStock ? (
                                 <button
                                   type="button"
-                                  className="w-full rounded-none bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                                  className="w-full rounded-none bg-accent px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();

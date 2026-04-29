@@ -115,8 +115,8 @@ const DEMO_PRODUCTS: Product[] = [
 
 function ProductsLoadingSkeleton() {
   return (
-    <main className="min-h-[50vh] px-4 py-6 sm:py-10 lg:py-12" aria-busy="true" aria-label="Loading products">
-      <div className="mx-auto max-w-6xl animate-pulse">
+    <main className="min-h-[50vh] px-2 py-6 sm:px-3 sm:py-10 lg:px-4 lg:py-12" aria-busy="true" aria-label="Loading products">
+      <div className="mx-auto max-w-7xl animate-pulse">
         {/* Top heading + desktop sort/view controls */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
@@ -284,12 +284,12 @@ function ProductsContent() {
   }
 
   return (
-    <main className="min-h-[50vh] px-4 py-6 sm:py-10 lg:py-12">
-      <div className="mx-auto max-w-6xl">
+    <main className="min-h-[50vh] px-2 py-6 sm:px-3 sm:py-10 lg:px-4 lg:py-12">
+      <div className="mx-auto max-w-7xl">
         {/* Desktop poster / hero banner */}
         <div className="mb-8 hidden lg:block">
           <div className="overflow-hidden rounded-none border border-border bg-card">
-            <div className="relative h-[140px] w-full xl:h-[170px]">
+            <div className="relative h-[90px] w-full xl:h-[110px]">
               <img
                 src="https://live.jewelbox.co.in/wp-content/uploads/2026/01/all_rings_web.jpg"
                 alt="Products poster"

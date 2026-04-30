@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import NavCategoryStrip from '@/components/NavCategoryStrip';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import LoginModal from '@/components/LoginModal';
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       {children}
       <Footer />
       {!isProductDetail && <MobileBottomNav />}
+      <LoginModal />
     </>
   );
 }

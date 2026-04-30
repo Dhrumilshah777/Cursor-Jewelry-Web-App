@@ -21,6 +21,7 @@ import {
 } from '@/lib/api';
 import AccountSidebar from '@/components/account/AccountSidebar';
 import OrdersView, { type Order } from '@/components/account/OrdersView';
+import { triggerLoginModal } from '@/components/LoginModal';
 
 /** Twilio Verify SMS is typically 6 digits (configurable in Twilio console). */
 const OTP_LENGTH = 6;
@@ -194,6 +195,16 @@ export default function LoginPage() {
   }, [mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
+    if (!isUserLoggedIn()) {
+      const returnTo = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('returnTo') : null;
+      const safe = returnTo && returnTo.startsWith('/') ? returnTo : '/';
+      triggerLoginModal(safe);
+      router.replace(safe);
+    }
+  }, [mounted, router]);
+
+  useEffect(() => {
     if (!isLoggedIn) {
       setAccountPhone(null);
       return;
@@ -330,6 +341,8 @@ export default function LoginPage() {
   const localTen =
     phoneDigits.startsWith('91') && phoneDigits.length > 10 ? phoneDigits.slice(-10) : phoneDigits.slice(-10);
   const phoneOk = localTen.length === 10;
+
+  if (!isLoggedIn) return null;
 
   return (
     <main className="min-h-[70vh] bg-white px-4 py-6 pb-20 sm:py-10">

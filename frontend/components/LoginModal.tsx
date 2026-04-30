@@ -309,8 +309,8 @@ export default function LoginModal() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 px-4 pb-6 pt-10 sm:items-center sm:pb-0">
-      <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 pb-0 pt-10 md:items-center md:px-8 md:py-10">
+      <div className="w-full max-w-4xl overflow-hidden rounded-t-2xl bg-white shadow-xl md:max-h-[calc(100vh-5rem)] md:rounded-2xl md:overflow-auto">
         <div className="relative grid grid-cols-1 md:grid-cols-2">
           {/* Left image panel (desktop) */}
           <div className="relative hidden min-h-[560px] md:block">

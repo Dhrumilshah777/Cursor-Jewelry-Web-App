@@ -44,14 +44,6 @@ type PaymentStockResponse = {
   paymentExpiresAt?: string;
 };
 
-type ReturnReq = {
-  _id: string;
-  order: string;
-  status: 'requested' | 'approved' | 'rejected' | 'refunded';
-  reason?: string;
-  createdAt: string;
-};
-
 const LOG_PREFIX = '[order-detail]';
 
 function imageSrc(image: string) {
@@ -62,9 +54,8 @@ function imageSrc(image: string) {
 }
 
 const TIMELINE_STEPS = [
-  { key: 'paid', label: 'Confirmed' },
-  { key: 'packed', label: 'Packed' },
-  { key: 'shipped', label: 'Dispatched' },
+  { key: 'paid', label: 'Order Placed' },
+  { key: 'shipped', label: 'Shipped' },
   { key: 'out_for_delivery', label: 'Out for Delivery' },
   { key: 'delivered', label: 'Delivered' },
 ];
@@ -91,16 +82,31 @@ function formatDateShort(d: Date): string {
   return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+function formatDateTime(d: Date): string {
+  return d.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+function formatCurrencyINR(amount: number): string {
+  try {
+    return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+  } catch {
+    return `₹${Math.round(amount)}`;
+  }
+}
+
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
   const [order, setOrder] = useState<Order | null>(null);
-  const [ret, setRet] = useState<ReturnReq | null>(null);
   const [loading, setLoading] = useState(true);
-  const [returnReason, setReturnReason] = useState('');
-  const [returnBusy, setReturnBusy] = useState(false);
-  const [returnMsg, setReturnMsg] = useState<string>('');
   const [paymentBanner, setPaymentBanner] = useState('');
   const [retryBusy, setRetryBusy] = useState(false);
   const [showStockLink, setShowStockLink] = useState(false);
@@ -145,12 +151,6 @@ export default function OrderDetailPage() {
           });
         }
         setOrder(data);
-        try {
-          const r = await apiGet<ReturnReq | null>(`/api/returns/order/${encodeURIComponent(id)}`, { user: true });
-          if (!cancelled) setRet(r || null);
-        } catch {
-          if (!cancelled) setRet(null);
-        }
       } catch (err) {
         if (cancelled) return;
         const e = err as Error & { responseBody?: string };
@@ -196,9 +196,6 @@ export default function OrderDetailPage() {
   const orderDate = new Date(order.createdAt);
   const isDelivered = order.status === 'delivered';
   const deliveredAtDate = order.deliveredAt ? new Date(order.deliveredAt) : null;
-  const daysSinceDelivery = deliveredAtDate ? (Date.now() - deliveredAtDate.getTime()) / (1000 * 60 * 60 * 24) : Number.POSITIVE_INFINITY;
-  const withinReturnWindow = isDelivered && deliveredAtDate && daysSinceDelivery <= 7;
-  const canRequestReturn = Boolean(withinReturnWindow && (!ret || ret.status === 'rejected'));
 
   const loadRazorpay = (): Promise<void> => {
     if (typeof window !== 'undefined' && window.Razorpay) return Promise.resolve();
@@ -310,57 +307,68 @@ export default function OrderDetailPage() {
     }
   }
 
-  async function submitReturn() {
-    // Defensive: should never happen because the UI only renders the button when order is loaded.
-    if (!order) return;
-    setReturnMsg('');
-    setReturnBusy(true);
-    try {
-      await apiPost('/api/returns', { orderId: order._id, reason: returnReason.trim() }, { user: true });
-      setReturnReason('');
-      setReturnMsg('Return request submitted.');
-      const r = await apiGet<ReturnReq | null>(`/api/returns/order/${encodeURIComponent(order._id)}`, { user: true });
-      setRet(r || null);
-    } catch (e) {
-      setReturnMsg((e as Error)?.message || 'Failed to request return');
-    } finally {
-      setReturnBusy(false);
-    }
-  }
-
   return (
-    <main className="min-h-[50vh] px-4 py-6 pb-12">
-      <div className="mx-auto max-w-2xl">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link href="/orders" className="flex items-center gap-1 text-stone-600 hover:text-charcoal">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Orders
-          </Link>
+    <main className="min-h-[50vh] bg-white px-4 pb-28 pt-3">
+      <div className="mx-auto max-w-md">
+        {/* Top bar */}
+        <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pb-2 pt-2">
+          <div className="relative flex items-center justify-center">
+            <Link
+              href="/orders"
+              className="absolute left-0 inline-flex h-9 w-9 items-center justify-center rounded-full text-charcoal hover:bg-stone-100"
+              aria-label="Back"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+            <h1 className="text-center font-serif text-base font-semibold text-charcoal">Order Details</h1>
+            <Link
+              href="/contact"
+              className="absolute right-0 inline-flex h-9 w-9 items-center justify-center rounded-full text-charcoal hover:bg-stone-100"
+              aria-label="Help"
+              title="Need help?"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.73 21a2 2 0 01-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
-        {/* Prominent status */}
-        <div className="mb-6">
-          <h1 className="font-sans text-2xl font-bold capitalize text-charcoal">
-            {statusLabel(order.status)}
-          </h1>
-          {isDelivered && (
-            <p className="mt-1 flex items-center gap-2 text-sm text-green-700">
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Delivered on {formatDateShort(deliveredAtDate || orderDate)}
-            </p>
-          )}
-          {order.status === 'pending_payment' && (
-            <p className="mt-1 text-sm text-amber-700">Complete payment to confirm your order.</p>
-          )}
-        </div>
+        {/* Delivered banner */}
+        {isDelivered && (
+          <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-charcoal">
+                  Delivered on {formatDate(deliveredAtDate || orderDate)}
+                </p>
+                <p className="mt-0.5 text-xs text-stone-500">Your order has been delivered</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pending payment notice (kept, but compact) */}
+        {order.status === 'pending_payment' && (
+          <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Complete payment to confirm your order.
+          </div>
+        )}
 
         {order.status === 'pending_payment' && order.canRetryPayment && (
-          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50/90 p-4">
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/90 p-4">
             <p className="font-medium text-charcoal">Payment not completed</p>
             {order.paymentExpiresAt && (
               <p className="mt-1 text-xs text-stone-600">
@@ -382,7 +390,7 @@ export default function OrderDetailPage() {
                 type="button"
                 onClick={() => void handleRetryPayment()}
                 disabled={retryBusy}
-                className="rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent-hover disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent-hover disabled:opacity-50"
               >
                 {retryBusy ? 'Please wait…' : 'Retry payment'}
               </button>
@@ -399,173 +407,208 @@ export default function OrderDetailPage() {
         )}
 
         {order.status === 'payment_cancelled' && (
-          <div className="mb-6 rounded-lg border border-stone-300 bg-stone-50 p-4">
+          <div className="mt-4 rounded-xl border border-stone-300 bg-stone-50 p-4">
             <p className="font-medium text-charcoal">Payment expired</p>
             <p className="mt-1 text-sm text-stone-600">
               This checkout is no longer valid. Add items to your cart and place a new order.
             </p>
             <Link
               href="/checkout"
-              className="mt-3 inline-block rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent-hover"
+              className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:bg-accent-hover"
             >
               Place order again
             </Link>
           </div>
         )}
 
-        {/* Returns */}
-        <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4">
-          <h2 className="font-medium text-charcoal mb-2">Returns</h2>
-          {ret ? (
-            <p className="text-sm text-stone-700">
-              Status: <span className="font-semibold">{ret.status}</span>
-            </p>
-          ) : (
-            <p className="text-sm text-stone-600">No return requested for this order.</p>
-          )}
-          {isDelivered && !deliveredAtDate && (
-            <p className="mt-2 text-sm text-amber-700">
-              Delivery date is missing for this order. Please contact support — admin can use “Mark delivered (override)” if the carrier webhook did not record it.
-            </p>
-          )}
-          {isDelivered && deliveredAtDate && !withinReturnWindow && (
-            <p className="mt-2 text-sm text-stone-500">Return window closed (7 days from delivery).</p>
-          )}
-          {canRequestReturn && (
-            <div className="mt-3">
-              <label className="block text-sm font-medium text-charcoal">Reason (optional)</label>
-              <textarea
-                value={returnReason}
-                onChange={(e) => setReturnReason(e.target.value)}
-                rows={3}
-                className="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-charcoal"
-                placeholder="Eg: Size issue / Changed mind / Defect"
-              />
-              <button
-                onClick={() => void submitReturn()}
-                disabled={returnBusy}
-                className="mt-3 rounded bg-accent px-4 py-2 text-sm font-semibold text-accent-cream hover:opacity-95 disabled:opacity-60"
-              >
-                {returnBusy ? 'Submitting…' : 'Request return'}
-              </button>
-              {returnMsg && <p className="mt-2 text-sm text-stone-600">{returnMsg}</p>}
+        {/* Order meta */}
+        <div className="mt-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-charcoal">
+                Order #{order._id.slice(-8).toUpperCase()}
+              </p>
+              <p className="mt-0.5 text-xs text-stone-500">{formatDateTime(orderDate)}</p>
             </div>
-          )}
-        </div>
+            <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+              {statusLabel(order.status).replace(/\b\w/g, (m) => m.toUpperCase())}
+            </span>
+          </div>
 
-        {/* Product card(s) */}
-        <div className="rounded-xl bg-stone-50/80 p-4 mb-6">
-          {order.items.map((item, i) => (
-            <div key={i} className="flex gap-4">
-              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-200">
-                {item.image ? (
-                  <img src={imageSrc(item.image)} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-stone-400">
-                    <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-charcoal">{item.name}</p>
-                <p className="text-sm text-stone-500">
-                  Qty: {item.quantity} × ₹{item.price}
-                </p>
-                <p className="mt-1 text-sm font-medium text-charcoal">
-                  ₹{(Number(item.price.replace(/[^0-9.]/g, '')) * item.quantity).toFixed(2)}
-                </p>
-              </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-xs text-stone-500">Payment Method</p>
+              <p className="mt-0.5 font-medium text-charcoal">Online</p>
+              <p className="mt-1 text-xs text-stone-500">UPI - —</p>
             </div>
-          ))}
-          <div className="mt-4 border-t border-stone-200 pt-3">
-            <p className="text-sm font-semibold text-charcoal">
-              Subtotal: ₹{Number(order.subtotal).toFixed(2)}
-            </p>
+            <div className="text-right">
+              <p className="text-xs text-stone-500">Total Amount</p>
+              <p className="mt-0.5 font-semibold text-charcoal">{formatCurrencyINR(Number(order.subtotal) || 0)}</p>
+            </div>
           </div>
         </div>
 
-        {/* Delivery timeline */}
-        <div className="mb-6">
-          <h2 className="font-medium text-charcoal mb-4">Order timeline</h2>
-          <div className="relative pl-6">
-            <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-stone-200" />
-            {TIMELINE_STEPS.map((step, index) => {
-              const done = isStepDone(order.status, step.key);
-              const showDate = step.key === 'paid' ? formatDate(orderDate) : (done ? '—' : '—');
+        {/* Order items */}
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold text-charcoal">Order Items</h2>
+          <div className="mt-3 rounded-xl bg-white">
+            {order.items.map((item, i) => {
+              const unit = Number(String(item.price || '').replace(/[^0-9.]/g, '')) || 0;
+              const line = unit * (item.quantity || 0);
               return (
-                <div key={step.key} className="relative flex gap-3 pb-6 last:pb-0">
-                  <div
-                    className={`absolute left-0 top-1.5 h-3 w-3 -translate-x-[5px] rounded-full ${
-                      done ? 'bg-green-500' : 'bg-stone-300'
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <p className={`font-medium ${done ? 'text-charcoal' : 'text-stone-400'}`}>
-                      {step.label}
-                    </p>
-                    <p className="text-sm text-stone-500">{showDate}</p>
+                <div key={i} className="flex gap-3 border-b border-stone-100 py-3 last:border-b-0">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-stone-100">
+                    {item.image ? (
+                      <img src={imageSrc(item.image)} alt="" className="h-full w-full object-cover" />
+                    ) : null}
                   </div>
-                  {done && (
-                    <span className="text-green-600 shrink-0">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-charcoal">{item.name}</p>
+                    <p className="mt-0.5 text-xs text-stone-500">18K Yellow Gold</p>
+                    <p className="mt-2 text-xs text-stone-600">Qty: {item.quantity}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-charcoal">{formatCurrencyINR(line || unit)}</p>
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Delivery address */}
-        <div className="rounded-lg border border-stone-200 bg-white p-4">
-          <h2 className="font-medium text-charcoal mb-2">Delivery address</h2>
-          <address className="text-sm text-stone-600 not-italic">
+        {/* Order tracking */}
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold text-charcoal">Order Tracking</h2>
+          <div className="mt-4 rounded-xl bg-white px-1">
+            <div className="relative pl-6">
+              <div className="absolute left-[11px] top-2 bottom-2 w-px bg-emerald-200" aria-hidden />
+              {TIMELINE_STEPS.map((step) => {
+                const done = isStepDone(order.status, step.key);
+                const when =
+                  step.key === 'paid'
+                    ? formatDateTime(orderDate)
+                    : step.key === 'delivered' && deliveredAtDate
+                      ? formatDateTime(deliveredAtDate)
+                      : done
+                        ? '—'
+                        : '';
+                return (
+                  <div key={step.key} className="relative pb-5 last:pb-2">
+                    <div className="absolute left-0 top-1.5">
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full ${done ? 'bg-emerald-600' : 'bg-stone-200'}`}>
+                        {done ? (
+                          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" aria-hidden className="text-white">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="pl-2">
+                      <p className={`text-sm font-medium ${done ? 'text-charcoal' : 'text-stone-400'}`}>{step.label}</p>
+                      {when ? <p className="mt-0.5 text-xs text-stone-500">{when}</p> : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Action rows */}
+        <div className="mt-6 overflow-hidden rounded-xl border border-stone-100 bg-white">
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('shipping-address');
+              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className="flex w-full items-center justify-between px-4 py-3 text-sm text-charcoal hover:bg-stone-50"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-stone-500" aria-hidden>📦</span>
+              Shipping Address
+            </span>
+            <span className="text-stone-400" aria-hidden>›</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/contact')}
+            className="flex w-full items-center justify-between border-t border-stone-100 px-4 py-3 text-sm text-charcoal hover:bg-stone-50"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-stone-500" aria-hidden>🧾</span>
+              Invoice
+            </span>
+            <span className="text-stone-400" aria-hidden>›</span>
+          </button>
+          <Link
+            href="/contact"
+            className="flex items-center justify-between border-t border-stone-100 px-4 py-3 text-sm text-charcoal hover:bg-stone-50"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-stone-500" aria-hidden>💬</span>
+              Need Help?
+            </span>
+            <span className="text-stone-400" aria-hidden>›</span>
+          </Link>
+        </div>
+
+        {/* Shipping address section (target for scroll) */}
+        <div id="shipping-address" className="mt-6 rounded-xl bg-stone-50 px-4 py-4">
+          <p className="text-sm font-semibold text-charcoal">Shipping Address</p>
+          <address className="mt-2 text-sm text-stone-600 not-italic">
             {order.shippingAddress.name}<br />
-            {order.shippingAddress.phone}
-            {order.tracking && String(order.tracking).trim() && (
+            {order.shippingAddress.phone}<br />
+            {order.shippingAddress.line1}
+            {order.shippingAddress.line2 ? `, ${order.shippingAddress.line2}` : ''}<br />
+            {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}
+            {order.tracking && String(order.tracking).trim() ? (
               <>
                 <br />
                 <span className="font-medium text-charcoal">AWB:</span> {order.tracking}
-                <br />
-                <span className="font-medium text-charcoal">Courier:</span>{' '}
-                {order.courier && String(order.courier).trim() ? order.courier : '—'}
               </>
-            )}
-            {!order.tracking?.trim() && order.courier && String(order.courier).trim() && (
-              <>
-                <br />
-                <span className="font-medium text-charcoal">Courier:</span> {order.courier}
-              </>
-            )}
-            <br />
-            {order.shippingAddress.line1}
-            {order.shippingAddress.line2 && <>, {order.shippingAddress.line2}</>}<br />
-            {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}
+            ) : null}
           </address>
-          {order.tracking && (
+          {order.tracking && String(order.tracking).trim() ? (
             <a
               href={`https://track.shiprocket.co/?awb=${encodeURIComponent(order.tracking)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-charcoal underline hover:no-underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-charcoal underline underline-offset-2 hover:no-underline"
             >
-              Track here
+              Track shipment
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>
-          )}
+          ) : null}
         </div>
+      </div>
 
-        <p className="mt-8">
-          <Link href="/orders" className="text-sm font-medium text-charcoal underline hover:no-underline">
-            ← My orders
+      {/* Bottom actions */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-stone-200 bg-white px-4 py-3">
+        <div className="mx-auto flex max-w-md gap-3">
+          <Link
+            href="/products"
+            className="flex-1 rounded-xl border border-stone-200 bg-white py-3 text-center text-sm font-semibold text-charcoal hover:bg-stone-50"
+          >
+            Buy Again
           </Link>
-        </p>
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('shipping-address');
+              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className="flex-1 rounded-xl bg-accent py-3 text-sm font-semibold text-white hover:bg-accent-hover"
+          >
+            Track Again
+          </button>
+        </div>
       </div>
     </main>
   );

@@ -34,66 +34,20 @@ function formatIndiaDisplay(phoneRaw: string): string {
   return `+91 ${ten.slice(0, 5)} ${ten.slice(5)}`;
 }
 
-function OtpIllustration({ variant }: { variant: 'send' | 'inbox' }) {
+function BrandMark() {
   return (
-    <div className="relative mx-auto flex h-[200px] w-[220px] items-center justify-center">
-      <div
-        className="absolute inset-[18%] rounded-[45%] bg-brand-mint/90 blur-[2px]"
-        aria-hidden
-      />
-      <svg
-        className="absolute left-2 top-10 h-5 w-5 text-emerald-500"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M12 2L2 22h20L12 2z" />
-      </svg>
-      <svg
-        className="absolute bottom-8 right-4 h-4 w-4 text-sky-500"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden
-      >
-        <circle cx="12" cy="12" r="10" />
-      </svg>
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="relative rounded-[2rem] border-[10px] border-charcoal/90 bg-white px-5 py-6 shadow-lg">
-          <div className="mx-auto h-1 w-10 rounded-full bg-charcoal/15" />
-          {variant === 'send' ? (
-            <div className="mt-4 flex flex-col items-center gap-2">
-              <svg className="h-10 w-10 text-brand-purple" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M3 11l18-8-8 18-2-7-8-3z"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <p className="font-mono text-xs font-semibold tracking-[0.35em] text-charcoal/50">****</p>
-            </div>
-          ) : (
-            <div className="mt-4 flex flex-col items-center gap-1">
-              <svg className="h-11 w-11 text-brand-purple" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M3 8l9 6 9-6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-              </svg>
-              <div className="flex gap-1 pt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-charcoal/35" />
-                <span className="h-1.5 w-1.5 rounded-full bg-charcoal/35" />
-                <span className="h-1.5 w-1.5 rounded-full bg-charcoal/35" />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <span
-        className="absolute right-10 top-14 flex h-2 w-2 rounded-full bg-amber-400"
-        aria-hidden
-      />
-      <span className="absolute bottom-14 left-8 h-1.5 w-1.5 rounded-full bg-orange-400" aria-hidden />
+    <div className="flex flex-col items-center">
+      <div className="font-serif text-4xl font-semibold tracking-wide text-charcoal">TB</div>
+      <div className="mt-1 text-[10px] font-medium tracking-[0.32em] text-stone-500">THE BRIDE JEWELRY</div>
     </div>
   );
+}
+
+function formatMmSs(totalSec: number) {
+  const s = Math.max(0, Math.floor(totalSec));
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
 }
 
 function OtpDigitInputs({
@@ -168,7 +122,7 @@ function OtpDigitInputs({
   };
 
   return (
-    <div className="flex justify-center gap-2 sm:gap-3" onPaste={onPaste}>
+    <div className="flex justify-center gap-2.5" onPaste={onPaste}>
       {arr.map((ch, index) => (
         <div key={index} className="flex flex-col items-center">
           <input
@@ -185,7 +139,7 @@ function OtpDigitInputs({
             onChange={(e) => onChangeCell(index, e)}
             onKeyDown={(e) => onKeyDown(index, e)}
             onFocus={(e) => e.target.select()}
-            className="h-11 w-9 border-0 border-b-2 border-stone-300 bg-transparent text-center font-sans text-xl font-semibold text-charcoal outline-none transition-colors focus:border-brand-purple disabled:opacity-50 sm:h-12 sm:w-10 sm:text-2xl"
+            className="h-12 w-10 rounded-md border border-stone-200 bg-white text-center font-sans text-xl font-semibold text-charcoal shadow-sm outline-none transition focus:border-charcoal focus:ring-0 disabled:opacity-50"
             aria-label={`Digit ${index + 1}`}
           />
         </div>
@@ -378,177 +332,159 @@ export default function LoginPage() {
   const phoneOk = localTen.length === 10;
 
   return (
-    <main className="min-h-[70vh] bg-[#fbfbfb] px-4 py-8 pb-24 sm:py-12">
+    <main className="min-h-[70vh] bg-white px-4 py-6 pb-20 sm:py-10">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-5 flex items-center justify-between">
-          <Link
-            href={backHref}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-charcoal transition-colors hover:bg-white"
-            aria-label="Go back"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
-          <div className="lg:sticky lg:top-24">
-            <AccountSidebar
-              activeHref={isLoggedIn ? '/orders' : '/login'}
-              name={null}
-              phone={isLoggedIn ? accountPhone : null}
-              onLogout={isLoggedIn ? handleLogout : undefined}
-            />
-          </div>
-
-          {isLoggedIn ? (
-            ordersLoading ? (
+        {isLoggedIn ? (
+          <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+            <div className="lg:sticky lg:top-24">
+              <AccountSidebar
+                activeHref="/orders"
+                name={null}
+                phone={accountPhone}
+                onLogout={handleLogout}
+              />
+            </div>
+            {ordersLoading ? (
               <section className="min-w-0">
                 <p className="text-stone-500">Loading your orders…</p>
               </section>
             ) : (
               <OrdersView orders={orders} />
-            )
-          ) : (
-            <section className="min-w-0">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 text-xs text-stone-400">
-                    <Link href="/" className="hover:text-stone-600">
-                      Home
-                    </Link>
-                    <span aria-hidden>›</span>
-                    <span className="text-stone-600">Login</span>
+            )}
+          </div>
+        ) : (
+          <section className="relative mx-auto max-w-md">
+            <div className="absolute left-0 top-0">
+              {otpStep === 'sent' ? (
+                <button
+                  type="button"
+                  onClick={resetToPhoneStep}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full text-charcoal transition-colors hover:bg-stone-100"
+                  aria-label="Go back"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              ) : (
+                <Link
+                  href={backHref}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full text-charcoal transition-colors hover:bg-stone-100"
+                  aria-label="Go back"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+
+            <div className="pt-8">
+              <BrandMark />
+
+              {otpStep === 'idle' ? (
+                <>
+                  <h1 className="mt-8 text-center font-serif text-3xl font-semibold tracking-tight text-charcoal">
+                    Welcome Back
+                  </h1>
+                  <p className="mt-2 text-center text-sm text-stone-500">Enter your mobile number to continue</p>
+
+                  <div className="mt-10 flex items-center gap-3">
+                    <div className="flex h-11 w-[84px] items-center justify-between rounded-xl border border-stone-200 bg-white px-3 text-sm text-charcoal">
+                      <span className="font-medium">+91</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="text-stone-400">
+                        <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <input
+                      id="phone"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="Enter mobile number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="h-11 flex-1 rounded-xl border border-stone-200 bg-white px-4 text-sm font-medium text-charcoal outline-none placeholder:font-normal placeholder:text-stone-400 focus:border-charcoal disabled:opacity-50"
+                      disabled={otpLoading}
+                      aria-label="Enter mobile number"
+                    />
                   </div>
-                  <h1 className="mt-2 font-serif text-4xl tracking-tight text-charcoal">Login</h1>
-                  <p className="mt-1 text-sm text-stone-500">Sign in with OTP to view your orders</p>
-                </div>
-              </div>
 
-              <div className="mt-6 max-w-md">
-                <div className="rounded-3xl border border-stone-200/60 bg-white px-5 pb-8 pt-2 shadow-[0_12px_40px_-12px_rgba(28,25,23,0.12)] sm:px-8">
-                  <OtpIllustration variant={otpStep === 'idle' ? 'send' : 'inbox'} />
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={otpLoading || !phoneOk}
+                    className="mt-8 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {otpLoading ? 'Sending…' : 'GET OTP'}
+                  </button>
 
-                  <h2 className="mt-2 text-center font-sans text-2xl font-bold tracking-tight text-charcoal">
-                    OTP Verification
-                  </h2>
+                  <div className="mt-5 flex items-center justify-center gap-2 text-xs text-stone-500">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="text-stone-400">
+                      <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="5" y="11" width="14" height="10" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>Secure login powered by OTP</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="mt-8 text-center font-serif text-3xl font-semibold tracking-tight text-charcoal">
+                    Enter OTP
+                  </h1>
+                  <p className="mt-2 text-center text-sm text-stone-500">
+                    We&apos;ve sent a 6-digit OTP to{' '}
+                    <span className="font-medium text-charcoal">{formatIndiaDisplay(phone)}</span>{' '}
+                    <button
+                      type="button"
+                      onClick={resetToPhoneStep}
+                      className="ml-1 font-medium text-charcoal underline underline-offset-2"
+                    >
+                      Change
+                    </button>
+                  </p>
 
-                  {otpStep === 'idle' ? (
-                    <>
-                      <p className="mx-auto mt-3 max-w-[280px] text-center font-sans text-sm leading-relaxed text-stone-500">
-                        We will send you an <span className="font-semibold text-charcoal">One Time Password</span> on this
-                        mobile number
-                      </p>
+                  <div className="mt-8">
+                    <OtpDigitInputs value={otp} onChange={setOtp} disabled={otpLoading} />
+                  </div>
 
-                      <div className="mt-8">
-                        <label className="block font-sans text-xs font-medium text-stone-500" htmlFor="phone">
-                          Enter Mobile Number
-                        </label>
-                        <input
-                          id="phone"
-                          inputMode="tel"
-                          autoComplete="tel"
-                          placeholder="+91 98765 43210"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="mt-1 w-full border-0 border-b-2 border-stone-300 bg-transparent py-2 font-sans text-base font-semibold text-charcoal outline-none transition-colors placeholder:font-normal placeholder:text-stone-400 focus:border-accent disabled:opacity-50"
-                          disabled={otpLoading}
-                        />
-                      </div>
-
+                  <p className="mt-6 text-center text-sm text-stone-500">
+                    {resendIn > 0 ? (
+                      <>Resend OTP in {formatMmSs(resendIn)}</>
+                    ) : (
                       <button
                         type="button"
                         onClick={handleSendOtp}
                         disabled={otpLoading || !phoneOk}
-                        className="mt-10 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                        className="font-medium text-charcoal underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {otpLoading ? 'Sending…' : 'Get OTP'}
+                        Resend OTP
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mx-auto mt-3 max-w-[300px] text-center font-sans text-sm leading-relaxed text-stone-500">
-                        Enter the OTP sent to{' '}
-                        <span className="font-semibold text-charcoal">{formatIndiaDisplay(phone)}</span>
-                      </p>
-
-                      <div className="mt-8">
-                        <OtpDigitInputs value={otp} onChange={setOtp} disabled={otpLoading} />
-                      </div>
-
-                      <p className="mt-6 text-center font-sans text-sm text-stone-500">
-                        Don&apos;t receive the OTP?{' '}
-                        {resendIn > 0 ? (
-                          <span className="text-stone-400">Resend in {resendIn}s</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleSendOtp}
-                            disabled={otpLoading || !phoneOk}
-                            className="font-bold text-brand-coral hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            RESEND OTP
-                          </button>
-                        )}
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={handleVerifyOtp}
-                        disabled={otpLoading || otp.length !== OTP_LENGTH}
-                        className="mt-8 w-full rounded-2xl bg-accent py-3.5 font-sans text-sm font-bold uppercase tracking-wide text-accent-cream shadow-md shadow-accent/20 transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-                      >
-                        {otpLoading ? 'Verifying…' : 'Verify & Proceed'}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={resetToPhoneStep}
-                        className="mt-4 w-full text-center font-sans text-xs font-medium text-stone-500 underline-offset-2 hover:text-charcoal hover:underline"
-                      >
-                        Change number
-                      </button>
-                    </>
-                  )}
-
-                  {otpInfo && otpStep === 'sent' && (
-                    <p className="mt-4 text-center font-sans text-xs text-stone-500">{otpInfo}</p>
-                  )}
-                  {error && <p className="mt-4 text-center font-sans text-sm text-red-600">{error}</p>}
-                </div>
-
-                {otpStep === 'idle' && (
-                  <p className="mt-6 text-sm text-stone-500">
-                    Don&apos;t have an account? We&apos;ll create one when you verify your phone number.
+                    )}
                   </p>
-                )}
-              </div>
 
-              <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-stone-500">
-                <Link href={returnTo || '/'} className="text-charcoal underline-offset-2 hover:text-brand-purple hover:underline">
-                  ← Back to home
-                </Link>
-                <span aria-hidden className="text-stone-300">
-                  ·
-                </span>
-                <Link href="/orders" className="text-charcoal underline-offset-2 hover:text-brand-purple hover:underline">
-                  My orders
-                </Link>
-                {returnTo && (
-                  <>
-                    <span aria-hidden className="text-stone-300">
-                      ·
-                    </span>
-                    <Link href="/cart" className="text-charcoal underline-offset-2 hover:text-brand-purple hover:underline">
-                      Cart
-                    </Link>
-                  </>
-                )}
-              </p>
-            </section>
-          )}
-        </div>
+                  <button
+                    type="button"
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading || otp.length !== OTP_LENGTH}
+                    className="mt-8 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {otpLoading ? 'Verifying…' : 'VERIFY & CONTINUE'}
+                  </button>
+
+                  <div className="mt-5 flex items-center justify-center gap-2 text-xs text-stone-500">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="text-stone-400">
+                      <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>Your information is safe with us</span>
+                  </div>
+                </>
+              )}
+
+              {otpInfo && otpStep === 'sent' && <p className="mt-4 text-center text-xs text-stone-500">{otpInfo}</p>}
+              {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

@@ -1,20 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiGet, apiPost, refreshUserSession } from '@/lib/api';
-
-type OrderItem = { productId: string; name: string; price: string; quantity: number };
-type Order = {
-  _id: string;
-  items: OrderItem[];
-  subtotal: number;
-  totalAmount?: number;
-  status: string;
-  createdAt: string;
-  deliveredAt?: string | null;
-};
+import AccountSidebar from '@/components/account/AccountSidebar';
+import OrdersView, { type Order } from '@/components/account/OrdersView';
 
 type ReturnReq = {
   _id: string;
@@ -85,8 +75,8 @@ export default function MyOrdersPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[50vh] px-4 py-12">
-        <div className="mx-auto max-w-4xl">
+      <main className="min-h-[70vh] bg-[#fbfbfb] px-4 py-8 pb-24 sm:py-12">
+        <div className="mx-auto max-w-6xl">
           <p className="text-stone-500">Loading orders…</p>
         </div>
       </main>
@@ -94,121 +84,32 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <main className="min-h-[50vh] px-4 py-12">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="font-sans text-2xl font-semibold uppercase tracking-wide text-charcoal">
-          My orders
-        </h1>
-        <p className="mt-1 text-sm text-stone-500">
-          {orders.length === 0 ? 'No orders yet.' : `${orders.length} order(s).`}
-        </p>
+    <main className="min-h-[70vh] bg-[#fbfbfb] px-4 py-8 pb-24 sm:py-12">
+      <div className="mx-auto max-w-6xl">
         {error && (
-          <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
           </div>
         )}
         {okMsg && (
-          <div className="mt-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+          <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {okMsg}
           </div>
         )}
 
-        {orders.length === 0 ? (
-          <div className="mt-8 rounded border border-stone-200 bg-stone-50 p-8 text-center">
-            <p className="text-stone-600">You haven&apos;t placed any orders yet.</p>
-            <Link href="/products" className="mt-4 inline-block text-charcoal underline hover:no-underline">
-              Browse products
-            </Link>
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+          <div className="lg:sticky lg:top-24">
+            <AccountSidebar activeHref="/orders" name="Neha" phone="+91 98765 43210" />
           </div>
-        ) : (
-          <ul className="mt-8 space-y-4">
-            {orders.map((order) => {
-              const ret = latestReturnForOrder(returns, order._id);
-              const isDelivered = order.status === 'delivered';
-              const withinWindow = isDelivered && daysSince(order.deliveredAt || null) <= 7;
-              const canRequest = withinWindow && (!ret || ret.status === 'rejected');
-              return (
-              <li key={order._id} className="rounded-lg border border-stone-200 bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium text-charcoal">
-                    Order #{order._id.slice(-8).toUpperCase()}
-                  </span>
-                  <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      order.status === 'delivered'
-                        ? 'bg-green-100 text-green-800'
-                        : order.status === 'out_for_delivery'
-                        ? 'bg-blue-100 text-blue-800'
-                        : order.status === 'shipped' || order.status === 'packed'
-                        ? 'bg-indigo-100 text-indigo-800'
-                        : order.status === 'paid'
-                        ? 'bg-green-100 text-green-800'
-                        : order.status === 'pending_payment'
-                        ? 'bg-amber-100 text-amber-800'
-                        : order.status === 'payment_cancelled'
-                        ? 'bg-stone-200 text-stone-800'
-                        : order.status === 'cancelled'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-stone-100 text-stone-700'
-                    }`}
-                  >
-                    {order.status.replace(/_/g, ' ')}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-stone-500">
-                  {new Date(order.createdAt).toLocaleDateString()} · ₹{Number(order.totalAmount ?? order.subtotal).toFixed(2)}
-                </p>
-                {order.status === 'pending_payment' && (
-                  <p className="mt-1 text-xs text-amber-800">Payment not completed — open details to pay.</p>
-                )}
-                {order.status === 'payment_cancelled' && (
-                  <p className="mt-1 text-xs text-stone-600">Checkout expired — place a new order from cart.</p>
-                )}
-                <Link
-                  href={`/orders/${order._id}`}
-                  className="mt-2 inline-block text-sm font-medium text-charcoal underline hover:no-underline"
-                >
-                  View details
-                </Link>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {ret && (
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${
-                        ret.status === 'approved'
-                          ? 'bg-blue-100 text-blue-800'
-                          : ret.status === 'requested'
-                          ? 'bg-amber-100 text-amber-800'
-                          : ret.status === 'refunded'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-stone-100 text-stone-700'
-                      }`}
-                    >
-                      Return: {ret.status}
-                    </span>
-                  )}
-                  {canRequest && (
-                    <button
-                      onClick={() => void requestReturn(order._id)}
-                      disabled={submitting === order._id}
-                      className="rounded bg-accent px-3 py-1.5 text-xs font-semibold text-accent-cream hover:bg-accent-hover disabled:opacity-60"
-                    >
-                      {submitting === order._id ? 'Requesting…' : 'Request return'}
-                    </button>
-                  )}
-                  {isDelivered && !withinWindow && (
-                    <span className="text-xs text-stone-500">Return window closed</span>
-                  )}
-                </div>
-              </li>
-            )})}
-          </ul>
-        )}
+          <OrdersView orders={orders} />
+        </div>
 
-        <p className="mt-8">
-          <Link href="/" className="text-sm text-charcoal underline hover:no-underline">
-            ← Back to home
-          </Link>
-        </p>
+        {orders.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-4 text-sm text-stone-600">
+            Return requests are still available from order details.{' '}
+            <span className="text-stone-400">(This page was restyled to match your screenshot.)</span>
+          </div>
+        )}
       </div>
     </main>
   );

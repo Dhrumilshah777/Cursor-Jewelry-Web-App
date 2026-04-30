@@ -330,7 +330,11 @@ exports.verifyPayment = async (req, res) => {
 exports.myOrders = async (req, res) => {
   try {
     await expireStalePendingPayments();
-    const orders = await Order.find({ user: req.userId }).sort({ createdAt: -1 });
+    // "Actual orders" for account UI: hide incomplete checkout attempts.
+    const orders = await Order.find({
+      user: req.userId,
+      status: { $nin: ['pending_payment', 'payment_cancelled'] },
+    }).sort({ createdAt: -1 });
     res.json(orders.map((o) => enrichOrder(o)));
   } catch (err) {
     res.status(500).json({ error: err.message });

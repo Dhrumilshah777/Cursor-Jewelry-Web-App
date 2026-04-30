@@ -115,7 +115,7 @@ export default function AccountSidebar({
           </svg>
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-charcoal">{name?.trim() ? `Hi, ${name}` : 'My Account'}</p>
+          <p className="truncate text-sm font-semibold text-charcoal">My Account</p>
           {phone?.trim() ? (
             <p className="truncate text-xs text-stone-500">{phone}</p>
           ) : (

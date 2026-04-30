@@ -260,7 +260,8 @@ export default function LoginPage() {
     apiGet<Order[]>('/api/orders', { user: true })
       .then((list) => {
         if (cancelled) return;
-        setOrders(Array.isArray(list) ? list : []);
+        const raw = Array.isArray(list) ? list : [];
+        setOrders(raw.filter((o) => !['pending_payment', 'payment_cancelled'].includes(String(o?.status || ''))));
       })
       .catch(() => {
         if (!cancelled) setOrders([]);
@@ -395,7 +396,7 @@ export default function LoginPage() {
           <div className="lg:sticky lg:top-24">
             <AccountSidebar
               activeHref={isLoggedIn ? '/orders' : '/login'}
-              name={isLoggedIn ? 'Neha' : 'Guest'}
+              name={null}
               phone={isLoggedIn ? accountPhone : null}
               onLogout={isLoggedIn ? handleLogout : undefined}
             />

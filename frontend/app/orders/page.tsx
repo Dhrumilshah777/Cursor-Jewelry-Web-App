@@ -45,7 +45,9 @@ export default function MyOrdersPage() {
           apiGet<Order[]>('/api/orders', { user: true }),
           apiGet<ReturnReq[]>('/api/returns', { user: true }),
         ]);
-        setOrders(Array.isArray(orderList) ? orderList : []);
+        const raw = Array.isArray(orderList) ? orderList : [];
+        // Backend should already filter these out; keep a defensive client-side filter.
+        setOrders(raw.filter((o) => !['pending_payment', 'payment_cancelled'].includes(String(o?.status || ''))));
         // API returns newest first already; keep it that way.
         setReturns(Array.isArray(returnList) ? returnList : []);
       } catch {
@@ -99,7 +101,7 @@ export default function MyOrdersPage() {
 
         <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
           <div className="lg:sticky lg:top-24">
-            <AccountSidebar activeHref="/orders" name="Neha" phone="+91 98765 43210" />
+            <AccountSidebar activeHref="/orders" name={null} phone={null} />
           </div>
           <OrdersView orders={orders} />
         </div>

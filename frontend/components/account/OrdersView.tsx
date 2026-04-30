@@ -2,8 +2,16 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { assetUrl } from '@/lib/api';
 
-type OrderItem = { productId: string; name: string; price: string; quantity: number };
+type OrderItem = {
+  productId: string;
+  name: string;
+  price: string;
+  quantity: number;
+  image?: string;
+  pricing?: { goldPurity?: string };
+};
 export type Order = {
   _id: string;
   items: OrderItem[];
@@ -50,23 +58,36 @@ function matchesTab(orderStatus: string, tab: TabKey): boolean {
   return true;
 }
 
-function PrimaryImage({ seed }: { seed: string }) {
+function imageSrc(image: string) {
+  if (!image) return '';
+  if (image.startsWith('http')) return image;
+  if (image.startsWith('/uploads/')) return assetUrl(image);
+  return image.startsWith('/') ? image : `/${image}`;
+}
+
+function PrimaryImage({ seed, image, alt }: { seed: string; image?: string; alt?: string }) {
+  const src = image ? imageSrc(image) : '';
   const n = Array.from(seed).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
   const hues = [28, 40, 210, 260];
   const hue = hues[n % hues.length];
   return (
     <div
       className="h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-white sm:h-28 sm:w-28"
-      aria-hidden
     >
-      <div
-        className="h-full w-full"
-        style={{
-          background:
-            `radial-gradient(120px 80px at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0.65) 40%, rgba(0,0,0,0) 70%), ` +
-            `linear-gradient(135deg, hsla(${hue}, 60%, 92%, 1), hsla(${hue + 20}, 60%, 85%, 1))`,
-        }}
-      />
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt || ''} className="h-full w-full object-cover" />
+      ) : (
+        <div
+          className="h-full w-full"
+          aria-hidden
+          style={{
+            background:
+              `radial-gradient(120px 80px at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0.65) 40%, rgba(0,0,0,0) 70%), ` +
+              `linear-gradient(135deg, hsla(${hue}, 60%, 92%, 1), hsla(${hue + 20}, 60%, 85%, 1))`,
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -173,12 +194,13 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
             const date = new Date(order.createdAt);
             const pill = statusPill(order.status);
             const itemCount = Array.isArray(order.items) ? order.items.reduce((a, x) => a + (x.quantity || 0), 0) : 0;
+            const purity = String(first?.pricing?.goldPurity || '').trim();
             return (
               <div
                 key={order._id}
                 className="grid gap-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)] sm:grid-cols-[auto_1fr_auto] sm:items-center sm:p-5"
               >
-                <PrimaryImage seed={order._id} />
+                <PrimaryImage seed={order._id} image={first?.image} alt={first?.name || 'Order item'} />
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -215,7 +237,7 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
                   </p>
 
                   <p className="mt-3 truncate text-sm font-semibold text-charcoal">{first?.name || 'Order items'}</p>
-                  <p className="mt-1 text-xs text-stone-500"> </p>
+                  <p className="mt-1 text-xs text-stone-500">{purity ? purity : (itemCount > 1 ? `${itemCount} items` : '')}</p>
 
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link

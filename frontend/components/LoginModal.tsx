@@ -164,6 +164,7 @@ function OtpDigitInputs({
 export default function LoginModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [animateIn, setAnimateIn] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [otpStep, setOtpStep] = useState<'idle' | 'sent'>('idle');
@@ -211,11 +212,20 @@ export default function LoginModal() {
 
   useEffect(() => {
     const onKeyDown = (e: globalThis.KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') close();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setAnimateIn(false);
+      return;
+    }
+    const t = window.setTimeout(() => setAnimateIn(true), 10);
+    return () => window.clearTimeout(t);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -240,9 +250,12 @@ export default function LoginModal() {
   };
 
   const close = () => {
-    setOpen(false);
-    setError('');
-    setOtpLoading(false);
+    setAnimateIn(false);
+    window.setTimeout(() => {
+      setOpen(false);
+      setError('');
+      setOtpLoading(false);
+    }, 160);
   };
 
   const handleSendOtp = async () => {
@@ -309,8 +322,21 @@ export default function LoginModal() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 pb-0 pt-10 md:items-center md:px-8 md:py-10">
-      <div className="w-full max-w-4xl overflow-hidden rounded-t-2xl bg-white shadow-xl md:max-h-[calc(100vh-5rem)] md:rounded-2xl md:overflow-auto">
+    <div
+      className={`fixed inset-0 z-[60] flex items-end justify-center pb-0 pt-10 transition-opacity duration-200 md:items-center md:px-8 md:py-10 ${
+        animateIn ? 'bg-black/40 opacity-100' : 'bg-black/0 opacity-0'
+      }`}
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) close();
+      }}
+    >
+      <div
+        className={`w-full max-w-4xl overflow-hidden rounded-t-2xl bg-white shadow-xl transition-transform duration-200 md:max-h-[calc(100vh-5rem)] md:rounded-2xl md:overflow-auto ${
+          animateIn ? 'translate-y-0 md:scale-100' : 'translate-y-6 md:scale-95'
+        }`}
+      >
         <div className="relative grid grid-cols-1 md:grid-cols-2">
           {/* Left image panel (desktop) */}
           <div className="relative hidden min-h-[560px] md:block">

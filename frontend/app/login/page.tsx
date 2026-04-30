@@ -22,6 +22,7 @@ import {
 import AccountSidebar from '@/components/account/AccountSidebar';
 import OrdersView, { type Order } from '@/components/account/OrdersView';
 import { triggerLoginModal } from '@/components/LoginModal';
+import MobileAccountHome from '@/components/account/MobileAccountHome';
 
 /** Twilio Verify SMS is typically 6 digits (configurable in Twilio console). */
 const OTP_LENGTH = 6;
@@ -153,6 +154,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [accountPhone, setAccountPhone] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState<string | null>(null);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [phone, setPhone] = useState('');
@@ -207,15 +210,27 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isLoggedIn) {
       setAccountPhone(null);
+      setAccountName(null);
+      setAccountEmail(null);
       return;
     }
     setAccountPhone(null);
-    apiGet<{ user?: { phoneE164?: string | null } }>('/api/auth/me', { user: true })
+    setAccountName(null);
+    setAccountEmail(null);
+    apiGet<{ user?: { phoneE164?: string | null; name?: string | null; email?: string | null } }>('/api/auth/me', { user: true })
       .then((me) => {
         const p = me?.user?.phoneE164;
+        const n = me?.user?.name;
+        const e = me?.user?.email;
         setAccountPhone(typeof p === 'string' && p.trim() ? p.trim() : '');
+        setAccountName(typeof n === 'string' && n.trim() ? n.trim() : '');
+        setAccountEmail(typeof e === 'string' && e.trim() ? e.trim() : '');
       })
-      .catch(() => setAccountPhone(''));
+      .catch(() => {
+        setAccountPhone('');
+        setAccountName('');
+        setAccountEmail('');
+      });
   }, [isLoggedIn]);
 
   useEffect(() => {
@@ -348,23 +363,32 @@ export default function LoginPage() {
     <main className="min-h-[70vh] bg-white px-4 py-6 pb-20 sm:py-10">
       <div className="mx-auto max-w-6xl">
         {isLoggedIn ? (
-          <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
-            <div className="lg:sticky lg:top-24">
-              <AccountSidebar
-                activeHref="/orders"
-                name={null}
-                phone={accountPhone}
-                onLogout={handleLogout}
-              />
+          <>
+            <MobileAccountHome
+              name={accountName}
+              email={accountEmail}
+              phoneE164={accountPhone}
+              onLogout={handleLogout}
+            />
+
+            <div className="hidden md:grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+              <div className="lg:sticky lg:top-24">
+                <AccountSidebar
+                  activeHref="/orders"
+                  name={accountName}
+                  phone={accountPhone}
+                  onLogout={handleLogout}
+                />
+              </div>
+              {ordersLoading ? (
+                <section className="min-w-0">
+                  <p className="text-stone-500">Loading your orders…</p>
+                </section>
+              ) : (
+                <OrdersView orders={orders} />
+              )}
             </div>
-            {ordersLoading ? (
-              <section className="min-w-0">
-                <p className="text-stone-500">Loading your orders…</p>
-              </section>
-            ) : (
-              <OrdersView orders={orders} />
-            )}
-          </div>
+          </>
         ) : (
           <section className="relative mx-auto max-w-md">
             <div className="absolute left-0 top-0">

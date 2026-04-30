@@ -398,7 +398,7 @@ export default function LoginModal() {
                   disabled={otpLoading || !phoneOk}
                   className="mt-7 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {otpLoading ? 'Sending…' : 'CONTINUE'}
+                  {otpLoading ? 'Sending…' : 'GET OTP'}
                 </button>
 
                 <div className="mt-4 flex items-center justify-center gap-2 text-xs text-stone-500">

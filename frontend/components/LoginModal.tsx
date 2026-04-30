@@ -7,7 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type ClipboardEvent,
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -88,7 +88,7 @@ function OtpDigitInputs({
     if (clean.length < OTP_LENGTH) focusAt(clean.length);
   };
 
-  const onKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (index: number, e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace') {
       if (arr[index]) {
         const next = value.slice(0, index) + value.slice(index + 1);
@@ -210,7 +210,7 @@ export default function LoginModal() {
   }, []);
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);

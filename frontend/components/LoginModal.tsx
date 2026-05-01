@@ -333,7 +333,7 @@ export default function LoginModal() {
       }}
     >
       <div
-        className={`w-full max-w-3xl overflow-hidden rounded-t-2xl border border-stone-200 bg-white shadow-2xl transition-transform duration-200 md:max-h-[calc(100vh-5rem)] md:rounded-2xl md:overflow-auto ${
+        className={`w-full max-w-4xl overflow-hidden rounded-t-2xl border border-stone-200 bg-white shadow-2xl transition-transform duration-200 md:max-h-[560px] md:rounded-2xl md:overflow-auto ${
           animateIn ? 'translate-y-0 md:scale-100' : 'translate-y-6 md:scale-95'
         }`}
       >
@@ -345,7 +345,7 @@ export default function LoginModal() {
           </div>
 
           {/* Right form panel */}
-          <div className="relative px-6 py-8 sm:px-10 sm:py-10">
+          <div className="relative px-6 py-7 sm:px-10 sm:py-8">
             <button
               type="button"
               onClick={close}
@@ -358,18 +358,16 @@ export default function LoginModal() {
               </svg>
             </button>
 
-            <BrandMark />
-
             {otpStep === 'idle' ? (
               <>
-                <h2 className="mt-8 text-center font-serif text-3xl font-semibold tracking-tight text-charcoal">
+                <h2 className="mt-2 text-center font-serif text-3xl font-semibold tracking-tight text-charcoal">
                   Welcome
                 </h2>
-                <p className="mt-1 text-center text-[11px] font-medium tracking-[0.28em] text-stone-500">
-                  TO THE BRIDE JEWELRY
+                <p className="mt-1 text-center text-[11px] font-medium text-stone-500">
+                  To The Bride Jewelry
                 </p>
 
-                <div className="mt-8 flex items-center gap-3">
+                <div className="mt-6 flex items-center gap-3">
                   <div className="flex h-11 w-[84px] items-center justify-between rounded-xl border border-stone-200 bg-white px-3 text-sm text-charcoal">
                     <span className="font-medium">+91</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="text-stone-400">
@@ -409,7 +407,7 @@ export default function LoginModal() {
                   <span>Secure login powered by OTP</span>
                 </div>
 
-                <div className="mt-8 grid grid-cols-3 gap-4 text-center text-[11px] text-stone-500">
+                <div className="mt-6 grid grid-cols-3 gap-4 text-center text-[11px] text-stone-500">
                   <div>
                     <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -443,13 +441,13 @@ export default function LoginModal() {
                   </div>
                 </div>
 
-                <p className="mt-8 text-center text-xs text-stone-500">
-                  New here? <span className="font-medium text-charcoal">Create an account</span>
+                <p className="mt-6 text-center text-xs text-stone-500">
+                  New here? <span className="font-medium text-charcoal underline underline-offset-2">Create an account</span>
                 </p>
               </>
             ) : (
               <>
-                <h2 className="mt-8 text-center font-serif text-3xl font-semibold tracking-tight text-charcoal">
+                <h2 className="mt-2 text-center font-serif text-3xl font-semibold tracking-tight text-charcoal">
                   Enter OTP
                 </h2>
                 <p className="mt-2 text-center text-sm text-stone-500">

@@ -333,7 +333,7 @@ export default function LoginModal() {
       }}
     >
       <div
-        className={`w-full max-w-4xl overflow-hidden rounded-t-2xl bg-white shadow-xl transition-transform duration-200 md:max-h-[calc(100vh-5rem)] md:rounded-2xl md:overflow-auto ${
+        className={`w-full max-w-3xl overflow-hidden rounded-t-2xl border border-stone-200 bg-white shadow-2xl transition-transform duration-200 md:max-h-[calc(100vh-5rem)] md:rounded-2xl md:overflow-auto ${
           animateIn ? 'translate-y-0 md:scale-100' : 'translate-y-6 md:scale-95'
         }`}
       >
@@ -341,11 +341,7 @@ export default function LoginModal() {
           {/* Left image panel (desktop) */}
           <div className="relative hidden min-h-[560px] md:block">
             <div className="absolute inset-0 bg-[url('/hero-1.png')] bg-cover bg-center" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-white/0" />
-            <div className="absolute bottom-10 left-10">
-              <p className="max-w-[220px] font-serif text-xl text-charcoal/90">Timeless Beauty.</p>
-              <p className="mt-1 max-w-[220px] font-serif text-xl text-charcoal/90">Crafted for You</p>
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/0 to-white/30" />
           </div>
 
           {/* Right form panel */}
@@ -396,8 +392,12 @@ export default function LoginModal() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={otpLoading || !phoneOk}
-                  className="mt-7 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-charcoal py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-black active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0110 0v4" />
+                    <rect x="5" y="11" width="14" height="10" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                   {otpLoading ? 'Sending…' : 'GET OTP'}
                 </button>
 
@@ -411,17 +411,33 @@ export default function LoginModal() {
 
                 <div className="mt-8 grid grid-cols-3 gap-4 text-center text-[11px] text-stone-500">
                   <div>
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">◆</div>
+                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l3 6 6 .8-4.4 4.3 1 6-5.6-3-5.6 3 1-6L3 8.8 9 8l3-6z" />
+                      </svg>
+                    </div>
                     <p className="mt-2 font-medium text-charcoal">Certified</p>
                     <p className="mt-0.5 text-[10px]">Jewelry</p>
                   </div>
                   <div>
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">⬡</div>
+                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s7-4.5 7-11V6l-7-4-7 4v5c0 6.5 7 11 7 11z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 12l1.8 1.8L15 10" />
+                      </svg>
+                    </div>
                     <p className="mt-2 font-medium text-charcoal">Safe</p>
                     <p className="mt-0.5 text-[10px]">Payments</p>
                   </div>
                   <div>
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">↺</div>
+                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 0115.5-6.4" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18.5 5.6V9h-3.4" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-15.5 6.4" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.5 18.4V15h3.4" />
+                      </svg>
+                    </div>
                     <p className="mt-2 font-medium text-charcoal">Easy</p>
                     <p className="mt-0.5 text-[10px]">Returns</p>
                   </div>
@@ -471,7 +487,7 @@ export default function LoginModal() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={otpLoading || otp.length !== OTP_LENGTH}
-                  className="mt-7 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-7 w-full rounded-xl bg-charcoal py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-black active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {otpLoading ? 'Verifying…' : 'VERIFY & CONTINUE'}
                 </button>

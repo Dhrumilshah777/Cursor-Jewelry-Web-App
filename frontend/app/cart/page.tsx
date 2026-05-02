@@ -136,7 +136,7 @@ export default function CartPage() {
 
   return (
     <main
-      className={`min-h-[50vh] bg-body px-4 py-6 sm:py-12 lg:py-10 ${items.length > 0 ? 'pb-44 md:pb-10 lg:pb-10' : ''}`}
+      className={`min-h-[50vh] bg-body px-4 py-6 sm:py-12 lg:py-10 ${items.length > 0 ? 'pb-32 md:pb-10 lg:pb-10' : ''}`}
     >
       <div className="mx-auto max-w-7xl">
         <nav className="text-xs text-text-muted">
@@ -245,17 +245,7 @@ export default function CartPage() {
                                   </button>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <button type="button" className="flex max-w-[7.5rem] items-start gap-1 text-left text-[11px] leading-tight text-text-muted hover:text-text">
-                                  <svg className="mt-0.5 h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                                    />
-                                  </svg>
-                                  Move to Wishlist
-                                </button>
+                              <div className="flex items-center">
                                 <button
                                   type="button"
                                   onClick={() => handleRemove(item.id)}
@@ -310,12 +300,8 @@ export default function CartPage() {
                                   {item.name}
                                 </Link>
                                 <p className="mt-1 text-xs text-text-muted">18K Gold</p>
-                                <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
-                                  <button type="button" className="hover:text-text">
-                                    ♡ Move to Wishlist
-                                  </button>
-                                  <span className="text-border">|</span>
-                                  <button type="button" onClick={() => handleRemove(item.id)} className="hover:text-red-600">
+                                <div className="mt-2">
+                                  <button type="button" onClick={() => handleRemove(item.id)} className="text-xs text-text-muted hover:text-red-600">
                                     Remove
                                   </button>
                                 </div>
@@ -531,10 +517,7 @@ export default function CartPage() {
               ))}
             </section>
 
-            <div
-              className="fixed inset-x-0 z-[45] flex items-center gap-3 border-t border-border bg-card px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] md:hidden"
-              style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
-            >
+            <div className="fixed inset-x-0 bottom-0 z-[45] flex items-center gap-3 border-t border-border bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] md:hidden">
               <div className="min-w-0 shrink-0">
                 <p className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total</p>
                 <p className="font-serif text-lg font-semibold tabular-nums leading-tight text-amber-800">

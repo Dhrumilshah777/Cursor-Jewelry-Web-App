@@ -406,44 +406,6 @@ export default function LoginModal() {
                   </svg>
                   <span>Secure login powered by OTP</span>
                 </div>
-
-                <div className="mt-6 grid grid-cols-3 gap-4 text-center text-[11px] text-stone-500">
-                  <div>
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l3 6 6 .8-4.4 4.3 1 6-5.6-3-5.6 3 1-6L3 8.8 9 8l3-6z" />
-                      </svg>
-                    </div>
-                    <p className="mt-2 font-medium text-charcoal">Certified</p>
-                    <p className="mt-0.5 text-[10px]">Jewelry</p>
-                  </div>
-                  <div>
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s7-4.5 7-11V6l-7-4-7 4v5c0 6.5 7 11 7 11z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 12l1.8 1.8L15 10" />
-                      </svg>
-                    </div>
-                    <p className="mt-2 font-medium text-charcoal">Safe</p>
-                    <p className="mt-0.5 text-[10px]">Payments</p>
-                  </div>
-                  <div>
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-stone-200 text-stone-400">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 0115.5-6.4" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M18.5 5.6V9h-3.4" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-15.5 6.4" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.5 18.4V15h3.4" />
-                      </svg>
-                    </div>
-                    <p className="mt-2 font-medium text-charcoal">Easy</p>
-                    <p className="mt-0.5 text-[10px]">Returns</p>
-                  </div>
-                </div>
-
-                <p className="mt-6 text-center text-xs text-stone-500">
-                  New here? <span className="font-medium text-charcoal underline underline-offset-2">Create an account</span>
-                </p>
               </>
             ) : (
               <>

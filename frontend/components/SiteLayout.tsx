@@ -12,6 +12,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   const isAdmin = pathname?.startsWith('/admin');
   const isHome = pathname === '/';
   const isProductDetail = Boolean(pathname && /^\/products\/[^/]+$/.test(pathname));
+  const isCart = pathname === '/cart';
 
   if (isAdmin) return <>{children}</>;
   return (
@@ -20,7 +21,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       {isHome && <NavCategoryStrip />}
       {children}
       <Footer />
-      {!isProductDetail && <MobileBottomNav />}
+      {!isProductDetail && !isCart && <MobileBottomNav />}
       <LoginModal />
     </>
   );

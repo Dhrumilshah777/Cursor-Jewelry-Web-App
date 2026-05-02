@@ -8,7 +8,7 @@ import { triggerLoginModal } from '@/components/LoginModal';
 
 const items = [
   { href: '/', label: 'Home', icon: 'home' },
-  { href: '/products', label: 'Shop', icon: 'bag' },
+  { href: '/cart', label: 'Cart', icon: 'cart' },
   { href: '/wishlist', label: 'Wishlist', icon: 'heart' },
   { href: '/login', label: 'Account', icon: 'user' },
 ] as const;
@@ -23,11 +23,14 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5H4.5A1.5 1.5 0 013 20v-9.5z" />
         </svg>
       );
-    case 'bag':
+    case 'cart':
       return (
-        <svg className={className} fill="none" stroke={stroke} strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10l1 13H6L7 7z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 7a3 3 0 016 0" />
+        <svg className={className} fill="none" stroke={stroke} strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+          />
         </svg>
       );
     case 'heart':
@@ -95,7 +98,7 @@ export default function MobileBottomNav() {
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2">
         {items.map(({ href, label, icon }) => {
           const active = isActive(href);
-          const showBadge = icon === 'bag' ? cartCount : icon === 'heart' ? wishlistCount : 0;
+          const showBadge = icon === 'cart' ? cartCount : icon === 'heart' ? wishlistCount : 0;
           const isAccount = href === '/login';
           return (
             isAccount && !isUserLoggedIn() ? (
@@ -121,7 +124,7 @@ export default function MobileBottomNav() {
               >
                 <span className={`relative ${active ? 'text-charcoal' : 'text-stone-400'}`}>
                   <NavIcon type={icon} active={active} />
-                  {icon === 'bag' && showBadge > 0 ? (
+                  {icon === 'cart' && showBadge > 0 ? (
                     <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-charcoal px-1 text-[10px] font-semibold leading-4 text-white">
                       {showBadge > 99 ? '99+' : showBadge}
                     </span>

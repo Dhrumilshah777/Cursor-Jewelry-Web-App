@@ -1,5 +1,10 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * Brand palette (THE BRIDE JEWELRY — green system)
+ * Primary #1E3A2A | Secondary #517A5E | Mint #E4F1E7
+ * Cream #FBF7F0 | Off-white #F5F2EA | Dark #1F1F1F | Medium #64735C | Border #E8E3D8
+ */
 const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -8,52 +13,69 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /** Surfaces */
-        body: '#FFFFFF',
-        hero: '#FFFFFF',
-        banner: '#FFFFFF',
+        /** Page canvas (cream) */
+        body: '#FBF7F0',
+        hero: '#FBF7F0',
+
+        /** Section wash (trust strip, etc.) */
+        'section-muted': '#F5F2EA',
+
+        /** Cards / elevated surfaces */
         card: '#FFFFFF',
         cream: '#FFFFFF',
-        'in-stock': '#F5F5F5',
 
-        /**
-         * Typography
-         * Primary: headings, logo, nav categories, main icons → warm soft black
-         * Body: descriptions, product labels, UI labels
-         * Muted: supporting / tertiary copy
-         */
-        text: '#2B1F1A',
-        charcoal: '#2B1F1A',
-        'body-text': '#6B5E57',
-        'text-muted': '#9CA3AF',
-        stone: '#9CA3AF',
+        /** Primary forest green — promo strip, CTAs, footer, active nav */
+        primary: '#1E3A2A',
 
-        /** Icons: match primary text; subtle inactive UI uses border gray */
-        'icon-subtle': '#E5E7EB',
+        /** Secondary sage — cart badge */
+        secondary: '#517A5E',
 
-        /** Solid black CTAs */
-        cta: '#0B0B0B',
-        'cta-hover': '#080808',
+        /** Pale mint accent surface */
+        mint: '#E4F1E7',
 
-        /** Footer & secondary links */
-        'footer-link': '#6B5E57',
+        /** Promo / top banner (same as primary) */
+        'gold-soft': '#1E3A2A',
+        banner: '#1E3A2A',
 
-        /** Borders & dividers */
-        border: '#E5E7EB',
+        /** Decorative tones */
+        'tone-warm': '#E4F1E7',
+        'tone-highlight': '#517A5E',
 
-        /** Brand gold — accents, premium highlights, accent icons */
-        accent: '#C6A46C',
-        'accent-hover': '#b89458',
-        'accent-cream': '#0B0B0B',
-        gold: '#C6A46C',
-        'gold-light': '#d4b896',
+        'in-stock': '#F5F2EA',
 
-        brown: '#0B0B0B',
-        'icon-badge': '#0B0B0B',
+        /** Typography */
+        text: '#1F1F1F',
+        charcoal: '#1F1F1F',
+        'body-text': '#64735C',
+        'text-muted': '#64735C',
+        stone: '#64735C',
+
+        'icon-subtle': '#E8E3D8',
+
+        /** Solid bars & primary chrome (footer, video strip, checkout black buttons → green) */
+        cta: '#1E3A2A',
+        'cta-hover': '#172e22',
+
+        'footer-link': '#64735C',
+
+        border: '#E8E3D8',
+
+        /** Primary actions / highlights (same as primary green) */
+        accent: '#1E3A2A',
+        'accent-hover': '#172e22',
+        'accent-cream': '#FFFFFF',
+
+        gold: '#517A5E',
+        'gold-light': '#6d9178',
+
+        brown: '#1E3A2A',
+
+        /** Cart / icon badges — secondary green + white number */
+        'icon-badge': '#517A5E',
 
         'brand-purple': '#7056FF',
         'brand-coral': '#FF6B4A',
-        'brand-mint': '#E8F4FC',
+        'brand-mint': '#E4F1E7',
       },
       fontFamily: {
         serif: ['var(--font-playfair)', 'Georgia', 'serif'],

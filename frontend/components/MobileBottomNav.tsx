@@ -92,7 +92,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card md:hidden"
       aria-label="Mobile navigation"
     >
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2">
@@ -109,10 +109,10 @@ export default function MobileBottomNav() {
                 className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] leading-none"
                 aria-label={label}
               >
-                <span className="relative text-stone-400">
+                <span className="relative text-text-muted">
                   <NavIcon type={icon} active={false} />
                 </span>
-                <span className="text-stone-400">{label}</span>
+                <span className="text-text-muted">{label}</span>
               </button>
             ) : (
               <Link
@@ -122,15 +122,15 @@ export default function MobileBottomNav() {
                 aria-label={label}
                 aria-current={active ? 'page' : undefined}
               >
-                <span className={`relative ${active ? 'text-charcoal' : 'text-stone-400'}`}>
+                <span className={`relative ${active ? 'text-primary' : 'text-text-muted'}`}>
                   <NavIcon type={icon} active={active} />
                   {icon === 'cart' && showBadge > 0 ? (
-                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-cta px-1 text-[10px] font-semibold leading-4 text-card">
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-icon-badge px-1 text-[10px] font-semibold leading-4 text-white">
                       {showBadge > 99 ? '99+' : showBadge}
                     </span>
                   ) : null}
                 </span>
-                <span className={`${active ? 'text-charcoal' : 'text-stone-400'}`}>{label}</span>
+                <span className={`${active ? 'text-primary' : 'text-text-muted'}`}>{label}</span>
               </Link>
             )
           );

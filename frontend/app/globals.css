@@ -6,11 +6,30 @@
 
 :root {
   --font-mona-sans: 'Mona Sans', system-ui, sans-serif;
+
+  /* Green brand system */
+  --primary-green: #1e3a2a;
+  --secondary-green: #517a5e;
+  --mint: #e4f1e7;
+  --cream: #fbf7f0;
+  --off-white: #f5f2ea;
+  --text-main: #1f1f1f;
+  --text-muted: #64735c;
+  --border: #e8e3d8;
+  --white: #ffffff;
+  --badge-bg: #517a5e;
+  --badge-text: #ffffff;
+  /* Aliases for legacy tokens */
+  --black: #1e3a2a;
+  --bg-main: #fbf7f0;
+  --bg-white: #ffffff;
+  --gold: #517a5e;
+  --gold-soft: #1e3a2a;
 }
 
 html,
 body {
-  background-color: #ffffff;
+  background-color: var(--bg-main);
 }
 
 @keyframes hero-text-in {

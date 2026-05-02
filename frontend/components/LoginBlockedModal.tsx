@@ -75,7 +75,7 @@ export default function LoginBlockedModal() {
         <div className="border-t border-stone-100 px-4 py-3">
           <Link
             href="/"
-            className="block w-full rounded-xl bg-accent py-3 text-center text-sm font-semibold uppercase tracking-wide text-cta hover:bg-accent-hover"
+            className="block w-full rounded-xl bg-accent py-3 text-center text-sm font-semibold uppercase tracking-wide text-white hover:bg-accent-hover"
             onClick={() => setOpen(false)}
           >
             OK

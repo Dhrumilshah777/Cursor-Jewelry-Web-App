@@ -59,7 +59,7 @@ function ShopByCategorySlider({ categories }: { categories: Category[] }) {
                 setIndex(i);
               }}
               className={`h-2 rounded-full transition-all ${
-                i === index ? 'w-6 bg-accent' : 'w-2 bg-blue-200'
+                i === index ? 'w-6 bg-accent' : 'w-2 bg-primary/20'
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />
@@ -202,7 +202,7 @@ export default function ShopByCategoryGrid() {
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-blue-700">
+        <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-primary">
           Shop by category
         </h2>
 

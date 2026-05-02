@@ -109,7 +109,7 @@ export default function ShopByStyleCarousel() {
   return (
     <section className="bg-cream py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-blue-700">
+        <h2 className="mt-6 mb-12 text-center text-3xl font-thin uppercase tracking-wide text-primary">
           Shop by Style
         </h2>
 

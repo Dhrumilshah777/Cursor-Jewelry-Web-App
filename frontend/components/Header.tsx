@@ -38,16 +38,16 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-body shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      {/* 1. Top promotional banner */}
-      <div className="bg-accent py-1.5 text-center">
-        <p className="text-xs font-medium uppercase tracking-wide text-cta sm:text-sm">
+    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-card shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      {/* 1. Top promotional banner — primary green */}
+      <div className="bg-gold-soft py-1.5 text-center">
+        <p className="text-xs font-medium uppercase tracking-wide text-white sm:text-sm">
           FLAT 10% OFF FIRST PURCHASE. CODE SAVE10
         </p>
       </div>
 
-      {/* 2. Main header — #F5EFE6 */}
-      <div className="border-b border-border bg-body">
+      {/* 2. Main header bar (white card on warm page) */}
+      <div className="border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2 sm:px-6 lg:px-8">
           {/* Left: Search on mobile; Book appointment on desktop */}
           <div className="flex min-w-0 flex-1 items-center justify-start">
@@ -84,7 +84,7 @@ export default function Header() {
                 </svg>
               </span>
             </span>
-            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-body-text sm:text-base">
+            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-text sm:text-base">
               The Bride Jewelry
             </span>
           </Link>
@@ -116,7 +116,7 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-icon-badge text-[10px] font-medium text-card">
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-icon-badge text-[10px] font-medium text-white">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}

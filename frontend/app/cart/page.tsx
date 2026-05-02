@@ -371,7 +371,7 @@ export default function CartPage() {
                         onClick={() => setGiftBoxSelected((v) => !v)}
                         className={`w-full shrink-0 rounded-lg border px-4 py-2.5 text-sm font-semibold sm:w-auto ${
                           giftBoxSelected
-                            ? 'border-accent bg-accent text-cta hover:bg-accent-hover'
+                            ? 'border-accent bg-accent text-white hover:bg-accent-hover'
                             : 'border-border bg-card text-text hover:bg-body'
                         }`}
                       >

@@ -354,7 +354,7 @@ function ProductsContent() {
                   <button
                     type="button"
                     onClick={() => setViewMode('grid')}
-                    className={`h-9 w-9 rounded ${viewMode === 'grid' ? 'bg-accent text-cta' : 'text-text-muted hover:bg-body'}`}
+                    className={`h-9 w-9 rounded ${viewMode === 'grid' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
                     aria-label="Grid view"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
@@ -364,7 +364,7 @@ function ProductsContent() {
                   <button
                     type="button"
                     onClick={() => setViewMode('list')}
-                    className={`h-9 w-9 rounded ${viewMode === 'list' ? 'bg-accent text-cta' : 'text-text-muted hover:bg-body'}`}
+                    className={`h-9 w-9 rounded ${viewMode === 'list' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
                     aria-label="List view"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
@@ -391,7 +391,7 @@ function ProductsContent() {
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
-                      className={`h-9 w-9 rounded ${viewMode === 'grid' ? 'bg-accent text-cta' : 'text-text-muted hover:bg-body'}`}
+                      className={`h-9 w-9 rounded ${viewMode === 'grid' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
                       aria-label="Grid view"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
@@ -401,7 +401,7 @@ function ProductsContent() {
                     <button
                       type="button"
                       onClick={() => setViewMode('list')}
-                      className={`h-9 w-9 rounded ${viewMode === 'list' ? 'bg-accent text-cta' : 'text-text-muted hover:bg-body'}`}
+                      className={`h-9 w-9 rounded ${viewMode === 'list' ? 'bg-accent text-white' : 'text-text-muted hover:bg-body'}`}
                       aria-label="List view"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto h-5 w-5">
@@ -603,7 +603,7 @@ function ProductsContent() {
                 <button
                   type="button"
                   onClick={() => setFiltersOpen(false)}
-                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-cta hover:bg-accent-hover"
+                  className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
                   aria-label="Close"
                 >
                   ✕

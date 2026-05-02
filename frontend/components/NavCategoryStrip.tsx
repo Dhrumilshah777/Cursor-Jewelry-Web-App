@@ -53,7 +53,7 @@ export default function NavCategoryStrip() {
   if (categories.length === 0) return null;
 
   return (
-    <div className="border-b border-stone-100 bg-white pl-4 sm:pl-6 lg:hidden">
+    <div className="border-b border-border bg-card pl-4 sm:pl-6 lg:hidden">
       <div
         ref={scrollRef}
         className="scrollbar-hide flex gap-3 overflow-x-auto pr-3 py-3 sm:pr-4"

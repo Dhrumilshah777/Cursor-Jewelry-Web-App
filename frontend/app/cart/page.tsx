@@ -136,7 +136,7 @@ export default function CartPage() {
 
   return (
     <main
-      className={`min-h-[50vh] bg-body px-4 py-6 sm:py-12 lg:py-10 ${items.length > 0 ? 'pb-28 md:pb-10 lg:pb-10' : ''}`}
+      className={`min-h-[50vh] bg-body px-4 py-6 sm:py-12 lg:py-10 ${items.length > 0 ? 'pb-32 md:pb-10 lg:pb-10' : ''}`}
     >
       <div className="mx-auto max-w-7xl">
         <nav className="text-xs text-text-muted">
@@ -517,26 +517,28 @@ export default function CartPage() {
               ))}
             </section>
 
-            <div className="fixed inset-x-0 bottom-0 z-[45] flex items-center gap-2 border-t border-border bg-card px-3 pt-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] md:hidden">
+            <div className="fixed inset-x-0 bottom-0 z-[45] flex items-center gap-3 border-t border-border bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] md:hidden">
               <div className="min-w-0 shrink-0">
                 <p className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total</p>
-                <p className="font-serif text-base font-semibold tabular-nums leading-tight text-amber-800">
+                <p className="font-serif text-lg font-semibold tabular-nums leading-tight text-amber-800">
                   {formatInr(displayTotal)}
                 </p>
               </div>
-              <Link
-                href={checkoutHref}
-                className="flex min-h-[36px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md bg-text px-2.5 py-1.5 text-center text-[10px] font-semibold uppercase leading-snug tracking-wide text-white"
-              >
-                <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.5 10.5V7.875a4.5 4.5 0 00-9 0V10.5M6.75 10.5h10.5l.75 10.5a1.125 1.125 0 01-1.125 1.2H7.125A1.125 1.125 0 016 21l.75-10.5z"
-                  />
-                </svg>
-                <span className="truncate">Proceed to checkout</span>
-              </Link>
+              <div className="flex min-w-0 flex-1 justify-end">
+                <Link
+                  href={checkoutHref}
+                  className="inline-flex max-w-[200px] min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-text px-4 py-2.5 text-center text-[11px] font-semibold uppercase leading-tight tracking-wide text-white"
+                >
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 10.5V7.875a4.5 4.5 0 00-9 0V10.5M6.75 10.5h10.5l.75 10.5a1.125 1.125 0 01-1.125 1.2H7.125A1.125 1.125 0 016 21l.75-10.5z"
+                    />
+                  </svg>
+                  <span className="text-center leading-snug">Proceed to checkout</span>
+                </Link>
+              </div>
             </div>
           </>
         )}

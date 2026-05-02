@@ -71,7 +71,7 @@ export default function Header() {
 
           {/* Center: Logo + brand name */}
           <Link href="/" className="flex flex-shrink-0 flex-col items-center">
-            <span className="flex items-center justify-center font-serif text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+            <span className="flex items-center justify-center font-sans text-2xl font-semibold tracking-tight text-text sm:text-3xl">
               <span className="relative">
                 TB
                 <svg
@@ -84,7 +84,7 @@ export default function Header() {
                 </svg>
               </span>
             </span>
-            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-text sm:text-base">
+            <span className="mt-0.5 font-sans text-sm font-medium uppercase tracking-[0.15em] text-text sm:text-base">
               The Bride Jewelry
             </span>
           </Link>

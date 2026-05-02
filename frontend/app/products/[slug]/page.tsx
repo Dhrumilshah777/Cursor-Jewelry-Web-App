@@ -1,9 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart, getCart } from '@/lib/api';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import {
+  apiGet,
+  assetUrl,
+  getApiBase,
+  addToWishlist,
+  removeFromWishlist,
+  isInWishlist,
+  addToCart,
+  getCart,
+  getCartFromApi,
+  isUserLoggedIn,
+} from '@/lib/api';
 import { productHref } from '@/lib/productLink';
 
 type PriceBreakup = {
@@ -123,9 +134,16 @@ const MOCK_PRODUCTS: Array<
   },
 ];
 
+function cartItemMatchesProduct(cartId: string, productId: string): boolean {
+  const a = String(cartId ?? '').trim();
+  const b = String(productId ?? '').trim();
+  return a === b || a.toLowerCase() === b.toLowerCase();
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const routeSlug = typeof params?.slug === 'string' ? decodeURIComponent(params.slug) : '';
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,17 +163,65 @@ export default function ProductDetailPage() {
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
   const [inCart, setInCart] = useState(false);
+  /** Latest cart sync (guest localStorage vs logged-in API); used by focus/pageshow/pathname so state stays correct after cart changes or bfcache restore. */
+  const syncInCartRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!product?._id) return;
-    const sync = () => {
-      setInCart(getCart().some((item) => String(item.id) === String(product._id)));
+    let cancelled = false;
+    const productId = String(product._id).trim();
+
+    const syncInCart = () => {
+      if (isUserLoggedIn()) {
+        getCartFromApi()
+          .then((items) => {
+            if (cancelled) return;
+            setInCart(items.some((item) => cartItemMatchesProduct(item.id, productId)));
+          })
+          .catch(() => {
+            if (!cancelled) setInCart(false);
+          });
+      } else {
+        setInCart(getCart().some((item) => cartItemMatchesProduct(item.id, productId)));
+      }
     };
-    sync();
+
+    syncInCartRef.current = syncInCart;
+
+    syncInCart();
     if (typeof window === 'undefined') return;
-    window.addEventListener('cart-updated', sync);
-    return () => window.removeEventListener('cart-updated', sync);
+    const onCartOrAuth = () => syncInCart();
+    window.addEventListener('cart-updated', onCartOrAuth);
+    window.addEventListener('auth-updated', onCartOrAuth);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('cart-updated', onCartOrAuth);
+      window.removeEventListener('auth-updated', onCartOrAuth);
+    };
   }, [product?._id]);
+
+  // Re-check cart when returning via browser back/forward, tab focus, or Next.js client navigation to this URL.
+  useEffect(() => {
+    const run = () => syncInCartRef.current();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') run();
+    };
+    window.addEventListener('pageshow', run);
+    window.addEventListener('focus', run);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('storage', run);
+    return () => {
+      window.removeEventListener('pageshow', run);
+      window.removeEventListener('focus', run);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('storage', run);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!product?._id || !pathname?.startsWith('/products/')) return;
+    syncInCartRef.current();
+  }, [pathname, product?._id]);
 
   useEffect(() => {
     if (!product?.category) return;
@@ -665,7 +731,7 @@ export default function ProductDetailPage() {
           <div className="min-w-0">
             <div className="flex items-start gap-3">
               <div className="min-w-0">
-                <h1 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
+                <h1 className="font-sans text-xl font-semibold leading-snug text-text sm:text-2xl">
                   {product.name}
                 </h1>
                 {metaLine ? <p className="mt-1 text-sm text-text-muted">{metaLine}</p> : null}
@@ -694,11 +760,11 @@ export default function ProductDetailPage() {
 
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <div>
-                <p className="font-sans text-3xl font-semibold text-text">₹ {displayPrice.toFixed(2)}</p>
+                <p className="font-sans text-xl font-semibold tabular-nums text-text sm:text-2xl">₹ {displayPrice.toFixed(2)}</p>
                 <p className="mt-1 text-xs font-medium text-emerald-700">(Inclusive of all taxes)</p>
               </div>
               {compareAtPrice != null && compareAtPrice > displayPrice && (
-                <p className="mb-1 font-sans text-lg text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
+                <p className="mb-1 font-sans text-base text-stone-400 line-through">₹ {Number(compareAtPrice).toFixed(2)}</p>
               )}
               <div className="ml-auto pb-1">
                 {outOfStock ? (
@@ -981,7 +1047,7 @@ export default function ProductDetailPage() {
           <div className="mx-auto max-w-5xl px-4">
             <div className="grid grid-cols-[1fr_1.2fr] items-center gap-3 sm:gap-4 md:mx-auto md:max-w-2xl md:grid-cols-[1fr_1.4fr]">
               <div className="min-w-0">
-                <p className="font-sans text-base font-semibold text-text">₹ {displayPrice.toFixed(2)}</p>
+                <p className="font-sans text-sm font-semibold tabular-nums text-text sm:text-base">₹ {displayPrice.toFixed(2)}</p>
                 <p className="text-[11px] text-text-muted">(Inclusive of all taxes)</p>
               </div>
               {inCart ? (

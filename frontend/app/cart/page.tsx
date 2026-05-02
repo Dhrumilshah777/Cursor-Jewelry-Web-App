@@ -151,7 +151,7 @@ export default function CartPage() {
           <div className="flex items-start justify-between gap-3 sm:block">
             <div>
               <h1 className="font-serif text-2xl font-semibold tracking-tight text-text sm:text-3xl">Your Cart</h1>
-              <p className="mt-1 text-sm text-text-muted">Review your items and proceed to checkout</p>
+              <p className="mt-1 text-sm text-body-text">Review your items and proceed to checkout</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5 text-[11px] text-text-muted sm:hidden">
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>
@@ -185,7 +185,7 @@ export default function CartPage() {
 
         {items.length === 0 ? (
           <div className="mt-8 rounded border border-border bg-card p-8 text-center">
-            <p className="text-text-muted">Add products from the collection or product pages.</p>
+            <p className="text-body-text">Add products from the collection or product pages.</p>
             <Link
               href="/products"
               className="mt-4 inline-block text-sm font-medium text-text underline hover:no-underline"
@@ -229,10 +229,10 @@ export default function CartPage() {
                                 {formatInr(lineTotal)}
                               </p>
                             </div>
-                            <p className="mt-1 text-xs text-text-muted">18K Gold</p>
+                            <p className="mt-1 text-xs text-body-text">18K Gold</p>
                             <div className="mt-4 flex items-center justify-between gap-2">
                               <div className="flex items-center rounded-lg border border-border bg-body px-2 py-1.5">
-                                <span className="text-xs text-text-muted">Qty:</span>
+                                <span className="text-xs text-body-text">Qty:</span>
                                 <span className="ml-1.5 text-sm font-medium tabular-nums text-text">{item.quantity}</span>
                                 <div className="ml-2 flex items-center border-l border-border pl-2">
                                   <button
@@ -271,7 +271,7 @@ export default function CartPage() {
 
                 {/* Desktop: table-style list */}
                 <div className="hidden overflow-hidden rounded-xl border border-border bg-card lg:block">
-                  <div className="grid grid-cols-[1fr_120px_140px_140px] gap-4 border-b border-border bg-body px-6 py-4 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  <div className="grid grid-cols-[1fr_120px_140px_140px] gap-4 border-b border-border bg-body px-6 py-4 text-xs font-semibold uppercase tracking-wide text-text">
                     <div>Product</div>
                     <div className="text-center">Quantity</div>
                     <div className="text-right">Price</div>
@@ -299,9 +299,9 @@ export default function CartPage() {
                                 >
                                   {item.name}
                                 </Link>
-                                <p className="mt-1 text-xs text-text-muted">18K Gold</p>
+                                <p className="mt-1 text-xs text-body-text">18K Gold</p>
                                 <div className="mt-2">
-                                  <button type="button" onClick={() => handleRemove(item.id)} className="text-xs text-text-muted hover:text-red-600">
+                                  <button type="button" onClick={() => handleRemove(item.id)} className="text-xs text-body-text hover:text-red-600">
                                     Remove
                                   </button>
                                 </div>
@@ -324,7 +324,7 @@ export default function CartPage() {
                                 <button
                                   type="button"
                                   disabled
-                                  className="flex h-9 w-9 cursor-not-allowed items-center justify-center text-text-muted/40"
+                                  className="flex h-9 w-9 cursor-not-allowed items-center justify-center text-icon-subtle"
                                   aria-label="Increase quantity (disabled)"
                                   title="Quantity increases are disabled"
                                 >
@@ -351,7 +351,7 @@ export default function CartPage() {
                   <div className="rounded-xl border border-border bg-card px-4 py-4 lg:rounded-none lg:rounded-b-xl lg:border-0 lg:bg-body lg:px-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-stone-50 text-text" aria-hidden>
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold" aria-hidden>
                           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7}>
                             <path
                               strokeLinecap="round"
@@ -363,7 +363,7 @@ export default function CartPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-text">Add a gift box to your order</p>
-                          <p className="text-xs text-text-muted">Make it extra special</p>
+                          <p className="text-xs text-body-text">Make it extra special</p>
                         </div>
                       </div>
                       <button
@@ -383,7 +383,7 @@ export default function CartPage() {
                 </div>
 
                 {!isUserLoggedIn() && (
-                  <p className="mt-4 text-sm text-text-muted">Sign in when you proceed to checkout; your cart will be kept.</p>
+                  <p className="mt-4 text-sm text-body-text">Sign in when you proceed to checkout; your cart will be kept.</p>
                 )}
               </section>
 
@@ -391,20 +391,20 @@ export default function CartPage() {
                 <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
                   <h2 className="font-serif text-lg font-semibold text-text">Order Summary</h2>
                   <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex items-center justify-between text-text-muted">
+                    <div className="flex items-center justify-between text-body-text">
                       <span>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
                       <span className="font-medium tabular-nums text-text">{formatInr(displaySubtotal)}</span>
                     </div>
-                    <div className="flex items-center justify-between text-text-muted">
+                    <div className="flex items-center justify-between text-body-text">
                       <span>Shipping</span>
                       <span className="font-medium text-green-600">{shipping === 0 ? 'Free' : formatInr(shipping)}</span>
                     </div>
-                    <div className="flex items-center justify-between text-text-muted">
+                    <div className="flex items-center justify-between text-body-text">
                       <span>Discount (SAVE10)</span>
                       <span className="font-medium text-green-600">-{formatInr(promoDiscount)}</span>
                     </div>
                     {giftBoxSelected && (
-                      <div className="flex items-center justify-between text-text-muted">
+                      <div className="flex items-center justify-between text-body-text">
                         <span>Gift box</span>
                         <span className="font-medium tabular-nums text-text">{formatInr(giftBoxPrice)}</span>
                       </div>
@@ -508,7 +508,7 @@ export default function CartPage() {
                 },
               ].map((b) => (
                 <div key={b.title} className="flex items-start gap-3">
-                  <div className="mt-0.5 text-text">{b.icon}</div>
+                  <div className="mt-0.5 text-gold">{b.icon}</div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-text">{b.title}</p>
                     <p className="mt-1 text-xs text-text-muted">{b.subtitle}</p>

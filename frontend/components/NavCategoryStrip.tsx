@@ -79,7 +79,7 @@ export default function NavCategoryStrip() {
                   </div>
                 )}
               </div>
-              <span className="mt-1.5 text-center font-sans text-xs font-medium uppercase tracking-wide text-stone-800">
+              <span className="mt-1.5 text-center font-sans text-xs font-medium uppercase tracking-wide text-text">
                 {cat.name}
               </span>
             </Link>

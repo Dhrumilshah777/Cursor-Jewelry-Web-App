@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /** Theme (jewelry): CTA black, white surfaces, gray borders, gold accent */
+        /** Surfaces */
         body: '#FFFFFF',
         hero: '#FFFFFF',
         banner: '#FFFFFF',
@@ -16,48 +16,48 @@ const config: Config = {
         cream: '#FFFFFF',
         'in-stock': '#F5F5F5',
 
-        /** Primary text & near-black UI */
-        text: '#111827',
-        charcoal: '#111827',
-        /** Solid black CTAs (buttons, badges) */
+        /**
+         * Typography
+         * Primary: headings, logo, nav categories, main icons → warm soft black
+         * Body: descriptions, product labels, UI labels
+         * Muted: supporting / tertiary copy
+         */
+        text: '#2B1F1A',
+        charcoal: '#2B1F1A',
+        'body-text': '#6B5E57',
+        'text-muted': '#9CA3AF',
+        stone: '#9CA3AF',
+
+        /** Icons: match primary text; subtle inactive UI uses border gray */
+        'icon-subtle': '#E5E7EB',
+
+        /** Solid black CTAs */
         cta: '#0B0B0B',
         'cta-hover': '#080808',
 
-        /** Secondary / muted copy */
-        'text-muted': '#9CA3AF',
-        stone: '#9CA3AF',
         /** Footer & secondary links */
-        'footer-link': '#6B7280',
+        'footer-link': '#6B5E57',
 
         /** Borders & dividers */
         border: '#E5E7EB',
 
-        /** Brand accent (gold) — primary actions on light, promo highlights */
+        /** Brand gold — accents, premium highlights, accent icons */
         accent: '#C6A46C',
         'accent-hover': '#b89458',
-        /** Text/icons on gold (high contrast) */
         'accent-cream': '#0B0B0B',
-        /** Legacy alias: “gold” accents in UI (totals, highlights) */
         gold: '#C6A46C',
         'gold-light': '#d4b896',
 
-        /** Outline / dark emphasis (legacy `brown`) */
         brown: '#0B0B0B',
-
-        /** Pills on icons (cart count, etc.) */
         'icon-badge': '#0B0B0B',
 
-        /** Login / SMS flow accents (unchanged hues; optional) */
         'brand-purple': '#7056FF',
         'brand-coral': '#FF6B4A',
         'brand-mint': '#E8F4FC',
       },
       fontFamily: {
-        /** Headings */
         serif: ['var(--font-playfair)', 'Georgia', 'serif'],
-        /** Body */
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        /** Backwards-compatible aliases */
         poppins: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         'dm-sans': ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },

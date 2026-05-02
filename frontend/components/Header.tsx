@@ -84,7 +84,7 @@ export default function Header() {
                 </svg>
               </span>
             </span>
-            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-text-muted sm:text-base">
+            <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-body-text sm:text-base">
               The Bride Jewelry
             </span>
           </Link>

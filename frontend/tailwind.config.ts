@@ -1,9 +1,12 @@
 import type { Config } from 'tailwindcss';
 
+/** Main page background (cream) — single source for canvas color */
+const MAIN_BG = '#FBF7F0';
+
 /**
  * Brand palette (THE BRIDE JEWELRY — green system)
  * Primary #1E3A2A | Secondary #517A5E | Mint #E4F1E7
- * Cream #FBF7F0 | Off-white #F5F2EA | Dark #1F1F1F | Medium #64735C | Border #E8E3D8
+ * Main background MAIN_BG | Off-white #F5F2EA | Dark #1F1F1F | Medium #64735C | Border #E8E3D8
  */
 const config: Config = {
   content: [
@@ -13,9 +16,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /** Page canvas (cream) */
-        body: '#FBF7F0',
-        hero: '#FBF7F0',
+        /** Page canvas — main background */
+        main: MAIN_BG,
+        body: MAIN_BG,
+        hero: MAIN_BG,
 
         /** Section wash (trust strip, etc.) */
         'section-muted': '#F5F2EA',

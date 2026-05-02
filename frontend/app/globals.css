@@ -11,6 +11,7 @@
   --primary-green: #1e3a2a;
   --secondary-green: #517a5e;
   --mint: #e4f1e7;
+  /* Main background */
   --cream: #fbf7f0;
   --off-white: #f5f2ea;
   --text-main: #1f1f1f;
@@ -21,7 +22,7 @@
   --badge-text: #ffffff;
   /* Aliases for legacy tokens */
   --black: #1e3a2a;
-  --bg-main: #fbf7f0;
+  --bg-main: #fbf7f0; /* same as --cream; page canvas */
   --bg-white: #ffffff;
   --gold: #517a5e;
   --gold-soft: #1e3a2a;

@@ -4,7 +4,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-16 border-t border-white/10 bg-accent text-white">
+    <footer className="mt-16 border-t border-white/10 bg-cta text-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12 lg:px-0">
         <div className="grid gap-10 border-b border-white/10 pb-10 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-16">
           {/* Newsletter */}
@@ -31,7 +31,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="shrink-0 rounded bg-white px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-accent transition hover:bg-white/90"
+                className="shrink-0 rounded bg-white px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-cta transition hover:bg-white/90"
               >
                 Subscribe
               </button>
@@ -134,7 +134,7 @@ export default function Footer() {
 
       <div className="relative h-44 w-full overflow-hidden sm:h-56" aria-hidden="true">
         <div className="absolute inset-0 bg-[url('/footer-bg.png')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-b from-accent via-accent/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-cta via-cta/35 to-transparent" />
       </div>
     </footer>
   );

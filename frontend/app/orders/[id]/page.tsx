@@ -604,7 +604,7 @@ export default function OrderDetailPage() {
               const el = document.getElementById('shipping-address');
               el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
-            className="flex-1 rounded-xl bg-accent py-3 text-sm font-semibold text-white hover:bg-accent-hover"
+            className="flex-1 rounded-xl bg-accent py-3 text-sm font-semibold text-cta hover:bg-accent-hover"
           >
             Track Again
           </button>

@@ -41,7 +41,7 @@ export default function Header() {
     <header className="sticky top-0 left-0 right-0 z-50 w-full bg-body shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       {/* 1. Top promotional banner */}
       <div className="bg-accent py-1.5 text-center">
-        <p className="text-xs font-medium uppercase tracking-wide text-white sm:text-sm">
+        <p className="text-xs font-medium uppercase tracking-wide text-cta sm:text-sm">
           FLAT 10% OFF FIRST PURCHASE. CODE SAVE10
         </p>
       </div>

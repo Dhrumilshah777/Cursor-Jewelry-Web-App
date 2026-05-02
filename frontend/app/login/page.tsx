@@ -450,7 +450,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleSendOtp}
                     disabled={otpLoading || !phoneOk}
-                    className="mt-8 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-8 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-cta transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {otpLoading ? 'Sending…' : 'GET OTP'}
                   </button>
@@ -503,7 +503,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleVerifyOtp}
                     disabled={otpLoading || otp.length !== OTP_LENGTH}
-                    className="mt-8 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-8 w-full rounded-xl bg-accent py-3.5 text-sm font-semibold uppercase tracking-wide text-cta transition hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {otpLoading ? 'Verifying…' : 'VERIFY & CONTINUE'}
                   </button>

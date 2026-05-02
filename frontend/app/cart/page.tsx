@@ -371,7 +371,7 @@ export default function CartPage() {
                         onClick={() => setGiftBoxSelected((v) => !v)}
                         className={`w-full shrink-0 rounded-lg border px-4 py-2.5 text-sm font-semibold sm:w-auto ${
                           giftBoxSelected
-                            ? 'border-accent bg-accent text-white hover:bg-accent-hover'
+                            ? 'border-accent bg-accent text-cta hover:bg-accent-hover'
                             : 'border-border bg-card text-text hover:bg-body'
                         }`}
                       >
@@ -411,7 +411,7 @@ export default function CartPage() {
                     )}
                     <div className="flex items-center justify-between border-t border-border pt-3">
                       <span className="font-serif text-base font-semibold text-text">Total</span>
-                      <span className="font-serif text-2xl font-semibold tabular-nums text-amber-800 lg:text-text">
+                      <span className="font-serif text-2xl font-semibold tabular-nums text-gold lg:text-text">
                         {formatInr(displayTotal)}
                       </span>
                     </div>
@@ -421,7 +421,7 @@ export default function CartPage() {
                   <div className="mt-5 hidden flex-col gap-3 lg:flex">
                     <Link
                       href={checkoutHref}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-text px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-cta px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
                     >
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>
                         <path
@@ -520,14 +520,14 @@ export default function CartPage() {
             <div className="fixed inset-x-0 bottom-0 z-[45] flex items-center gap-3 border-t border-border bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] md:hidden">
               <div className="min-w-0 shrink-0">
                 <p className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total</p>
-                <p className="font-serif text-lg font-semibold tabular-nums leading-tight text-amber-800">
+                <p className="font-serif text-lg font-semibold tabular-nums leading-tight text-gold">
                   {formatInr(displayTotal)}
                 </p>
               </div>
               <div className="flex min-w-0 flex-1 justify-end">
                 <Link
                   href={checkoutHref}
-                  className="inline-flex max-w-[200px] min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-text px-4 py-2.5 text-center text-[11px] font-semibold uppercase leading-tight tracking-wide text-white"
+                  className="inline-flex max-w-[200px] min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-cta px-4 py-2.5 text-center text-[11px] font-semibold uppercase leading-tight tracking-wide text-white"
                 >
                   <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>
                     <path

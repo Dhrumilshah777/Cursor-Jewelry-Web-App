@@ -115,7 +115,7 @@ export default function KindWordsSection() {
               type="button"
               onClick={() => setCurrent(i)}
               className={`h-2 rounded-full transition-all ${
-                i === current ? 'w-6 bg-charcoal' : 'w-2 bg-charcoal/30'
+                i === current ? 'w-6 bg-cta' : 'w-2 bg-cta/30'
               }`}
               aria-label={`Go to testimonial ${i + 1}`}
             />

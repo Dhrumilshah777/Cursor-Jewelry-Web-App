@@ -8,32 +8,46 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /** Black & white theme */
+        /** Theme (jewelry): CTA black, white surfaces, gray borders, gold accent */
         body: '#FFFFFF',
         hero: '#FFFFFF',
         banner: '#FFFFFF',
-        'in-stock': '#F5F5F5',
-        /** Outline CTAs + banner emphasis */
-        brown: '#111111',
         card: '#FFFFFF',
-        text: '#111111',
-        'text-muted': '#6B7280',
-        /** Footer / secondary links */
-        'footer-link': '#374151',
-        border: '#E5E7EB',
-        accent: '#012249',
-        'accent-hover': '#011a36',
-        /** Cart count / icon pills on dark nav icons */
-        'icon-badge': '#012249',
-
-        /** Legacy names still used across the app */
         cream: '#FFFFFF',
-        charcoal: '#111111',
-        'accent-cream': '#FFFFFF',
-        gold: '#111111',
-        'gold-light': '#111111',
-        stone: '#6B7280',
-        /** Login / accent (SMS OTP flow) */
+        'in-stock': '#F5F5F5',
+
+        /** Primary text & near-black UI */
+        text: '#111827',
+        charcoal: '#111827',
+        /** Solid black CTAs (buttons, badges) */
+        cta: '#0B0B0B',
+        'cta-hover': '#080808',
+
+        /** Secondary / muted copy */
+        'text-muted': '#9CA3AF',
+        stone: '#9CA3AF',
+        /** Footer & secondary links */
+        'footer-link': '#6B7280',
+
+        /** Borders & dividers */
+        border: '#E5E7EB',
+
+        /** Brand accent (gold) — primary actions on light, promo highlights */
+        accent: '#C6A46C',
+        'accent-hover': '#b89458',
+        /** Text/icons on gold (high contrast) */
+        'accent-cream': '#0B0B0B',
+        /** Legacy alias: “gold” accents in UI (totals, highlights) */
+        gold: '#C6A46C',
+        'gold-light': '#d4b896',
+
+        /** Outline / dark emphasis (legacy `brown`) */
+        brown: '#0B0B0B',
+
+        /** Pills on icons (cart count, etc.) */
+        'icon-badge': '#0B0B0B',
+
+        /** Login / SMS flow accents (unchanged hues; optional) */
         'brand-purple': '#7056FF',
         'brand-coral': '#FF6B4A',
         'brand-mint': '#E8F4FC',

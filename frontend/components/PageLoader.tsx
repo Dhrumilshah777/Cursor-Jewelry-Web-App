@@ -51,7 +51,7 @@ export default function PageLoader() {
         <span className="mt-1.5 font-sans text-xs font-light uppercase tracking-[0.35em] text-stone-500 sm:text-sm">
           THE MAISON BLURE
         </span>
-        <span className="mt-2 block h-px w-16 bg-charcoal/30 sm:w-20" aria-hidden />
+        <span className="mt-2 block h-px w-16 bg-cta/30 sm:w-20" aria-hidden />
       </div>
     </div>
   );

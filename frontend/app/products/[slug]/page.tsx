@@ -731,7 +731,7 @@ export default function ProductDetailPage() {
                     Out of stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cta">
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white" aria-hidden />
                     In stock
                   </span>
@@ -861,7 +861,7 @@ export default function ProductDetailPage() {
                     onClick={handleBuyNow}
                     disabled={outOfStock}
                     className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
+                      outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-cta hover:bg-accent-hover'
                     }`}
                   >
                     Buy now
@@ -900,7 +900,7 @@ export default function ProductDetailPage() {
                       type="button"
                       onClick={checkDelivery}
                       disabled={deliveryChecking}
-                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
+                      className="rounded bg-accent px-5 py-2 text-sm font-medium text-cta hover:bg-accent-hover disabled:opacity-60"
                     >
                       {deliveryChecking ? 'Checking…' : 'Check'}
                     </button>
@@ -1099,7 +1099,7 @@ export default function ProductDetailPage() {
                 }}
                 disabled={outOfStock}
                 className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                  outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
+                  outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-cta hover:bg-accent-hover'
                 }`}
               >
                 Buy now
@@ -1110,7 +1110,7 @@ export default function ProductDetailPage() {
 
         {addedToCart && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-cta shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >
@@ -1119,7 +1119,7 @@ export default function ProductDetailPage() {
         )}
         {linkCopied && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-cta shadow-lg transition-all duration-300"
             role="status"
             aria-live="polite"
           >

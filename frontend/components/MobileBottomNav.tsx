@@ -125,7 +125,7 @@ export default function MobileBottomNav() {
                 <span className={`relative ${active ? 'text-charcoal' : 'text-stone-400'}`}>
                   <NavIcon type={icon} active={active} />
                   {icon === 'cart' && showBadge > 0 ? (
-                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-charcoal px-1 text-[10px] font-semibold leading-4 text-white">
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-cta px-1 text-[10px] font-semibold leading-4 text-card">
                       {showBadge > 99 ? '99+' : showBadge}
                     </span>
                   ) : null}

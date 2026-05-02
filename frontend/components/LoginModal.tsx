@@ -390,7 +390,7 @@ export default function LoginModal() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={otpLoading || !phoneOk}
-                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-charcoal py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-black active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cta py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-cta-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0110 0v4" />
@@ -447,7 +447,7 @@ export default function LoginModal() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={otpLoading || otp.length !== OTP_LENGTH}
-                  className="mt-7 w-full rounded-xl bg-charcoal py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-black active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-7 w-full rounded-xl bg-cta py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-cta-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {otpLoading ? 'Verifying…' : 'VERIFY & CONTINUE'}
                 </button>

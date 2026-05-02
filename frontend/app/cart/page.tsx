@@ -463,7 +463,7 @@ export default function CartPage() {
               </aside>
             </div>
 
-            <section className="mt-8 grid grid-cols-2 gap-4 rounded-xl bg-stone-100 p-4 sm:mt-10 sm:rounded-none sm:border-t sm:border-border sm:bg-transparent sm:p-0 sm:pt-8 lg:mt-10 lg:grid-cols-4">
+            <section className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 rounded-xl bg-stone-100 p-4 sm:mt-10 sm:gap-x-8 sm:gap-y-7 sm:rounded-none sm:border-t sm:border-border sm:bg-transparent sm:p-0 sm:pt-8 lg:mt-10 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-0">
               {[
                 {
                   title: 'CERTIFIED JEWELRY',

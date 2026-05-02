@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart, getCart } from '@/lib/api';
+import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart } from '@/lib/api';
 import { productHref } from '@/lib/productLink';
 
 type PriceBreakup = {
@@ -144,9 +144,6 @@ export default function ProductDetailPage() {
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [alreadyInCart, setAlreadyInCart] = useState(false);
-
   useEffect(() => {
     if (!product?.category) return;
     const slug = categoryToSlug(product.category);
@@ -181,19 +178,6 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!product?._id) return;
-    const checkCart = () => {
-      const list = getCart();
-      setAlreadyInCart(list.some((item) => item.id === product._id));
-    };
-    checkCart();
-    if (typeof window !== 'undefined') {
-      window.addEventListener('cart-updated', checkCart);
-      return () => window.removeEventListener('cart-updated', checkCart);
-    }
-  }, [product?._id]);
-
-  useEffect(() => {
-    if (!product?._id) return;
     const syncWish = () => setWishlisted(isInWishlist(product._id));
     syncWish();
     if (typeof window !== 'undefined') {
@@ -217,10 +201,6 @@ export default function ProductDetailPage() {
     if (product?.ringSize) setRingSizeInput(product.ringSize);
     else setRingSizeInput('');
   }, [product?.ringSize]);
-
-  useEffect(() => {
-    setQuantity(Math.max(1, Number(product?.purchaseQuantity) || 1));
-  }, [product?._id, product?.purchaseQuantity]);
 
   useEffect(() => {
     if (!routeSlug) {
@@ -561,26 +541,8 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleBuyNow = () => {
-    if (!product) return;
-    if (outOfStock) return;
-    addToCart({
-      id: product._id,
-      slug: product.slug,
-      name: product.name,
-      price: String(displayPrice),
-      image: product.image,
-      quantity: Math.max(1, quantity),
-    });
-    setAlreadyInCart(true);
-    if (typeof window !== 'undefined') {
-      const loggedIn = localStorage.getItem('user_logged_in') === '1';
-      router.push(loggedIn ? '/checkout' : '/login?returnTo=/checkout');
-    }
-  };
-
   return (
-    <main className="min-h-[50vh] bg-body px-4 py-6 pb-24 sm:py-8 md:px-6 lg:px-8 md:pb-12">
+    <main className="min-h-[50vh] bg-body px-4 py-6 pb-28 sm:py-8 md:px-6 lg:px-8 md:pb-28">
       <div className="mx-auto max-w-6xl">
         <nav className="mb-6 text-sm text-text-muted">
           <Link href="/" className="hover:text-text">HOME</Link>
@@ -803,76 +765,6 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Quantity + CTAs (like reference) */}
-            <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Quantity: <span className="font-semibold text-text">{Math.max(1, quantity)}</span>
-              </p>
-              <div className="mt-2 grid grid-cols-[140px_1fr] gap-3">
-                <div className="flex items-center justify-between rounded border border-border bg-card px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-body"
-                    aria-label="Decrease quantity"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm font-semibold text-text" aria-live="polite">
-                    {Math.max(1, quantity)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="h-8 w-8 rounded text-lg text-text-muted hover:bg-body"
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (outOfStock) return;
-                      addToCart({
-                        id: product._id,
-                        slug: product.slug,
-                        name: product.name,
-                        price: String(displayPrice),
-                        image: product.image,
-                        quantity: Math.max(1, quantity),
-                      });
-                      setAddedToCart(true);
-                      setAlreadyInCart(true);
-                      setTimeout(() => setAddedToCart(false), 2500);
-                    }}
-                    disabled={outOfStock}
-                    className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      outOfStock
-                        ? 'cursor-not-allowed bg-border text-text-muted'
-                        : 'border-2 border-accent bg-card text-accent hover:bg-body hover:border-accent'
-                    }`}
-                  >
-                    Add to cart
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleBuyNow}
-                    disabled={outOfStock}
-                    className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
-                    }`}
-                  >
-                    Buy now
-                  </button>
-                </div>
-              </div>
-              {alreadyInCart && !outOfStock && (
-                <p className="mt-2 text-xs text-text-muted">This product is already in your cart; adding again will increase quantity.</p>
-              )}
-            </div>
-
             {/* Delivery check */}
             <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-start gap-3">
@@ -1071,10 +963,10 @@ export default function ProductDetailPage() {
             </div>
           </div>
         )}
-        {/* Sticky bottom bar (mobile): price + BUY NOW */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3 md:hidden">
+        {/* Sticky bottom bar: price + Add to cart */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3">
           <div className="mx-auto max-w-5xl px-4">
-            <div className="grid grid-cols-[1fr_1.2fr] items-center gap-3">
+            <div className="grid grid-cols-[1fr_1.2fr] items-center gap-3 sm:gap-4 md:mx-auto md:max-w-2xl md:grid-cols-[1fr_1.4fr]">
               <div className="min-w-0">
                 <p className="font-sans text-base font-semibold text-text">₹ {displayPrice.toFixed(2)}</p>
                 <p className="text-[11px] text-text-muted">(Inclusive of all taxes)</p>
@@ -1091,18 +983,15 @@ export default function ProductDetailPage() {
                     image: product.image,
                     quantity: purchaseQty,
                   });
-                  setAlreadyInCart(true);
-                  if (typeof window !== 'undefined') {
-                    const loggedIn = localStorage.getItem('user_logged_in') === '1';
-                    router.push(loggedIn ? '/checkout' : '/login?returnTo=/checkout');
-                  }
+                  setAddedToCart(true);
+                  setTimeout(() => setAddedToCart(false), 2500);
                 }}
                 disabled={outOfStock}
                 className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                   outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
                 }`}
               >
-                Buy now
+                Add to cart
               </button>
             </div>
           </div>
@@ -1110,7 +999,7 @@ export default function ProductDetailPage() {
 
         {addedToCart && (
           <div
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300"
+            className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 border border-border bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 md:bottom-28"
             role="status"
             aria-live="polite"
           >

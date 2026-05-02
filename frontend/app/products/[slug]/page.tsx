@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart } from '@/lib/api';
+import { apiGet, assetUrl, getApiBase, addToWishlist, removeFromWishlist, isInWishlist, addToCart, getCart } from '@/lib/api';
 import { productHref } from '@/lib/productLink';
 
 type PriceBreakup = {
@@ -144,6 +144,19 @@ export default function ProductDetailPage() {
   const [youMayAlsoLike, setYouMayAlsoLike] = useState<Product[]>([]);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [ringSizeInput, setRingSizeInput] = useState('');
+  const [inCart, setInCart] = useState(false);
+
+  useEffect(() => {
+    if (!product?._id) return;
+    const sync = () => {
+      setInCart(getCart().some((item) => String(item.id) === String(product._id)));
+    };
+    sync();
+    if (typeof window === 'undefined') return;
+    window.addEventListener('cart-updated', sync);
+    return () => window.removeEventListener('cart-updated', sync);
+  }, [product?._id]);
+
   useEffect(() => {
     if (!product?.category) return;
     const slug = categoryToSlug(product.category);
@@ -971,28 +984,38 @@ export default function ProductDetailPage() {
                 <p className="font-sans text-base font-semibold text-text">₹ {displayPrice.toFixed(2)}</p>
                 <p className="text-[11px] text-text-muted">(Inclusive of all taxes)</p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (outOfStock) return;
-                  addToCart({
-                    id: product._id,
-                    slug: product.slug,
-                    name: product.name,
-                    price: String(displayPrice),
-                    image: product.image,
-                    quantity: purchaseQty,
-                  });
-                  setAddedToCart(true);
-                  setTimeout(() => setAddedToCart(false), 2500);
-                }}
-                disabled={outOfStock}
-                className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-                  outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
-                }`}
-              >
-                Add to cart
-              </button>
+              {inCart ? (
+                <Link
+                  href="/cart"
+                  className="flex w-full items-center justify-center rounded px-4 py-3 text-center text-sm font-semibold uppercase tracking-wide transition-colors bg-accent text-white hover:bg-accent-hover"
+                >
+                  Go to cart
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (outOfStock) return;
+                    addToCart({
+                      id: product._id,
+                      slug: product.slug,
+                      name: product.name,
+                      price: String(displayPrice),
+                      image: product.image,
+                      quantity: purchaseQty,
+                    });
+                    setInCart(true);
+                    setAddedToCart(true);
+                    setTimeout(() => setAddedToCart(false), 2500);
+                  }}
+                  disabled={outOfStock}
+                  className={`w-full rounded px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                    outOfStock ? 'cursor-not-allowed bg-border text-text-muted' : 'bg-accent text-white hover:bg-accent-hover'
+                  }`}
+                >
+                  Add to cart
+                </button>
+              )}
             </div>
           </div>
         </div>

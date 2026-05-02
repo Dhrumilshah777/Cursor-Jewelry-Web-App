@@ -89,7 +89,7 @@ export default function HeroSlider() {
             key={index}
             type="button"
             onClick={() => setCurrent(index)}
-            className="h-1.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/40"
+            className="h-1.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-main/40"
             style={{
               width: index === current ? '4rem' : '4.25rem',
               backgroundColor: index === current ? 'rgba(248,246,243,0.95)' : 'rgba(255,255,255,0.35)',

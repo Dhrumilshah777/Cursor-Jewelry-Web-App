@@ -732,7 +732,7 @@ export default function ProductDetailPage() {
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white" aria-hidden />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-main" aria-hidden />
                     In stock
                   </span>
                 )}
@@ -774,7 +774,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Product details — borders use border-border (#E7E1D7); fill stays white */}
+            {/* Product details — borders use border-border; fill uses card / main cream */}
             {specTiles.length > 0 && (
               <div className="mt-6">
                 <h3 className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">

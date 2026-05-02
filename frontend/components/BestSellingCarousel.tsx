@@ -82,7 +82,7 @@ function ProductCard({ product }: { product: Product }) {
           <button
             type="button"
             onClick={toggleWishlist}
-            className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border bg-white/80 backdrop-blur transition-colors ${
+            className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border bg-main/80 backdrop-blur transition-colors ${
               wishlisted
                 ? 'border-primary/40 text-primary hover:border-primary/60 hover:text-primary'
                 : 'border-stone-200 text-stone-500 hover:border-stone-400 hover:text-charcoal'

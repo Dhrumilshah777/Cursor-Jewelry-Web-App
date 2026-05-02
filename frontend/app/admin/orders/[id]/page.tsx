@@ -189,7 +189,7 @@ export default function AdminOrderDetailPage() {
             type="button"
             onClick={() => void handleRetryForwardPickup()}
             disabled={pickupRetryBusy}
-            className="mt-3 rounded border border-stone-400 bg-white px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-stone-50 disabled:opacity-50"
+            className="mt-3 rounded border border-stone-400 bg-main px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-stone-50 disabled:opacity-50"
           >
             {pickupRetryBusy ? 'Retrying…' : 'Retry pickup'}
           </button>
@@ -241,7 +241,7 @@ export default function AdminOrderDetailPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="mt-8 rounded-lg border border-stone-200 bg-white p-6">
+      <form onSubmit={handleSave} className="mt-8 rounded-lg border border-stone-200 bg-main p-6">
         <h2 className="font-medium text-charcoal">Update status</h2>
         {saveError && (
           <div className="mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -313,7 +313,7 @@ export default function AdminOrderDetailPage() {
                 type="button"
                 onClick={handleMarkDeliveredOverride}
                 disabled={overrideBusy}
-                className="rounded border border-stone-300 bg-white px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+                className="rounded border border-stone-300 bg-main px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 disabled:opacity-50"
               >
                 {overrideBusy ? '…' : 'Mark delivered (override)'}
               </button>

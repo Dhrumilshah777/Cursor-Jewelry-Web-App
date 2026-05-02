@@ -51,7 +51,7 @@ export default function MobileAccountHome({
 
   return (
     <section className="mx-auto max-w-md px-4 pb-28 pt-4 md:hidden">
-      <div className="rounded-2xl border border-stone-200 bg-white">
+      <div className="rounded-2xl border border-stone-200 bg-main">
         <div className="flex items-center gap-3 border-b border-stone-200 px-4 py-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-charcoal">
             <span className="text-xs font-semibold">
@@ -95,7 +95,7 @@ export default function MobileAccountHome({
       <button
         type="button"
         onClick={onLogout}
-        className="mt-8 w-full rounded-xl border border-red-200 bg-white py-3 text-sm font-semibold text-red-600"
+        className="mt-8 w-full rounded-xl border border-red-200 bg-main py-3 text-sm font-semibold text-red-600"
       >
         Log out
       </button>

@@ -101,7 +101,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen bg-stone-100">
-      <aside className="w-56 flex-shrink-0 border-r border-stone-200 bg-white p-4">
+      <aside className="w-56 flex-shrink-0 border-r border-stone-200 bg-main p-4">
         <Link href="/admin" className="block font-semibold text-charcoal">
           BLURE Admin
         </Link>

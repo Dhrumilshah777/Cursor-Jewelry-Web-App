@@ -92,7 +92,7 @@ export default function AdminPromoCardsPage() {
 
       <div className="mt-8 grid gap-8 sm:grid-cols-2">
         {cards.map((card, index) => (
-          <div key={index} className="rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+          <div key={index} className="rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
             <h2 className="font-medium text-charcoal">Card {index + 1}</h2>
 
             <div className="mt-4">

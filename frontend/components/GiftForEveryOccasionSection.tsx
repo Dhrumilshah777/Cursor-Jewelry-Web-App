@@ -182,7 +182,7 @@ export default function GiftForEveryOccasionSection() {
           <button
             type="button"
             onClick={() => scroll('prev')}
-            className="absolute left-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-colors hover:bg-white"
+            className="absolute left-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-main/90 shadow-lg transition-colors hover:bg-main"
             aria-label="Previous"
           >
             <svg className="h-5 w-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,7 @@ export default function GiftForEveryOccasionSection() {
           <button
             type="button"
             onClick={() => scroll('next')}
-            className="absolute right-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-colors hover:bg-white"
+            className="absolute right-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-main/90 shadow-lg transition-colors hover:bg-main"
             aria-label="Next"
           >
             <svg className="h-5 w-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">

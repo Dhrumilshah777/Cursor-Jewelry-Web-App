@@ -37,7 +37,7 @@ export default function AdminOrdersPage() {
       ) : (
         <ul className="mt-8 space-y-4">
           {orders.map((order) => (
-            <li key={order._id} className="rounded-lg border border-stone-200 bg-white p-4">
+            <li key={order._id} className="rounded-lg border border-stone-200 bg-main p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link href={`/admin/orders/${order._id}`} className="font-medium text-charcoal hover:underline">
                   Order #{order._id.slice(-8).toUpperCase()}

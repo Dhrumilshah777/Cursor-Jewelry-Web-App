@@ -111,7 +111,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-white transition-transform duration-300 ease-out"
+      className="fixed inset-0 z-[100] bg-main transition-transform duration-300 ease-out"
       style={{ transform: isSlidUp ? 'translateY(-100%)' : 'translateY(0)' }}
       onTransitionEnd={handleTransitionEnd}
     >

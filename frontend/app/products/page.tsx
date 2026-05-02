@@ -472,7 +472,7 @@ function ProductsContent() {
                 {filteredProducts.map((product) => (
                   <li
                     key={product._id}
-                    className={`group overflow-hidden rounded-none bg-white ${
+                    className={`group overflow-hidden rounded-none bg-main ${
                       viewMode === 'list' ? 'flex gap-4 p-4' : 'p-3 sm:p-4'
                     }`}
                   >

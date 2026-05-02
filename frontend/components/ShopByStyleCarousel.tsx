@@ -117,7 +117,7 @@ export default function ShopByStyleCarousel() {
           <button
             type="button"
             onClick={() => scroll('prev')}
-            className="absolute left-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-colors hover:bg-white md:left-4"
+            className="absolute left-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-main/90 shadow-lg transition-colors hover:bg-main md:left-4"
             aria-label="Previous"
           >
             <svg className="h-5 w-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@ export default function ShopByStyleCarousel() {
           <button
             type="button"
             onClick={() => scroll('next')}
-            className="absolute right-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-colors hover:bg-white md:right-4"
+            className="absolute right-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-main/90 shadow-lg transition-colors hover:bg-main md:right-4"
             aria-label="Next"
           >
             <svg className="h-5 w-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">

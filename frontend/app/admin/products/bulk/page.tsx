@@ -100,7 +100,7 @@ export default function AdminBulkProductsPage() {
         </Link>
       </div>
 
-      <div className="mt-6 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-medium text-charcoal">Products JSON</h2>
           <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function AdminBulkProductsPage() {
       </div>
 
       {result && (
-        <section className="mt-6 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+        <section className="mt-6 rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-medium text-charcoal">Result</h2>
             <p className="text-sm text-stone-600">

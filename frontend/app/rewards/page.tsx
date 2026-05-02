@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function RewardsPage() {
   return (
-    <main className="min-h-[60vh] bg-white px-4 py-10">
+    <main className="min-h-[60vh] bg-main px-4 py-10">
       <div className="mx-auto max-w-2xl">
         <Link href="/login" className="text-sm text-charcoal underline underline-offset-2 hover:no-underline">
           ← Back

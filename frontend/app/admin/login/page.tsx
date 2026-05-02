@@ -20,13 +20,13 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-stone-100 p-4">
-      <div className="w-full max-w-sm rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+      <div className="w-full max-w-sm rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
         <h1 className="text-xl font-semibold text-charcoal">BLURE Admin</h1>
         <p className="mt-1 text-sm text-stone-500">Sign in with Google. Only accounts with admin role can access.</p>
 
         <a
           href={googleLoginUrl}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded border border-stone-300 bg-white px-3 py-2.5 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-stone-50"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded border border-stone-300 bg-main px-3 py-2.5 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-stone-50"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

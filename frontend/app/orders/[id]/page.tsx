@@ -308,10 +308,10 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <main className="min-h-[50vh] bg-white px-4 pb-28 pt-3">
+    <main className="min-h-[50vh] bg-main px-4 pb-28 pt-3">
       <div className="mx-auto max-w-md">
         {/* Top bar */}
-        <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pb-2 pt-2">
+        <div className="sticky top-0 z-10 -mx-4 bg-main px-4 pb-2 pt-2">
           <div className="relative flex items-center justify-center">
             <Link
               href="/orders"
@@ -451,7 +451,7 @@ export default function OrderDetailPage() {
         {/* Order items */}
         <div className="mt-6">
           <h2 className="text-sm font-semibold text-charcoal">Order Items</h2>
-          <div className="mt-3 rounded-xl bg-white">
+          <div className="mt-3 rounded-xl bg-main">
             {order.items.map((item, i) => {
               const unit = Number(String(item.price || '').replace(/[^0-9.]/g, '')) || 0;
               const line = unit * (item.quantity || 0);
@@ -479,7 +479,7 @@ export default function OrderDetailPage() {
         {/* Order tracking */}
         <div className="mt-6">
           <h2 className="text-sm font-semibold text-charcoal">Order Tracking</h2>
-          <div className="mt-4 rounded-xl bg-white px-1">
+          <div className="mt-4 rounded-xl bg-main px-1">
             <div className="relative pl-6">
               <div className="absolute left-[11px] top-2 bottom-2 w-px bg-emerald-200" aria-hidden />
               {TIMELINE_STEPS.map((step) => {
@@ -519,7 +519,7 @@ export default function OrderDetailPage() {
         </div>
 
         {/* Action rows */}
-        <div className="mt-6 overflow-hidden rounded-xl border border-stone-100 bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-stone-100 bg-main">
           <button
             type="button"
             onClick={() => {
@@ -590,11 +590,11 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Bottom actions */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-stone-200 bg-white px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-stone-200 bg-main px-4 py-3">
         <div className="mx-auto flex max-w-md gap-3">
           <Link
             href="/products"
-            className="flex-1 rounded-xl border border-stone-200 bg-white py-3 text-center text-sm font-semibold text-charcoal hover:bg-stone-50"
+            className="flex-1 rounded-xl border border-stone-200 bg-main py-3 text-center text-sm font-semibold text-charcoal hover:bg-stone-50"
           >
             Buy Again
           </Link>

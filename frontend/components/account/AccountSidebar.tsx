@@ -106,9 +106,9 @@ export default function AccountSidebar({
   ].map((x) => ({ ...x, active: activeHref === x.href }));
 
   return (
-    <aside className="w-full max-w-[280px] rounded-2xl border border-stone-200 bg-white p-4 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
+    <aside className="w-full max-w-[280px] rounded-2xl border border-stone-200 bg-main p-4 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
       <div className="flex items-center gap-3 border-b border-stone-200 pb-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-main text-stone-700">
           <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
             <circle cx="12" cy="8" r="3.2" />
             <path d="M20 21a8 8 0 1 0-16 0" strokeLinecap="round" />

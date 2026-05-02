@@ -23,7 +23,7 @@
   /* Aliases for legacy tokens */
   --black: #1e3a2a;
   --bg-main: #fbf7f0; /* same as --cream; page canvas */
-  --bg-white: #ffffff;
+  --bg-white: #fbf7f0; /* same as main canvas; no pure white surfaces */
   --gold: #517a5e;
   --gold-soft: #1e3a2a;
 }

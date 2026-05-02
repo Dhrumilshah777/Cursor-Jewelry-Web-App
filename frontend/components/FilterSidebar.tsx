@@ -94,7 +94,7 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
 
   return (
     <aside
-      className={`w-full flex-shrink-0 rounded border border-stone-200 bg-white p-5 lg:w-64 ${className}`}
+      className={`w-full flex-shrink-0 rounded border border-stone-200 bg-main p-5 lg:w-64 ${className}`}
       role="navigation"
       aria-label="Filter products"
     >
@@ -139,11 +139,11 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                     className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                       !category
                         ? 'border-accent bg-accent'
-                        : 'border-stone-300 bg-white'
+                        : 'border-stone-300 bg-main'
                     }`}
                   >
                     {!category && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-main" />
                     )}
                   </span>
                   <span>All ({facets.totalProducts ?? totalCount})</span>
@@ -165,11 +165,11 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                         className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                           isActive
                             ? 'border-accent bg-accent'
-                            : 'border-stone-300 bg-white'
+                            : 'border-stone-300 bg-main'
                         }`}
                       >
                         {isActive && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-main" />
                         )}
                       </span>
                       <span>{cat.name}</span>
@@ -226,11 +226,11 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                         className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                           isSelected
                             ? 'border-accent bg-accent'
-                            : 'border-stone-300 bg-white'
+                            : 'border-stone-300 bg-main'
                         }`}
                       >
                         {isSelected && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-main" />
                         )}
                       </span>
                       <span>{bucket.label}</span>
@@ -331,12 +331,12 @@ export default function FilterSidebar({ facets, totalCount, className = '' }: Fi
                         className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                           isSelected
                             ? 'border-accent bg-accent'
-                            : 'border-stone-300 bg-white'
+                            : 'border-stone-300 bg-main'
                         }`}
                         aria-hidden
                       >
                         {isSelected && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-main" />
                         )}
                       </span>
                       <span>

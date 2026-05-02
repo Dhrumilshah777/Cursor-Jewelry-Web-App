@@ -222,7 +222,7 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
-      <form onSubmit={saveProduct} className="mt-8 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+      <form onSubmit={saveProduct} className="mt-8 rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
         <h2 className="font-medium text-charcoal">{editingId ? 'Edit product' : 'Add product'}</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
@@ -558,7 +558,7 @@ export default function AdminProductsPage() {
 
       <ul className="mt-8 space-y-4">
         {products.map((p) => (
-          <li key={p._id} className="flex items-center gap-4 rounded-lg border border-stone-200 bg-white p-4">
+          <li key={p._id} className="flex items-center gap-4 rounded-lg border border-stone-200 bg-main p-4">
             <img src={p.image.startsWith('http') ? p.image : assetUrl(p.image)} alt="" className="h-16 w-16 rounded object-cover" />
             <div className="min-w-0 flex-1">
               <p className="font-medium text-charcoal">{p.name}</p>

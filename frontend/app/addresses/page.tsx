@@ -44,7 +44,7 @@ export default function AddressesPage() {
   }, []);
 
   return (
-    <main className="min-h-[60vh] bg-white px-4 py-10">
+    <main className="min-h-[60vh] bg-main px-4 py-10">
       <div className="mx-auto max-w-2xl">
         <Link href="/login" className="text-sm text-charcoal underline underline-offset-2 hover:no-underline">
           ← Back
@@ -58,7 +58,7 @@ export default function AddressesPage() {
         ) : (
           <div className="mt-6 space-y-3">
             {addresses.map((a, idx) => (
-              <div key={idx} className="rounded-xl border border-stone-200 bg-white p-4">
+              <div key={idx} className="rounded-xl border border-stone-200 bg-main p-4">
                 <p className="text-sm font-semibold text-charcoal">{a.name || 'Address'}</p>
                 <p className="mt-1 text-sm text-stone-600">
                   {[a.line1, a.line2, a.city, a.state, a.pincode].filter(Boolean).join(', ')}

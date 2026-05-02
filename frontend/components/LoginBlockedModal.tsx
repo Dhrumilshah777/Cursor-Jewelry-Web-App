@@ -43,7 +43,7 @@ export default function LoginBlockedModal() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 px-4 pb-6 pt-10 sm:items-center sm:pb-0">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-main shadow-xl">
         <div className="relative">
           {hasImage && imgOk ? (
             <img
@@ -62,7 +62,7 @@ export default function LoginBlockedModal() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-charcoal shadow hover:bg-white"
+            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-main/90 text-charcoal shadow hover:bg-main"
             aria-label="Close"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>

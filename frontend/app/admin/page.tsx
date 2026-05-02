@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
           <Link
             key={c.href}
             href={c.href}
-            className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            className="rounded-lg border border-stone-200 bg-main p-5 shadow-sm transition-shadow hover:shadow-md"
           >
             <h2 className="font-medium text-charcoal">{c.title}</h2>
             <p className="mt-1 text-sm text-stone-500">{c.desc}</p>
@@ -72,13 +72,13 @@ export default function AdminDashboardPage() {
         {loading ? (
           <p className="mt-4 text-sm text-stone-500">Loading products…</p>
         ) : products.length === 0 ? (
-          <p className="mt-4 rounded-lg border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+          <p className="mt-4 rounded-lg border border-stone-200 bg-main p-6 text-center text-sm text-stone-500">
             No products yet. <Link href="/admin/products" className="text-charcoal underline hover:no-underline">Add products</Link> to show them in Latest Beauty.
           </p>
         ) : (
           <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((p) => (
-              <li key={p._id} className="flex gap-4 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+              <li key={p._id} className="flex gap-4 rounded-lg border border-stone-200 bg-main p-4 shadow-sm">
                 <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-stone-100">
                   {p.image ? (
                     <img

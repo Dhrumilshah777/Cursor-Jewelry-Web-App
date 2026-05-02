@@ -144,11 +144,11 @@ export default function AdminReturnsPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search by order id, email, status, reason…"
-          className="w-full max-w-xl rounded border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-charcoal"
+          className="w-full max-w-xl rounded border border-stone-300 bg-main px-3 py-2 text-sm outline-none focus:border-charcoal"
         />
         <button
           onClick={() => void refresh()}
-          className="rounded border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-charcoal hover:bg-stone-50"
+          className="rounded border border-stone-300 bg-main px-3 py-2 text-sm font-medium text-charcoal hover:bg-stone-50"
         >
           Refresh
         </button>
@@ -172,7 +172,7 @@ export default function AdminReturnsPage() {
       ) : (
         <ul className="mt-6 space-y-3">
           {filtered.map((r) => (
-            <li key={r._id} className="rounded-lg border border-stone-200 bg-white p-4">
+            <li key={r._id} className="rounded-lg border border-stone-200 bg-main p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium text-charcoal">
@@ -253,7 +253,7 @@ export default function AdminReturnsPage() {
                     <button
                       onClick={() => void retryReturnPickup(r._id)}
                       disabled={pickupBusyId === r._id}
-                      className="rounded border border-stone-400 bg-white px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-stone-50 disabled:opacity-60"
+                      className="rounded border border-stone-400 bg-main px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-stone-50 disabled:opacity-60"
                     >
                       {pickupBusyId === r._id ? '…' : 'Retry return pickup'}
                     </button>

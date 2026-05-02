@@ -101,7 +101,7 @@ export default function PromoCardsSection() {
                     )}
                   </div>
                   <div className="relative z-10 mt-3 sm:mt-4">
-                    <span className="inline-block rounded-md bg-white px-4 py-2 font-sans text-xs font-semibold uppercase tracking-wide text-black transition-colors group-hover:bg-stone-100 sm:px-5 sm:py-2.5 sm:text-sm">
+                    <span className="inline-block rounded-md bg-main px-4 py-2 font-sans text-xs font-semibold uppercase tracking-wide text-black transition-colors group-hover:bg-stone-100 sm:px-5 sm:py-2.5 sm:text-sm">
                       {card.ctaText}
                     </span>
                   </div>

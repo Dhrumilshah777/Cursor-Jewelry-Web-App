@@ -127,7 +127,7 @@ export default function AdminHeroPage() {
 
       <div className="mt-8 space-y-8">
         {slides.map((slide, index) => (
-          <div key={index} className="rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+          <div key={index} className="rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
             <h2 className="font-medium text-charcoal">Slide {index + 1}</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>

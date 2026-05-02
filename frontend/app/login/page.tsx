@@ -141,7 +141,7 @@ function OtpDigitInputs({
             onChange={(e) => onChangeCell(index, e)}
             onKeyDown={(e) => onKeyDown(index, e)}
             onFocus={(e) => e.target.select()}
-            className="h-12 w-10 rounded-md border border-stone-200 bg-white text-center font-sans text-xl font-semibold text-charcoal shadow-sm outline-none transition focus:border-charcoal focus:ring-0 disabled:opacity-50"
+            className="h-12 w-10 rounded-md border border-stone-200 bg-main text-center font-sans text-xl font-semibold text-charcoal shadow-sm outline-none transition focus:border-charcoal focus:ring-0 disabled:opacity-50"
             aria-label={`Digit ${index + 1}`}
           />
         </div>
@@ -360,7 +360,7 @@ export default function LoginPage() {
   if (!isLoggedIn) return null;
 
   return (
-    <main className="min-h-[70vh] bg-white px-4 py-6 pb-20 sm:py-10">
+    <main className="min-h-[70vh] bg-main px-4 py-6 pb-20 sm:py-10">
       <div className="mx-auto max-w-6xl">
         {isLoggedIn ? (
           <>
@@ -427,7 +427,7 @@ export default function LoginPage() {
                   <p className="mt-2 text-center text-sm text-stone-500">Enter your mobile number to continue</p>
 
                   <div className="mt-10 flex items-center gap-3">
-                    <div className="flex h-11 w-[84px] items-center justify-between rounded-xl border border-stone-200 bg-white px-3 text-sm text-charcoal">
+                    <div className="flex h-11 w-[84px] items-center justify-between rounded-xl border border-stone-200 bg-main px-3 text-sm text-charcoal">
                       <span className="font-medium">+91</span>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="text-stone-400">
                         <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -440,7 +440,7 @@ export default function LoginPage() {
                       placeholder="Enter mobile number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="h-11 flex-1 rounded-xl border border-stone-200 bg-white px-4 text-sm font-medium text-charcoal outline-none placeholder:font-normal placeholder:text-stone-400 focus:border-charcoal disabled:opacity-50"
+                      className="h-11 flex-1 rounded-xl border border-stone-200 bg-main px-4 text-sm font-medium text-charcoal outline-none placeholder:font-normal placeholder:text-stone-400 focus:border-charcoal disabled:opacity-50"
                       disabled={otpLoading}
                       aria-label="Enter mobile number"
                     />

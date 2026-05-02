@@ -107,7 +107,7 @@ export default function MyOrdersPage() {
         </div>
 
         {orders.length > 0 && (
-          <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-4 text-sm text-stone-600">
+          <div className="mt-6 rounded-2xl border border-stone-200 bg-main p-4 text-sm text-stone-600">
             Return requests are still available from order details.{' '}
             <span className="text-stone-400">(This page was restyled to match your screenshot.)</span>
           </div>

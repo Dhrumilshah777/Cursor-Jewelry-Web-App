@@ -110,7 +110,7 @@ export default function AdminBestSellingPage() {
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-      <form onSubmit={save} className="mt-8 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+      <form onSubmit={save} className="mt-8 rounded-lg border border-stone-200 bg-main p-6 shadow-sm">
         <ul className="space-y-3">
           {selectedProducts.map((product, i) => (
             <li

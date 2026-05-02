@@ -24,9 +24,9 @@ const config: Config = {
         /** Section wash (trust strip, etc.) */
         'section-muted': '#F5F2EA',
 
-        /** Cards / elevated surfaces */
-        card: '#FFFFFF',
-        cream: '#FFFFFF',
+        /** Cards / elevated surfaces (match main background — no harsh white) */
+        card: MAIN_BG,
+        cream: MAIN_BG,
 
         /** Primary forest green — promo strip, CTAs, footer, active nav */
         primary: '#1E3A2A',

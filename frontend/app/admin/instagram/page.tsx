@@ -103,7 +103,7 @@ export default function AdminInstagramPage() {
 
       <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {images.map((img, index) => (
-          <li key={index} className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+          <li key={index} className="rounded-lg border border-stone-200 bg-main p-3 shadow-sm">
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded bg-stone-100">
               {img.src ? (
                 <img

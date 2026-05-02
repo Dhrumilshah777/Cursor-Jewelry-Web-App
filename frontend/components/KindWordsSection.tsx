@@ -61,7 +61,7 @@ export default function KindWordsSection() {
           <button
             type="button"
             onClick={goPrev}
-            className="absolute left-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-charcoal shadow-md transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-charcoal/30 md:left-4"
+            className="absolute left-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-main/80 text-charcoal shadow-md transition-colors hover:bg-main focus:outline-none focus:ring-2 focus:ring-charcoal/30 md:left-4"
             aria-label="Previous testimonial"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@ export default function KindWordsSection() {
             {testimonials.map((t, index) => (
               <div
                 key={t.id}
-                className={`flex w-full flex-shrink-0 flex-col rounded-lg bg-white p-6 shadow-md md:max-w-[calc(33.333%-1rem)] ${
+                className={`flex w-full flex-shrink-0 flex-col rounded-lg bg-main p-6 shadow-md md:max-w-[calc(33.333%-1rem)] ${
                   index === current ? 'block' : 'hidden md:block'
                 }`}
               >
@@ -98,7 +98,7 @@ export default function KindWordsSection() {
           <button
             type="button"
             onClick={goNext}
-            className="absolute right-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-charcoal shadow-md transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-charcoal/30 md:right-4"
+            className="absolute right-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-main/80 text-charcoal shadow-md transition-colors hover:bg-main focus:outline-none focus:ring-2 focus:ring-charcoal/30 md:right-4"
             aria-label="Next testimonial"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

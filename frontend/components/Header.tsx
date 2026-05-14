@@ -48,70 +48,44 @@ export default function Header() {
 
       {/* 2. Main header bar (white card on warm page) */}
       <div className="border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2 sm:px-6 lg:px-8">
-          {/* Left: Search on mobile; Book appointment on desktop */}
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-3 sm:px-6 lg:px-8">
+          {/* Left: Search (all breakpoints — luxury nav pattern) */}
           <div className="flex min-w-0 flex-1 items-center justify-start">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex h-10 w-10 items-center justify-center text-text md:hidden"
+              className="flex h-10 w-10 items-center justify-center text-text transition-opacity hover:opacity-80"
               aria-label="Search"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </button>
-            <Link
-              href="#appointment"
-              className="hidden text-xs font-medium uppercase tracking-wider text-text underline underline-offset-2 hover:text-text-muted md:block"
-            >
-              Book a virtual appointment
-            </Link>
           </div>
 
           {/* Center: Logo + brand name */}
           <Link href="/" className="flex flex-shrink-0 flex-col items-center">
             <span className="flex items-center justify-center font-serif text-2xl font-semibold tracking-tight text-text sm:text-3xl">
-              <span className="relative">
-                TB
-                <svg
-                  className="absolute -right-1 -top-3 h-3 w-3 text-text sm:-top-4 sm:h-4 sm:w-4"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d="M12 2L14.5 8.5L21 9L16 13.5L17.5 20L12 17L6.5 20L8 13.5L3 9L9.5 8.5L12 2Z" />
-                </svg>
-              </span>
+              TB
             </span>
             <span className="mt-0.5 font-serif text-sm font-medium uppercase tracking-[0.2em] text-text sm:text-base">
               The Bride Jewelry
             </span>
           </Link>
 
-          {/* Right: Search, Account, Wishlist, Cart (outline icons) */}
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-6 md:gap-8">
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              className="hidden text-text transition-opacity hover:opacity-80 md:block"
-              aria-label="Search"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-            </button>
-            <Link href="/login" className="hidden text-text transition-opacity hover:opacity-80 md:block" aria-label="Account">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-            </Link>
-            <Link href="/wishlist" className="hidden text-text transition-opacity hover:opacity-80 md:block" aria-label="Wishlist">
+          {/* Right: Wishlist, Account, Cart (outline icons — matches luxury nav: heart, person, bag) */}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-4 sm:gap-6 md:gap-8">
+            <Link href="/wishlist" className="text-text transition-opacity hover:opacity-80" aria-label="Wishlist">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </Link>
-            <Link href="/cart" className="relative hidden text-text transition-opacity hover:opacity-80 md:block" aria-label="Cart">
+            <Link href="/login" className="text-text transition-opacity hover:opacity-80" aria-label="Account">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </Link>
+            <Link href="/cart" className="relative text-text transition-opacity hover:opacity-80" aria-label="Cart">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
@@ -124,7 +98,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className="flex h-10 w-10 items-center justify-center text-text md:hidden"
+              className="ml-1 flex h-10 w-10 items-center justify-center text-text md:hidden"
               aria-expanded={mobileOpen}
               aria-label="Toggle menu"
             >
@@ -189,16 +163,6 @@ export default function Header() {
                 </svg>
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
-              className="mb-4 flex items-center gap-2 font-sans text-xs font-medium uppercase tracking-wider text-text"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              Search
-            </button>
             <nav className="flex flex-1 flex-col gap-1">
               {mainNavLinks.map(({ href, label }) => (
                 <Link

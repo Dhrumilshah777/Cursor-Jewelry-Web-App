@@ -1,12 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:wght@200&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-mona-sans: 'Mona Sans', system-ui, sans-serif;
-
   /* Green brand system */
   --primary-green: #1e3a2a;
   --secondary-green: #517a5e;

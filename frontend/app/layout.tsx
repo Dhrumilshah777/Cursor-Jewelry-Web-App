@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Jost } from 'next/font/google';
 import './globals.css';
 import PageLoader from '@/components/PageLoader';
 import SiteLayout from '@/components/SiteLayout';
 
-const playfair = Playfair_Display({
+const jost = Jost({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-jost',
   display: 'swap',
 });
 
@@ -34,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={jost.variable}>
       <body className="min-h-screen bg-main font-sans text-text antialiased">
         <PageLoader />
         <SiteLayout>{children}</SiteLayout>
